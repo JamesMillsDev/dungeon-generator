@@ -30,9 +30,6 @@
     <ClInclude Include="Maths\Color.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Maths\MathAlias.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Maths\Maths.h">
       <Filter>Header Files</Filter>
     </ClInclude>
