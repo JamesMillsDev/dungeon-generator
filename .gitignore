@@ -1,0 +1,6 @@
+.vs/
+.idea/
+3dengine.*
+Build/
+Intermediate/
+*.user

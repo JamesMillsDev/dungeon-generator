@@ -1,0 +1,44 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36908.2 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dungeon-generator", "dungeon-generator\dungeon-generator.vcxproj", "{A8A644E7-9D44-44A6-90B3-344BF310C107}"
+	ProjectSection(ProjectDependencies) = postProject
+		{AECDEF09-EA39-416A-A0D1-F9010BC78EA3} = {AECDEF09-EA39-416A-A0D1-F9010BC78EA3}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "3D-engine", "3D-engine\3D-engine.vcxproj", "{AECDEF09-EA39-416A-A0D1-F9010BC78EA3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A8A644E7-9D44-44A6-90B3-344BF310C107}.Debug|x64.ActiveCfg = Debug|x64
+		{A8A644E7-9D44-44A6-90B3-344BF310C107}.Debug|x64.Build.0 = Debug|x64
+		{A8A644E7-9D44-44A6-90B3-344BF310C107}.Debug|x86.ActiveCfg = Debug|Win32
+		{A8A644E7-9D44-44A6-90B3-344BF310C107}.Debug|x86.Build.0 = Debug|Win32
+		{A8A644E7-9D44-44A6-90B3-344BF310C107}.Release|x64.ActiveCfg = Release|x64
+		{A8A644E7-9D44-44A6-90B3-344BF310C107}.Release|x64.Build.0 = Release|x64
+		{A8A644E7-9D44-44A6-90B3-344BF310C107}.Release|x86.ActiveCfg = Release|Win32
+		{A8A644E7-9D44-44A6-90B3-344BF310C107}.Release|x86.Build.0 = Release|Win32
+		{AECDEF09-EA39-416A-A0D1-F9010BC78EA3}.Debug|x64.ActiveCfg = Debug|x64
+		{AECDEF09-EA39-416A-A0D1-F9010BC78EA3}.Debug|x64.Build.0 = Debug|x64
+		{AECDEF09-EA39-416A-A0D1-F9010BC78EA3}.Debug|x86.ActiveCfg = Debug|Win32
+		{AECDEF09-EA39-416A-A0D1-F9010BC78EA3}.Debug|x86.Build.0 = Debug|Win32
+		{AECDEF09-EA39-416A-A0D1-F9010BC78EA3}.Release|x64.ActiveCfg = Release|x64
+		{AECDEF09-EA39-416A-A0D1-F9010BC78EA3}.Release|x64.Build.0 = Release|x64
+		{AECDEF09-EA39-416A-A0D1-F9010BC78EA3}.Release|x86.ActiveCfg = Release|Win32
+		{AECDEF09-EA39-416A-A0D1-F9010BC78EA3}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F6DD0CAE-0AFF-44D5-A3F1-6698C0182630}
+	EndGlobalSection
+EndGlobal
