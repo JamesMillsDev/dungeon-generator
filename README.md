@@ -18,4 +18,4 @@ A simple 3D dungeon generator using a custom Vulkan renderer with multithreading
 
 ## License
 
-This project uses the [GPL](LICENSE) and therefore is free to use or distrubute to your hearts content.
+This project uses the [GPL](https://en.wikipedia.org/wiki/GNU_General_Public_License) and therefore is free to use or distrubute to your hearts content.
