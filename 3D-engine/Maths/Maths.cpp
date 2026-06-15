@@ -203,6 +203,16 @@ float Maths::LerpUnclamped(const float a, const float b, const float t)
 	return a + (b - t) * t;
 }
 
+float Maths::Radians(const float deg)
+{
+	return deg * PI / 180.f;
+}
+
+float Maths::Degrees(const float rad)
+{
+	return rad * (180.f / PI);
+}
+
 float Maths::Gamma(const float v, const float absMax, const float gamma)
 {
 	const bool negative = v < 0.f;

@@ -41,12 +41,12 @@ const Color Color::MAGENTA = Color{ 0xFF00FFFF };
 
 Color Color::Lerp(const Color& a, const Color& b, const float t)
 {
-	return a + (b - t) * Maths::Clamp01(t);
+	return a + (b - a) * Maths::Clamp01(t);
 }
 
 Color Color::LerpUnclamped(const Color& a, const Color& b, const float t)
 {
-	return a + (b - t) * t;
+	return a + (b - a) * t;
 }
 
 Color Color::FromHex(const char* hex)
@@ -88,8 +88,8 @@ void Color::RGBToHSV(const Color& rgb, float& h, float& s, float& v)
 	const float normB = rgb.b / 255.f;
 
 	// Find the minimum and maximum channel and difference between them
-	const float cMin = Maths::Min(3, normR, normG, normB);
-	const float cMax = Maths::Max(3, normR, normG, normB);
+	const float cMin = Maths::Min<float>(3, normR, normG, normB);
+	const float cMax = Maths::Max<float>(3, normR, normG, normB);
 	const float cDiff = cMax - cMin;
 
 	// Value is always the max
@@ -395,11 +395,6 @@ Color Color::operator+(const float rhs) const
 Color Color::operator-(const Color& rhs) const
 {
 	return { r - rhs.r, g - rhs.g, b - rhs.b, a - rhs.a };
-}
-
-Color Color::operator-(const float rhs) const
-{
-	return { r - rhs, g - rhs, b - rhs, a - rhs };
 }
 
 Color Color::operator*(const Color& rhs) const

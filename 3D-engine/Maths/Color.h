@@ -252,8 +252,6 @@ public:
 
 	Color operator-(const Color& rhs) const;
 
-	Color operator-(float rhs) const;
-
 	Color operator*(const Color& rhs) const;
 
 	Color operator*(float rhs) const;

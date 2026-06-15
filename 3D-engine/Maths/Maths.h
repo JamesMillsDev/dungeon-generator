@@ -267,6 +267,10 @@ public:
 	 */
 	static float LerpUnclamped(float a, float b, float t);
 
+	static float Radians(float deg);
+
+	static float Degrees(float rad);
+
 	static float Gamma(float v, float absMax, float gamma);
 
 	static float MoveTowards(float current, float target, float maxDelta);
