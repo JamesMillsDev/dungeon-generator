@@ -267,14 +267,13 @@ public:
 	 */
 	static float LerpUnclamped(float a, float b, float t);
 
+	/** @brief Converts the incoming @c deg value into radians. */
 	static float Radians(float deg);
 
+	/** @brief Converts the incoming @c rad value into degrees. */
 	static float Degrees(float rad);
 
-	static float Gamma(float v, float absMax, float gamma);
-
-	static float MoveTowards(float current, float target, float maxDelta);
-
+	/** @brief Smoothly moves a value @c t from @c from to @c to in a cubic form.  */
 	static float SmoothStep(float from, float to, float t);
 
 	/**
@@ -293,6 +292,7 @@ public:
 	 */
 	static float PingPong(float time, float length);
 
+	/** @brief Calculates the difference between two angles. */
 	static float DeltaAngle(float current, float target);
 
 };

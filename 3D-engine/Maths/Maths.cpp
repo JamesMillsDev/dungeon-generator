@@ -213,30 +213,6 @@ float Maths::Degrees(const float rad)
 	return rad * (180.f / PI);
 }
 
-float Maths::Gamma(const float v, const float absMax, const float gamma)
-{
-	const bool negative = v < 0.f;
-	const float absVal = Abs(v);
-
-	if (absVal > absMax)
-	{
-		return negative ? -absVal : absVal;
-	}
-
-	const float result = Pow(absVal / absMax, gamma) * absMax;
-	return negative ? -result : result;
-}
-
-float Maths::MoveTowards(const float current, const float target, const float maxDelta)
-{
-	if (Abs(target - current) <= maxDelta)
-	{
-		return target;
-	}
-
-	return current + Sign(target - current) * maxDelta;
-}
-
 float Maths::SmoothStep(const float from, const float to, float t)
 {
 	t = Clamp01(t);
