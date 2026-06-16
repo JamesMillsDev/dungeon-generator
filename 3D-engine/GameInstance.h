@@ -40,10 +40,8 @@ public:
 	 *
 	 * All simulation, input handling, and non-rendering updates should
 	 * be performed here. Render() is called immediately after.
-	 *
-	 * @param dt The time elapsed since the last frame, in seconds.
 	 */
-	virtual void Tick(float dt) = 0;
+	virtual void Tick() = 0;
 
 	/**
 	 * @brief Called once per frame to submit draw commands.

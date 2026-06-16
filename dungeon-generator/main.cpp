@@ -4,10 +4,10 @@
 class TestGameInstance : public GameInstance
 {
 public:
-	void Init() override{}
-	void Shutdown() override{}
-	void Tick(float dt) override{}
-	void Render() override{}
+	void Init() override {}
+	void Shutdown() override {}
+	void Tick() override {}
+	void Render() override {}
 };
 
 int main()

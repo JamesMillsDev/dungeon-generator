@@ -63,6 +63,8 @@ EExitCode Application::Run() const
 		GameTime::Tick();
 
 		glfwPollEvents();
+
+		m_game->Tick();
 	}
 
 	// Shutdown the game instance and close the window
