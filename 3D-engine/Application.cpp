@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <GLFW/glfw3.h>
 
+#include "GameTime.h"
+
 #include "Utility/Config.h"
 
 using std::runtime_error;
@@ -50,12 +52,16 @@ EExitCode Application::Run() const
 		return EExitCode::WindowFailedToOpen;
 	}
 
+	GameTime::Init();
+
 	// Initialise the game instance
 	m_game->Init();
 
 	// Continue to loop until the window requests a close
 	while (!m_window->ShouldClose())
 	{
+		GameTime::Tick();
+
 		glfwPollEvents();
 	}
 

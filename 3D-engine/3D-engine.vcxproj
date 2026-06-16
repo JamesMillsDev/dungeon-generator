@@ -189,6 +189,7 @@
   <ItemGroup>
     <ClInclude Include="Application.h" />
     <ClInclude Include="GameInstance.h" />
+    <ClInclude Include="GameTime.h" />
     <ClInclude Include="Maths\Maths.h" />
     <ClInclude Include="Maths\Color.h" />
     <ClInclude Include="Maths\Matrix3.h" />
@@ -203,6 +204,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="GameTime.cpp" />
     <ClCompile Include="Maths\Maths.cpp" />
     <ClCompile Include="Maths\Color.cpp" />
     <ClCompile Include="Maths\Matrix3.cpp" />
