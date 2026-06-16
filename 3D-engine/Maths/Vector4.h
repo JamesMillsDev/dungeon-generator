@@ -1,16 +1,15 @@
 #pragma once
 
-#include <string>
+#include <ostream>
 
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
-#include <glm/vec4.hpp>
+#include <glm/ext/vector_float2.hpp>
+#include <glm/ext/vector_float3.hpp>
+#include <glm/ext/vector_float4.hpp>
 
 struct Vector2;
 struct Vector3;
 
 using std::ostream;
-using std::string;
 
 using glm::vec2;
 using glm::vec3;
