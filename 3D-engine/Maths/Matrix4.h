@@ -111,6 +111,8 @@ public:
 
 	Matrix4& operator*=(const Matrix4& rhs);
 
+	Matrix4 operator/(float rhs) const;
+
 	bool operator==(const Matrix4& rhs) const;
 
 	bool operator!=(const Matrix4& rhs) const;

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Matrix4.h"
 
+#include "Matrix3.h"
 #include "Vector3.h"
 
 Matrix4 Matrix4::MakeTranslate(const Vector3& trans)
@@ -89,19 +90,43 @@ Matrix4 Matrix4::MakeTransform(const Vector3& trans, const Vector3& euler, const
 	return MakeTranslate(trans) * MakeRotate(euler) * MakeScale(scale);
 }
 
-Matrix4 Matrix4::MakePerspective(float fovY, float aspect, float near, float far)
+Matrix4 Matrix4::MakePerspective(const float fovY, const float aspect, const float near, const float far)
 {
-	return Matrix4();
+	const float tanFov = Maths::Tan(fovY / 2.f);
+
+	return Matrix4
+	{
+		1 / (aspect * tanFov), 0.f, 0.f, 0.f,
+		0.f, 1 / tanFov, 0.f, 0.f,
+		0.f, 0.f, -((far + near) / (far - near)), -(2.f * far * near / (far - near)),
+		0.f, 0.f, -1.f, 0.f
+	};
 }
 
-Matrix4 Matrix4::MakeOrthographic(float left, float right, float bottom, float top, float near, float far)
+Matrix4 Matrix4::MakeOrthographic(const float left, const float right, const float bottom, const float top, const float near, const float far)
 {
-	return Matrix4();
+	return Matrix4
+	{
+		2.f / (right - left), 0.f, 0.f, -((right + left) / (right - left)),
+		0.f, 2.f / (top - bottom), 0.f, -((top + bottom) / (top - bottom)),
+		0.f, 0.f, -2.f / (far - near), -((far + near) / (far - near)),
+		0.f, 0.f, 0.f, 1.f
+	};
 }
 
 Matrix4 Matrix4::MakeLookAt(const Vector3& eye, const Vector3& target, const Vector3& up)
 {
-	return Matrix4();
+	const Vector3 zAxis = (eye - target).Normalised();
+	const Vector3 xAxis = Vector3::Cross(up, zAxis).Normalised();
+	const Vector3 yAxis = Vector3::Cross(zAxis, xAxis);
+
+	return Matrix4
+	{
+		xAxis.x, yAxis.x, zAxis.x, -Vector3::Dot(xAxis, eye),
+		xAxis.y, yAxis.y, zAxis.y, -Vector3::Dot(yAxis, eye),
+		xAxis.z, yAxis.z, zAxis.z, -Vector3::Dot(zAxis, eye),
+		0.f, 0.f, 0.f, 1.f
+	};
 }
 
 Matrix4 Matrix4::Identity()
@@ -185,85 +210,236 @@ Matrix4 Matrix4::Transposed() const
 
 Matrix4 Matrix4::Inverse() const
 {
-	return Matrix4
-	{
-
-	};
+	const Matrix4 adjugate = Adjugate();
+	return adjugate / Determinant();
 }
 
 Matrix4 Matrix4::Minor() const
 {
-	return Matrix4();
+	return Matrix4
+	{
+		Matrix3{ column2.y, column2.z, column2.w, column3.y, column3.z, column3.w, column4.y, column4.z, column4.w }.Determinant(),
+		Matrix3{ column1.y, column1.z, column1.w, column3.y, column3.z, column3.w, column4.y, column4.z, column4.w }.Determinant(),
+		Matrix3{ column1.y, column1.z, column1.w, column2.y, column2.z, column2.w, column4.y, column4.z, column4.w }.Determinant(),
+		Matrix3{ column1.y, column1.z, column1.w, column2.y, column2.z, column2.w, column3.y, column3.z, column3.w, }.Determinant(),
+		Matrix3{ column2.x, column2.z, column2.w, column3.x, column3.z, column3.w, column4.x, column4.z, column4.w }.Determinant(),
+		Matrix3{ column1.x, column1.z, column1.w, column3.x, column3.z, column3.w, column4.x, column4.z, column4.w }.Determinant(),
+		Matrix3{ column1.x, column1.z, column1.w, column2.x, column2.z, column2.w, column4.x, column4.z, column4.w }.Determinant(),
+		Matrix3{ column1.x, column1.z, column1.w, column2.x, column2.z, column2.w, column3.x, column3.z, column3.w, }.Determinant(),
+		Matrix3{ column2.x, column2.y, column2.w, column3.x, column3.y, column3.w, column4.x, column4.y, column4.w }.Determinant(),
+		Matrix3{ column1.x, column1.y, column1.w, column3.x, column3.z, column3.w, column4.x, column4.y, column4.w }.Determinant(),
+		Matrix3{ column1.x, column2.x, column4.x, column1.y, column2.y, column4.y, column1.w, column2.w, column4.w }.Determinant(),
+		Matrix3{ column1.x, column2.x, column3.x, column1.y, column2.y, column3.y, column1.w, column2.w, column3.w, }.Determinant(),
+		Matrix3{ column2.x, column2.y, column2.z, column3.x, column3.y, column3.z, column4.x, column4.y, column4.z }.Determinant(),
+		Matrix3{ column1.x, column1.y, column1.z, column3.x, column3.y, column3.z, column4.x, column4.y, column4.z }.Determinant(),
+		Matrix3{ column1.x, column2.x, column4.x, column1.y, column2.y, column4.y, column1.z, column2.z, column4.z }.Determinant(),
+		Matrix3{ column1.x, column2.x, column3.x, column1.y, column2.y, column3.y, column1.z, column2.z, column3.z, }.Determinant(),
+	};
 }
 
 Matrix4 Matrix4::Cofactor() const
 {
-	return Matrix4();
+	const Matrix4 minor = Minor();
+	return Matrix4
+	{
+		+minor.column1.x, -minor.column2.y, +minor.column3.z, -minor.column3.w,
+		-minor.column1.x, +minor.column2.y, -minor.column3.z, +minor.column3.w,
+		+minor.column1.x, -minor.column2.y, +minor.column3.z, -minor.column3.w,
+		-minor.column1.x, +minor.column2.y, -minor.column3.z, +minor.column3.w,
+	};
 }
 
 Matrix4 Matrix4::Adjugate() const
 {
-	return Matrix4
-	{
-
-	};
+	const Matrix4 cofactor = Cofactor();
+	return cofactor.Transposed();
 }
 
 float Matrix4::Determinant() const
 {
-	return 0.0f;
+	const Matrix4 cofactor = Cofactor();
+	return column1.x * cofactor.column1.x + column1.y * cofactor.column1.y + column1.z * cofactor.column1.z + column1.w * cofactor.column1.w;
 }
 
-bool Matrix4::IsOrthogonal(float e) const
+bool Matrix4::IsOrthogonal(const float e) const
 {
-	return false;
+	return (*this * Transposed()).IsIdentity(e);
 }
 
-bool Matrix4::IsIdentity(float e) const
+bool Matrix4::IsIdentity(const float e) const
 {
-	return false;
+	return Maths::Approx(column1.x, 1.f, e) && Maths::IsNearZero(column2.x, e) && Maths::IsNearZero(column3.x, e) && Maths::IsNearZero(column4.x, e) &&
+		Maths::IsNearZero(column1.y, e) && Maths::Approx(column2.y, 1.f, e) && Maths::IsNearZero(column3.y, e) && Maths::IsNearZero(column4.y, e) &&
+		Maths::IsNearZero(column1.z, e) && Maths::IsNearZero(column2.z, e) && Maths::Approx(column3.z, 1.f, e) && Maths::IsNearZero(column4.z, e) &&
+		Maths::IsNearZero(column1.w, e) && Maths::IsNearZero(column2.w, e) && Maths::IsNearZero(column3.w, e) && Maths::Approx(column4.w, 1.f, e);
 }
 
 void Matrix4::Orthogonalize()
-{}
+{
+	// Gram-Schmidt process - make each column perpendicular to all previous columns
+	// by subtracting the projection of the column onto each prior basis vector
+	const Vector4 u1 = column1;
+	const Vector4 u2 = column2;
+	const Vector4 u3 = column3;
+	const Vector4 u4 = column4;
+
+	// Remove the component of u2 that points along u1
+	const Vector4 prj = u1 * (Vector4::Dot(u2, u1) / Vector4::Dot(u1, u1));
+	const Vector4 e2 = u2 - prj;
+
+	// Remove the components of u3 that point along u1 and e2
+	Vector4 prj1 = u1 * (Vector4::Dot(u3, u1) / Vector4::Dot(u1, u1));
+	Vector4 prj2 = e2 * (Vector4::Dot(u3, e2) / Vector4::Dot(e2, e2));
+	const Vector4 e3 = u3 - prj1 - prj2;
+
+	// Remove the components of u4 that point along u1, e2 and e3
+	prj1 = u1 * (Vector4::Dot(u4, u1) / Vector4::Dot(u1, u1));
+	prj2 = e2 * (Vector4::Dot(u4, e2) / Vector4::Dot(e2, e2));
+	const Vector4 prj3 = e3 * (Vector4::Dot(u4, e3) / Vector4::Dot(e3, e3));
+	const Vector4 e4 = u4 - prj1 - prj2 - prj3;
+
+	column1 = u1;
+	column2 = e2;
+	column3 = e3;
+	column4 = e4;
+}
 
 void Matrix4::Orthonormalize()
-{}
+{
+	for (int i = 0; i < 4; ++i)
+	{
+		(*this)[i] = (*this)[i].Normalised();
+	}
+}
 
 float Matrix4::Trace() const
 {
-	return 0.0f;
+	return column1.x + column2.y + column3.z + column4.w;
 }
 
 Matrix4::operator mat4() const
-{}
-
-Matrix4 Matrix4::operator*(const Matrix4& rhs) const
 {
-	return Matrix4();
-}
-
-Matrix4& Matrix4::operator*=(const Matrix4& rhs)
-{
-	// TODO: insert return statement here
-}
-
-bool Matrix4::operator==(const Matrix4& rhs) const
-{
-	return false;
-}
-
-bool Matrix4::operator!=(const Matrix4& rhs) const
-{
-	return false;
+	return mat4
+	{
+		static_cast<vec4>(column1),
+		static_cast<vec4>(column2),
+		static_cast<vec4>(column3),
+		static_cast<vec4>(column4),
+	};
 }
 
 Matrix4& Matrix4::operator=(const Matrix4& rhs)
 {
-	// TODO: insert return statement here
+	if (this == &rhs)
+	{
+		return *this;
+	}
+
+	column1 = rhs.column1;
+	column2 = rhs.column2;
+	column3 = rhs.column3;
+	column4 = rhs.column4;
+
+	return *this;
+}
+
+Vector4 Matrix4::operator*(const Vector4& rhs) const
+{
+	return Vector4
+	{
+		column1.x * rhs.x + column2.x * rhs.y + column3.x * rhs.z + column4.x * rhs.w,
+		column1.y * rhs.x + column2.y * rhs.y + column3.y * rhs.z + column4.y * rhs.w,
+		column1.z * rhs.x + column2.z * rhs.y + column3.z * rhs.z + column4.z * rhs.w,
+		column1.w * rhs.x + column2.w * rhs.y + column3.w * rhs.z + column4.w * rhs.w,
+	};
+}
+
+Matrix4 Matrix4::operator*(const Matrix4& rhs) const
+{
+	return Matrix4
+	{
+		column1.x * rhs.column1.x + column1.y * rhs.column2.x + column1.z * rhs.column3.x + column1.w * rhs.column4.x,
+		column2.x * rhs.column1.x + column2.y * rhs.column2.x + column2.z * rhs.column3.x + column2.w * rhs.column4.x,
+		column3.x * rhs.column1.x + column3.y * rhs.column2.x + column3.z * rhs.column3.x + column3.w * rhs.column4.x,
+		column4.x * rhs.column1.x + column4.y * rhs.column2.x + column4.z * rhs.column3.x + column4.w * rhs.column4.x,
+		
+		column1.x * rhs.column1.y + column1.y * rhs.column2.y + column1.z * rhs.column3.y + column1.w * rhs.column4.y,
+		column2.x * rhs.column1.y + column2.y * rhs.column2.y + column2.z * rhs.column3.y + column2.w * rhs.column4.y,
+		column3.x * rhs.column1.y + column3.y * rhs.column2.y + column3.z * rhs.column3.y + column3.w * rhs.column4.y,
+		column4.x * rhs.column1.y + column4.y * rhs.column2.y + column4.z * rhs.column3.y + column4.w * rhs.column4.y,
+		
+		column1.x * rhs.column1.z + column1.y * rhs.column2.z + column1.z * rhs.column3.z + column1.w * rhs.column4.z,
+		column2.x * rhs.column1.z + column2.y * rhs.column2.z + column2.z * rhs.column3.z + column2.w * rhs.column4.z,
+		column3.x * rhs.column1.z + column3.y * rhs.column2.z + column3.z * rhs.column3.z + column3.w * rhs.column4.z,
+		column4.x * rhs.column1.z + column4.y * rhs.column2.z + column4.z * rhs.column3.z + column4.w * rhs.column4.z,
+		
+		column1.x * rhs.column1.w + column1.y * rhs.column2.w + column1.z * rhs.column3.w + column1.w * rhs.column4.w,
+		column2.x * rhs.column1.w + column2.y * rhs.column2.w + column2.z * rhs.column3.w + column2.w * rhs.column4.w,
+		column3.x * rhs.column1.w + column3.y * rhs.column2.w + column3.z * rhs.column3.w + column3.w * rhs.column4.w,
+		column4.x * rhs.column1.w + column4.y * rhs.column2.w + column4.z * rhs.column3.w + column4.w * rhs.column4.w
+	};
+}
+
+Matrix4& Matrix4::operator*=(const Matrix4& rhs)
+{
+	*this = *this * rhs;
+	return *this;
+}
+
+Matrix4 Matrix4::operator/(const float rhs) const
+{
+	return Matrix4
+	{
+		column1 / rhs,
+		column2 / rhs,
+		column3 / rhs,
+		column4 / rhs
+	};
+}
+
+bool Matrix4::operator==(const Matrix4& rhs) const
+{
+	if (this == &rhs)
+	{
+		return true;
+	}
+
+	return column1 == rhs.column1 && column2 == rhs.column3 && column3 == rhs.column3 && column4 == rhs.column4;
+}
+
+bool Matrix4::operator!=(const Matrix4& rhs) const
+{
+	if (this == &rhs)
+	{
+		return true;
+	}
+
+	return column1 != rhs.column1 || column2 != rhs.column3 || column3 != rhs.column3 || column4 != rhs.column4;
+}
+
+Vector4& Matrix4::operator[](const int index)
+{
+	assert(index >= 0 && index <= 4 && "Index out of range!");
+
+	return (&column1)[index];
+}
+
+const Vector4& Matrix4::operator[](const int index) const
+{
+	assert(index >= 0 && index <= 4 && "Index out of range!");
+
+	return (&column1)[index];
 }
 
 ostream& operator<<(ostream& stream, const Matrix4& matrix)
 {
-	// TODO: insert return statement here
+	stream << std::format(
+		"[{:.2f}, {:.2f}, {:.2f}, {:.2f}]\n[{:.2f}, {:.2f}, {:.2f}, {:.2f}]\n[{:.2f}, {:.2f}, {:.2f}, {:.2f}]\n[{:.2f}, {:.2f}, {:.2f}, {:.2f}]",
+		matrix.column1.x, matrix.column2.x, matrix.column3.x, matrix.column4.x,
+		matrix.column1.y, matrix.column2.y, matrix.column3.y, matrix.column4.y,
+		matrix.column1.z, matrix.column2.z, matrix.column3.z, matrix.column4.z,
+		matrix.column1.w, matrix.column2.w, matrix.column3.w, matrix.column4.w
+	);
+
+	return stream;
 }

@@ -266,9 +266,9 @@ Vector3 Matrix3::operator*(const Vector3& rhs) const
 {
 	return Vector3
 	{
-		rhs[0] * (*this)[0][0] + rhs[0] * (*this)[1][0] + rhs[0] * (*this)[2][0],
-		rhs[1] * (*this)[0][0] + rhs[1] * (*this)[1][0] + rhs[1] * (*this)[2][0],
-		rhs[2] * (*this)[0][0] + rhs[2] * (*this)[1][0] + rhs[2] * (*this)[2][0]
+		column1.x * rhs.x + column2.x * rhs.y + column3.x * rhs.z,
+		column1.y * rhs.x + column2.y * rhs.y + column3.y * rhs.z,
+		column1.z * rhs.x + column2.z * rhs.y + column3.z * rhs.z
 	};
 }
 
@@ -276,17 +276,17 @@ Matrix3 Matrix3::operator*(const Matrix3& rhs) const
 {
 	return Matrix3
 	{
-		rhs[0][0] * (*this)[0][0] + rhs[0][1] * (*this)[1][0] + rhs[0][2] * (*this)[2][0],
-		rhs[1][0] * (*this)[0][0] + rhs[1][1] * (*this)[1][0] + rhs[1][2] * (*this)[2][0],
-		rhs[2][0] * (*this)[0][0] + rhs[2][1] * (*this)[1][0] + rhs[2][2] * (*this)[2][0],
+		rhs.column1.x * column1.x + rhs.column2.x * column1.y + rhs.column3.x * column1.z,
+		rhs.column1.y * column1.x + rhs.column2.y * column1.y + rhs.column3.y * column1.z,
+		rhs.column1.z * column1.x + rhs.column2.z * column1.y + rhs.column3.z * column1.z,
 
-		rhs[0][0] * (*this)[0][1] + rhs[0][1] * (*this)[1][1] + rhs[0][2] * (*this)[0][1],
-		rhs[1][0] * (*this)[0][1] + rhs[1][1] * (*this)[1][1] + rhs[1][2] * (*this)[0][1],
-		rhs[2][0] * (*this)[0][1] + rhs[2][1] * (*this)[1][1] + rhs[2][2] * (*this)[0][1],
+		rhs.column1.x * column2.x + rhs.column2.x * column2.y + rhs.column3.x * column2.x,
+		rhs.column1.y * column2.x + rhs.column2.y * column2.y + rhs.column3.y * column2.x,
+		rhs.column1.z * column2.x + rhs.column2.z * column2.y + rhs.column3.z * column2.x,
 
-		rhs[0][0] * (*this)[0][2] + rhs[0][1] * (*this)[1][2] + rhs[0][2] * (*this)[2][2],
-		rhs[1][0] * (*this)[0][2] + rhs[1][1] * (*this)[1][2] + rhs[1][2] * (*this)[2][2],
-		rhs[2][0] * (*this)[0][2] + rhs[2][1] * (*this)[1][2] + rhs[2][2] * (*this)[2][2],
+		rhs.column1.x * column3.x + rhs.column2.x * column3.y + rhs.column3.x * column3.z,
+		rhs.column1.y * column3.x + rhs.column2.y * column3.y + rhs.column3.y * column3.z,
+		rhs.column1.z * column3.x + rhs.column2.z * column3.y + rhs.column3.z * column3.z,
 	};
 }
 
