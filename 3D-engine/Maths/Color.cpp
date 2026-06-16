@@ -125,7 +125,7 @@ void Color::RGBToHSV(const Color& rgb, float& h, float& s, float& v)
 
 Color Color::HSVToRGB(const float h, const float s, const float v, const float a)
 {
-	return HSVToRGB(h, s, v, a);
+	return HSVToRGB(h, s, v, true, a);
 }
 
 Color Color::HSVToRGB(const float h, const float s, float v, const bool hdr, float a)

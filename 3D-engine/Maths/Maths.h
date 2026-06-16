@@ -1,5 +1,9 @@
 #pragma once
 
+#include <array>
+
+using std::array;
+
 using uint8 = unsigned char;
 using uint16 = unsigned short;
 using uint32 = unsigned int;
@@ -302,10 +306,11 @@ requires(std::is_same_v<FIRST, ARGS> && ...)
 float Maths::Min(const int count, ARGS... values)
 {
 	float value = POSITIVE_INFINITY;
+	array<FIRST, sizeof...(ARGS)> arr{ std::forward<ARGS>(values)... };
 
 	for (int i = 0; i < count; ++i)
 	{
-		value = std::min(value, values[i]);
+		value = std::min(value, arr[i]);
 	}
 
 	return value;
@@ -316,10 +321,11 @@ requires(std::is_same_v<FIRST, ARGS> && ...)
 float Maths::Max(const int count, ARGS... values)
 {
 	float value = NEGATIVE_INFINITY;
+	array<FIRST, sizeof...(ARGS)> arr{ std::forward<ARGS>(values)... };
 
 	for (int i = 0; i < count; ++i)
 	{
-		value = std::max(value, values[i]);
+		value = std::max(value, arr[i]);
 	}
 
 	return value;
