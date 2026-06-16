@@ -104,13 +104,15 @@ public:
 
 	Matrix3& operator*=(const Matrix3& rhs);
 
+	Matrix3 operator/(float rhs) const;
+
 	bool operator==(const Matrix3& rhs) const;
 
 	bool operator!=(const Matrix3& rhs) const;
 
-	Vector4& operator[](int index);
+	Vector3& operator[](int index);
 
-	const Vector4& operator[](int index) const;
+	const Vector3& operator[](int index) const;
 
 	friend ostream& operator<<(ostream& stream, const Matrix3& matrix);
 
