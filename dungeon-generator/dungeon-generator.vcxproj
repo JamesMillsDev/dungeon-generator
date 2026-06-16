@@ -177,6 +177,9 @@ xcopy /y /q /s "$(ProjectDir)Config\" "$(OutDir)Config\"</Command>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Config\Engine.json" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

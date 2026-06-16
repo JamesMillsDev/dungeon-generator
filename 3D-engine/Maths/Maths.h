@@ -277,9 +277,21 @@ public:
 
 	static float SmoothStep(float from, float to, float t);
 
-	static float Repeat(float v, float length);
+	/**
+	 * @brief Returns a value between @c 0 and @c length based on the @c time. 
+	 * When the value exceeds @c length, it moves it resets to @c 0.
+	 * @param time The value to scale along.
+	 * @param length The maximum value.
+	 */
+	static float Repeat(float time, float length);
 
-	static float PingPong(float v, float length);
+	/**
+	 * @brief Returns a value between @c 0 and @c length based on the @c time. 
+	 * When the value exceeds @c length, it moves it in reverse.
+	 * @param time The value to scale along.
+	 * @param length The maximum value.
+	 */
+	static float PingPong(float time, float length);
 
 	static float DeltaAngle(float current, float target);
 
