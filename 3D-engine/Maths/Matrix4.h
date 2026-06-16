@@ -43,8 +43,6 @@ public:
 
 	static Matrix4 Identity();
 
-	static Matrix4 FromRows(const Vector4& row1, const Vector4& row2, const Vector4& row3, const Vector4& row4);
-
 public:
 	Vector4 column1;
 	Vector4 column2;
