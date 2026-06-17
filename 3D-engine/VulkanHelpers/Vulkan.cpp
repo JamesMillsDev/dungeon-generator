@@ -579,6 +579,47 @@ void Vulkan::CreateSwapChain(GLFWwindow* window)
 	m_swapChainFormat = surfaceFormat.format;
 	m_swapChainExtent = extent;
 }
+
+void Vulkan::CreateImageViews()
+{
+	// Match the image view vector size to the other one
+	m_swapChainImageViews.resize(m_swapChainImages.size());
+
+	// Iterate over each image
+	for (uint64 i = 0; i < m_swapChainImages.size(); ++i)
+	{
+		// Set up the create info struct for this image view
+		VkImageViewCreateInfo createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		createInfo.image = m_swapChainImages[i];
+
+		// Notify the struct of the view type (this can be used for 1,2,3D or cube map images)
+		createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		createInfo.format = m_swapChainFormat;
+
+		// Assign the swizzles, in case you want to handle monochromatics
+		createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+		// Assign the purpose of this image view
+		createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		createInfo.subresourceRange.baseMipLevel = 0;
+		createInfo.subresourceRange.levelCount = 1;
+		createInfo.subresourceRange.baseArrayLayer = 0;
+		createInfo.subresourceRange.layerCount = 1;
+
+		// Attempt to create the image view for this index
+		if (const VkResult result = vkCreateImageView(m_device, &createInfo, nullptr, &m_swapChainImageViews[i]);
+			result != VK_SUCCESS)
+		{
+			throw runtime_error(
+				std::format("Failed to create Image View for index '{}'! Error Code: {}", i, static_cast<uint32>(result))
+			);
+		}
+	}
+}
 #pragma endregion
 
 #pragma region Common
@@ -621,6 +662,7 @@ void Vulkan::Create(GLFWwindow* window)
 		PickPhysicalDevice();
 		CreateLogicalDevice();
 		CreateSwapChain(window);
+		CreateImageViews();
 
 		// Vulkan fully setup correctly
 		m_loaded = true;
@@ -638,6 +680,11 @@ void Vulkan::Destroy()
 	if (!m_loaded)
 	{
 		return;
+	}
+
+	for (const VkImageView& imageView : m_swapChainImageViews)
+	{
+		vkDestroyImageView(m_device, imageView, nullptr);
 	}
 
 	vkDestroySwapchainKHR(m_device, m_swapChain, nullptr);

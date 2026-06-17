@@ -51,9 +51,10 @@ private:
 	vector<VkImage> m_swapChainImages;
 	VkFormat m_swapChainFormat;
 	VkExtent2D m_swapChainExtent;
+	vector<VkImageView> m_swapChainImageViews;
 
 private:
-	Vulkan(Config* config);
+	explicit Vulkan(Config* config);
 	~Vulkan();
 
 private:
@@ -71,5 +72,6 @@ private:
 	void CreateLogicalDevice();
 
 	void CreateSwapChain(GLFWwindow* window);
+	void CreateImageViews();
 
 };
