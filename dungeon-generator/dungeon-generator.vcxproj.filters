@@ -29,10 +29,10 @@
     <None Include="Config\Engine.json">
       <Filter>Config Files</Filter>
     </None>
-    <None Include="Content\Shaders\triangle.fs.glsl">
+    <None Include="Content\Shaders\triangle.frag">
       <Filter>Content Files\Shaders</Filter>
     </None>
-    <None Include="Content\Shaders\triangle.vs.glsl">
+    <None Include="Content\Shaders\triangle.vert">
       <Filter>Content Files\Shaders</Filter>
     </None>
   </ItemGroup>

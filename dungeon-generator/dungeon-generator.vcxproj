@@ -183,8 +183,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Config\Engine.json" />
-    <None Include="Content\Shaders\triangle.fs.glsl" />
-    <None Include="Content\Shaders\triangle.vs.glsl" />
+    <None Include="Content\Shaders\triangle.frag" />
+    <None Include="Content\Shaders\triangle.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
