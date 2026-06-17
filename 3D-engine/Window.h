@@ -2,8 +2,6 @@
 
 #include <string>
 
-#include <vulkan/vulkan_core.h>
-
 using std::string;
 
 struct GLFWwindow;
@@ -13,7 +11,7 @@ class Config;
 class Window
 {
 	friend class Application;
-	friend class Renderer;
+	friend class Vulkan;
 
 private:
 	int m_width;
@@ -23,7 +21,6 @@ private:
 	bool m_isOpen;
 
 	GLFWwindow* m_window;
-	VkSurfaceKHR m_surface;
 
 private:
 	explicit Window(Config* config);
@@ -39,10 +36,6 @@ public:
 	void SetHeight(int h);
 
 	[[nodiscard]] bool ShouldClose() const;
-
-	void InitialiseVulkan(const VkInstance& instance);
-
-	void CleanupVulkan(const VkInstance& instance);
 
 private:
 	void Open();

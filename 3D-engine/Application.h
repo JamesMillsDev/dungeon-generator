@@ -14,6 +14,7 @@
 using std::string;
 
 class Config;
+class Renderer;
 
 enum class EExitCode : uint8_t
 {
@@ -69,6 +70,9 @@ private:
 
 	/** @brief The active game instance managed by this application. */
 	GameInstance* m_game;
+
+	/** @brief The renderer that the game engine is using. */
+	Renderer* m_renderer;
 
 private:
 	Application();

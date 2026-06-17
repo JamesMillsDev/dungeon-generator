@@ -1,21 +1,22 @@
 {
-	"Application": {
-		"Title": "Dungeon Crawler (tm)",
-		"Version": [ 0, 0, 1 ]
-	},
-	"Window": {
-		"Width": 1080,
-		"Height": 720,
-		"ClrColor": {
-			"r": 240,
-			"g": 240,
-			"b": 240,
-			"a": 255
-		},
-		"Resizable": false
-	},
-	"Engine": {
-		"Title": "TinyVulkan",
-		"Version": [ 0, 0, 1 ]
-	}
+  "Application": {
+    "Title": "Dungeon Crawler (tm)",
+    "Version": [ 0, 0, 1 ]
+  },
+  "Window": {
+    "Width": 1080,
+    "Height": 720,
+    "ClrColor": {
+      "r": 240,
+      "g": 240,
+      "b": 240,
+      "a": 255
+    },
+    "Resizable": false
+  },
+  "Engine": {
+    "Title": "TinyVulkan",
+    "Version": [ 0, 0, 1 ],
+    "Vulkan": [ 1, 0, 0 ]
+  }
 }

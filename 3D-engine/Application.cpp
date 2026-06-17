@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 
 #include "GameTime.h"
+#include "Renderer.h"
 
 #include "Utility/Config.h"
 
@@ -24,11 +25,15 @@ void Application::Quit()
 }
 
 Application::Application()
-	: m_config{ new Config{ "Engine" } }, m_window{ new Window{ m_config } }, m_game{ nullptr }
+	: m_config{ new Config{ "Engine" } }, m_window{ new Window{ m_config } }, m_game{ nullptr },
+	m_renderer{ new Renderer{ m_config, m_window->m_window } }
 {}
 
 Application::~Application()
 {
+	delete m_renderer;
+	m_renderer = nullptr;
+
 	delete m_game;
 	m_game = nullptr;
 

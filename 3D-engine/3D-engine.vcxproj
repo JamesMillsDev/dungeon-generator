@@ -190,6 +190,7 @@
     <ClInclude Include="Application.h" />
     <ClInclude Include="GameInstance.h" />
     <ClInclude Include="GameTime.h" />
+    <ClInclude Include="Maths\Alias.h" />
     <ClInclude Include="Maths\Maths.h" />
     <ClInclude Include="Maths\Color.h" />
     <ClInclude Include="Maths\Matrix3.h" />
@@ -198,8 +199,13 @@
     <ClInclude Include="Maths\Vector3.h" />
     <ClInclude Include="Maths\Vector4.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Renderer.h" />
     <ClInclude Include="Utility\Config.h" />
     <ClInclude Include="Utility\Version.h" />
+    <ClInclude Include="VulkanHelpers\Buffer.h" />
+    <ClInclude Include="VulkanHelpers\Common.h" />
+    <ClInclude Include="VulkanHelpers\Structs.h" />
+    <ClInclude Include="VulkanHelpers\Vulkan.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
@@ -218,8 +224,11 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Utility\Config.cpp" />
     <ClCompile Include="Utility\Version.cpp" />
+    <ClCompile Include="VulkanHelpers\Buffer.cpp" />
+    <ClCompile Include="VulkanHelpers\Vulkan.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

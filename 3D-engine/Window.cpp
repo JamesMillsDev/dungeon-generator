@@ -9,7 +9,7 @@
 using std::runtime_error;
 
 Window::Window(Config* config)
-	: m_isOpen{ false }, m_window{ nullptr }, m_surface{ VK_NULL_HANDLE }
+	: m_isOpen{ false }, m_window{ nullptr }
 {
 	m_width = config->Get<int>("Window.Width");
 	m_height = config->Get<int>("Window.Height");
@@ -42,20 +42,6 @@ void Window::SetHeight(const int h)
 bool Window::ShouldClose() const
 {
 	return glfwWindowShouldClose(m_window) || !m_isOpen;
-}
-
-void Window::InitialiseVulkan(const VkInstance& instance)
-{
-	if (glfwCreateWindowSurface(instance, m_window, nullptr, &m_surface) != VK_SUCCESS)
-	{
-		throw runtime_error("Failed to create window surface!");
-	}
-}
-
-void Window::CleanupVulkan(const VkInstance& instance)
-{
-	vkDestroySurfaceKHR(instance, m_surface, nullptr);
-	m_surface = nullptr;
 }
 
 void Window::Open()
