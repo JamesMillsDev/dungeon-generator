@@ -1,16 +1,10 @@
 #pragma once
 
-using uint8 = unsigned char;
-using uint16 = unsigned short;
-using uint32 = unsigned int;
-using uint32l = unsigned long;
-using uint64 = unsigned long long;
+#include "Alias.h"
 
-using int8 = char;
-using int16 = short;
-using int32 = int;
-using int32l = long;
-using int64 = long long;
+#include <array>
+
+using std::array;
 
 /** @brief A collection of useful mathematical operations and types. */
 class Maths
@@ -302,10 +296,11 @@ requires(std::is_same_v<FIRST, ARGS> && ...)
 float Maths::Min(const int count, ARGS... values)
 {
 	float value = POSITIVE_INFINITY;
+	array<FIRST, sizeof...(ARGS)> arr{ std::forward<ARGS>(values)... };
 
 	for (int i = 0; i < count; ++i)
 	{
-		value = std::min(value, values[i]);
+		value = std::min(value, arr[i]);
 	}
 
 	return value;
@@ -316,10 +311,11 @@ requires(std::is_same_v<FIRST, ARGS> && ...)
 float Maths::Max(const int count, ARGS... values)
 {
 	float value = NEGATIVE_INFINITY;
+	array<FIRST, sizeof...(ARGS)> arr{ std::forward<ARGS>(values)... };
 
 	for (int i = 0; i < count; ++i)
 	{
-		value = std::max(value, values[i]);
+		value = std::max(value, arr[i]);
 	}
 
 	return value;

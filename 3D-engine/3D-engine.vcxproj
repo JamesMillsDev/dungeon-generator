@@ -94,7 +94,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRTDBG_MAP_ALLOC;WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -142,7 +142,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRTDBG_MAP_ALLOC;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -188,6 +188,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="Maths\Alias.h" />
     <ClInclude Include="Maths\Maths.h" />
     <ClInclude Include="Maths\Color.h" />
     <ClInclude Include="Maths\Matrix3.h" />
@@ -198,6 +199,10 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="Utility\Config.h" />
     <ClInclude Include="Utility\Version.h" />
+    <ClInclude Include="VulkanHelpers\Buffer.h" />
+    <ClInclude Include="VulkanHelpers\Common.h" />
+    <ClInclude Include="VulkanHelpers\Structs.h" />
+    <ClInclude Include="VulkanHelpers\Vulkan.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
@@ -216,6 +221,8 @@
     </ClCompile>
     <ClCompile Include="Utility\Config.cpp" />
     <ClCompile Include="Utility\Version.cpp" />
+    <ClCompile Include="VulkanHelpers\Buffer.cpp" />
+    <ClCompile Include="VulkanHelpers\Vulkan.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
