@@ -21,8 +21,8 @@ private:
 	static vector<const char*> GetRequiredExtensions();
 	static void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
 
-	static uint32 RateDeviceSuitability(VkPhysicalDevice device);
-	static QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
+	static uint32 RateDeviceSuitability(VkPhysicalDevice device, VkSurfaceKHR surface);
+	static QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface);
 
 private:
 	string m_engineTitle;
@@ -36,10 +36,10 @@ private:
 	VkInstance m_instance;
 	VkDebugUtilsMessengerEXT m_debugMessenger;
 
+	VkSurfaceKHR m_surface;
+
 	VkPhysicalDevice m_physicalDevice;
 	VkDevice m_device;
-
-	VkSurfaceKHR m_surface;
 
 private:
 	Vulkan(Config* config);

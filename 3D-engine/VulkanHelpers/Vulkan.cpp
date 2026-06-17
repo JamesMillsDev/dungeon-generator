@@ -1,16 +1,18 @@
 #include "pch.h"
 #include "Vulkan.h"
 
+#include <iostream>
 #include <map>
+#include <set>
 #include <stdexcept>
 
 #define GLFW_INCLUDE_VULKAN
-#include <iostream>
 #include <GLFW/glfw3.h>
 
 using std::exception;
 using std::multimap;
 using std::runtime_error;
+using std::set;
 
 #pragma region VkInstance / Debug Messenger
 namespace
@@ -210,7 +212,7 @@ void Vulkan::CreateSurface(GLFWwindow* window)
 #pragma endregion
 
 #pragma region Physical / Logical Device
-uint32 Vulkan::RateDeviceSuitability(VkPhysicalDevice device)
+uint32 Vulkan::RateDeviceSuitability(VkPhysicalDevice device, VkSurfaceKHR surface)
 {
 	// Get the properties of the device
 	VkPhysicalDeviceProperties deviceProperties;
@@ -238,7 +240,7 @@ uint32 Vulkan::RateDeviceSuitability(VkPhysicalDevice device)
 	}
 
 	// Application can't function without queue families
-	QueueFamilyIndices queueFamily = FindQueueFamilies(device);
+	QueueFamilyIndices queueFamily = FindQueueFamilies(device, surface);
 	if (!queueFamily.IsComplete())
 	{
 		return 0;
@@ -247,7 +249,7 @@ uint32 Vulkan::RateDeviceSuitability(VkPhysicalDevice device)
 	return score;
 }
 
-QueueFamilyIndices Vulkan::FindQueueFamilies(VkPhysicalDevice device)
+QueueFamilyIndices Vulkan::FindQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface)
 {
 	// Get the queue families from this physical device
 	uint32 queueFamilyCount = 0;
@@ -265,6 +267,15 @@ QueueFamilyIndices Vulkan::FindQueueFamilies(VkPhysicalDevice device)
 		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
 		{
 			indices.graphicsFamily = i;
+		}
+
+		// Attempt to get the surface support of this device
+		VkBool32 presentSupport = false;
+		vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+		if (presentSupport)
+		{
+			// It supports it, so store the indices
+			indices.presentFamily = i;
 		}
 
 		// If the queue family index has been completed, we can break this loop
@@ -299,7 +310,7 @@ void Vulkan::PickPhysicalDevice()
 	multimap<uint32, VkPhysicalDevice> candidates;
 	for (const VkPhysicalDevice& device : devices)
 	{
-		uint32 suitability = RateDeviceSuitability(device);
+		uint32 suitability = RateDeviceSuitability(device, m_surface);
 		candidates.emplace(suitability, device);
 	}
 
@@ -317,23 +328,35 @@ void Vulkan::PickPhysicalDevice()
 
 void Vulkan::CreateLogicalDevice()
 {
-	// Set up the graphics queue for the logical device
-	QueueFamilyIndices indices = FindQueueFamilies(m_physicalDevice);
+	// Attempt to get the queue family indices
+	QueueFamilyIndices indices = FindQueueFamilies(m_physicalDevice, m_surface);
+	if (!indices.IsComplete())
+	{
+		throw runtime_error("Queue families failed to initialise!");
+	}
 
-	VkDeviceQueueCreateInfo queueCreateInfo{};
-	queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-	queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
-	queueCreateInfo.queueCount = 1;
+	// Set up the queues for the logical device
+	vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+	const set uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };  // NOLINT(bugprone-unchecked-optional-access)
 
 	float queuePriority = 1.f;
-	queueCreateInfo.pQueuePriorities = &queuePriority;
+	for (uint32 queueFamily : uniqueQueueFamilies)
+	{
+		// Generate the create info for this queue family
+		VkDeviceQueueCreateInfo queueCreateInfo{};
+		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queueCreateInfo.queueFamilyIndex = queueFamily;
+		queueCreateInfo.queueCount = 1;
+		queueCreateInfo.pQueuePriorities = &queuePriority;
+		queueCreateInfos.push_back(queueCreateInfo);
+	}
 
 	// Set up the create info for the logical device
 	VkDeviceCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 
-	createInfo.pQueueCreateInfos = &queueCreateInfo;
-	createInfo.queueCreateInfoCount = 1;
+	createInfo.queueCreateInfoCount = static_cast<uint32>(queueCreateInfos.size());
+	createInfo.pQueueCreateInfos = queueCreateInfos.data();
 
 	VkPhysicalDeviceFeatures deviceFeatures{};
 	createInfo.pEnabledFeatures = &deviceFeatures;
@@ -362,7 +385,7 @@ void Vulkan::CreateLogicalDevice()
 #pragma region Common
 Vulkan::Vulkan(Config* config)
 	: m_loaded{ false }, m_instance{ VK_NULL_HANDLE }, m_debugMessenger{ VK_NULL_HANDLE },
-	m_physicalDevice{ VK_NULL_HANDLE }, m_device{ VK_NULL_HANDLE }
+	m_surface{ VK_NULL_HANDLE }, m_physicalDevice{ VK_NULL_HANDLE }, m_device{ VK_NULL_HANDLE }
 {
 	m_engineTitle = config->Get<string>("Engine.Title");
 	m_engineVersion = new Version{ "Engine.Version", config };
