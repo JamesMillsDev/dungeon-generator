@@ -19,7 +19,8 @@ class Renderer;
 enum class EExitCode : uint8_t
 {
 	Success,
-	WindowFailedToOpen
+	WindowFailedToOpen,
+	RendererFailedToInit,
 };
 
 class Application

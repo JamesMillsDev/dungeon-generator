@@ -26,7 +26,7 @@ void Application::Quit()
 
 Application::Application()
 	: m_config{ new Config{ "Engine" } }, m_window{ new Window{ m_config } }, m_game{ nullptr },
-	m_renderer{ new Renderer{ m_config, m_window->m_window } }
+	m_renderer{ new Renderer{ m_config } }
 {}
 
 Application::~Application()
@@ -57,6 +57,15 @@ EExitCode Application::Run() const
 		return EExitCode::WindowFailedToOpen;
 	}
 
+	m_renderer->Create(m_window->m_window);
+	// Validate the renderer succeeded to initialise
+	if (!m_renderer->IsValid())
+	{
+		// It didn't, so shutdown the window and return the error code.
+		m_window->Close();
+		return EExitCode::RendererFailedToInit;
+	}
+
 	GameTime::Init();
 
 	// Initialise the game instance
@@ -73,6 +82,7 @@ EExitCode Application::Run() const
 	}
 
 	// Shutdown the game instance and close the window
+	m_renderer->Destroy();
 	m_game->Shutdown();
 	m_window->Close();
 
