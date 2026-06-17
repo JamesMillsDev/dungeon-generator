@@ -152,7 +152,6 @@ void Vulkan::CreateInstance()
 	createInfo.enabledExtensionCount = static_cast<uint32>(extensions.size());
 	createInfo.ppEnabledExtensionNames = extensions.data();
 
-	createInfo.enabledLayerCount = 0;
 	createInfo.pNext = nullptr;
 
 	if constexpr (ENABLE_VALIDATION_LAYERS)
@@ -246,6 +245,23 @@ uint32 Vulkan::RateDeviceSuitability(VkPhysicalDevice device, VkSurfaceKHR surfa
 		return 0;
 	}
 
+	// Check if the extensions are supported on this device
+	bool extensionsSupported = CheckDeviceExtensionSupport(device);
+
+	// If extensions are supported, check the swap chain support
+	bool swapChainAdequate = false;
+	if (extensionsSupported)
+	{
+		SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(device, surface);
+		swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
+	}
+
+	// Application can't function without swap chain support
+	if (!swapChainAdequate)
+	{
+		return 0;
+	}
+
 	return score;
 }
 
@@ -288,6 +304,116 @@ QueueFamilyIndices Vulkan::FindQueueFamilies(VkPhysicalDevice device, VkSurfaceK
 	}
 
 	return indices;
+}
+
+bool Vulkan::CheckDeviceExtensionSupport(VkPhysicalDevice device)
+{
+	// Get the extensions available to do this device
+	uint32 extensionCount;
+	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
+	vector<VkExtensionProperties> availableExtensions(extensionCount);
+	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
+
+	// Iterate over every available extension, and remove it from the required set
+	set<string> requiredExtensions(DEVICE_EXTENSIONS.begin(), DEVICE_EXTENSIONS.end());
+	for (const VkExtensionProperties& extension : availableExtensions)
+	{
+		requiredExtensions.erase(extension.extensionName);
+	}
+
+	// Succeeds if there are no more remaining extensions.
+	return requiredExtensions.empty();
+}
+
+SwapChainSupportDetails Vulkan::QuerySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface)
+{
+	SwapChainSupportDetails details;
+
+	// Get the physical device surface capabilities
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
+
+	// Get the surface formats that the device supports
+	uint32 formatCount;
+	vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
+
+	// If there are any, fill the details buffer
+	if (formatCount != 0)
+	{
+		details.formats.resize(formatCount);
+		vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data());
+	}
+
+	// Get the surface formats that the device supports
+	uint32 presentModeCount;
+	vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
+
+	// If there are any, fill the details buffer
+	if (formatCount != 0)
+	{
+		details.presentModes.resize(presentModeCount);
+		vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, details.presentModes.data());
+	}
+
+	return details;
+}
+
+VkSurfaceFormatKHR Vulkan::ChooseSwapChainFormat(const vector<VkSurfaceFormatKHR>& availableFormats)
+{
+	for (const VkSurfaceFormatKHR& format : availableFormats)
+	{
+		// If the format is sRGB and in BGRA uint format, this is a valid surface format
+		if (format.format == VK_FORMAT_B8G8R8A8_SRGB && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+		{
+			return format;
+		}
+	}
+
+	// We need a format, but since none where chosen, use the first one
+	return availableFormats[0];
+}
+
+VkPresentModeKHR Vulkan::ChooseSwapPresentMode(const vector<VkPresentModeKHR>& availablePresetModes)
+{
+	for (const VkPresentModeKHR& presentMode : availablePresetModes)
+	{
+		// Use the mailbox mode if it is available
+		if (presentMode == VK_PRESENT_MODE_MAILBOX_KHR)
+		{
+			return presentMode;
+		}
+	}
+
+	// Default to double buffering in case mailbox mode isn't available
+	return VK_PRESENT_MODE_FIFO_KHR;
+}
+
+VkExtent2D Vulkan::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, GLFWwindow* window)
+{
+	if (capabilities.currentExtent.width != std::numeric_limits<uint32>::max())
+	{
+		return capabilities.currentExtent;
+	}
+
+	// Get the current window size in pixels
+	int w, h;
+	glfwGetFramebufferSize(window, &w, &h);
+
+	VkExtent2D actualExtent
+	{
+		static_cast<uint32>(w),
+		static_cast<uint32>(h)
+	};
+
+	// Clamp the actual extent to the maximum and minimum ranges just in case
+	actualExtent.width = std::clamp(
+		actualExtent.width, capabilities.maxImageExtent.width, capabilities.maxImageExtent.width
+	);
+
+	actualExtent.height = std::clamp(
+		actualExtent.height, capabilities.maxImageExtent.height, capabilities.maxImageExtent.height
+	);
+
+	return actualExtent;
 }
 
 void Vulkan::PickPhysicalDevice()
@@ -361,7 +487,9 @@ void Vulkan::CreateLogicalDevice()
 	VkPhysicalDeviceFeatures deviceFeatures{};
 	createInfo.pEnabledFeatures = &deviceFeatures;
 
-	createInfo.enabledExtensionCount = 0;
+	createInfo.enabledExtensionCount = static_cast<uint32>(DEVICE_EXTENSIONS.size());
+	createInfo.ppEnabledExtensionNames = DEVICE_EXTENSIONS.data();
+
 	createInfo.enabledLayerCount = 0;
 
 	// Add the validation layer data if they are enabled
@@ -382,10 +510,82 @@ void Vulkan::CreateLogicalDevice()
 }
 #pragma endregion
 
+#pragma region Swap Chain
+void Vulkan::CreateSwapChain(GLFWwindow* window)
+{
+	SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(m_physicalDevice, m_surface);
+
+	// Choose the correct format, mode and extent for this device
+	VkSurfaceFormatKHR surfaceFormat = ChooseSwapChainFormat(swapChainSupport.formats);
+	VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.presentModes);
+	VkExtent2D extent = ChooseSwapExtent(swapChainSupport.capabilities, window);
+
+	// Get one more than the minimum supported images to limit waiting on the driver, clamping to maximum
+	uint32 imageCount = swapChainSupport.capabilities.minImageCount + 1;
+	if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount)
+	{
+		imageCount = swapChainSupport.capabilities.maxImageCount;
+	}
+
+	// Set up the initial swap chain create info
+	VkSwapchainCreateInfoKHR createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+	createInfo.surface = m_surface;
+
+	// Provide the details about the swap images
+	createInfo.minImageCount = imageCount;
+	createInfo.imageFormat = surfaceFormat.format;
+	createInfo.imageColorSpace = surfaceFormat.colorSpace;
+	createInfo.imageExtent = extent;
+	createInfo.imageArrayLayers = 1; // This will always be 1 unless developing a stereoscopic application
+	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT; // This can be changed for post-processing
+
+	// Set up the image families
+	auto [graphicsFamily, presentFamily] = FindQueueFamilies(m_physicalDevice, m_surface);
+	const uint32 queueFamilyIndices[] = { graphicsFamily.value(), presentFamily.value() };  // NOLINT(bugprone-unchecked-optional-access)
+
+	createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+	if (graphicsFamily != presentFamily)
+	{
+		createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+		createInfo.queueFamilyIndexCount = 2;
+		createInfo.pQueueFamilyIndices = queueFamilyIndices;
+	}
+
+	createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
+	createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR; // It is extremely rare for this to be anything else
+
+	createInfo.presentMode = presentMode;
+	createInfo.clipped = VK_TRUE;
+
+	createInfo.oldSwapchain = VK_NULL_HANDLE;
+
+	// Create the swap chain, throwing runtime_error if anything other than success
+	if (const VkResult result = vkCreateSwapchainKHR(m_device, &createInfo, nullptr, &m_swapChain);
+		result != VK_SUCCESS)
+	{
+		throw runtime_error(
+			std::format("Failed to create Swap Chain! Error Code: {}", static_cast<uint32>(result))
+		);
+	}
+
+	// Obtain the swap chain images
+	vkGetSwapchainImagesKHR(m_device, m_swapChain, &imageCount, nullptr);
+	m_swapChainImages.resize(imageCount);
+	vkGetSwapchainImagesKHR(m_device, m_swapChain, &imageCount, m_swapChainImages.data());
+
+	// Cache the extent and format
+	m_swapChainFormat = surfaceFormat.format;
+	m_swapChainExtent = extent;
+}
+#pragma endregion
+
 #pragma region Common
-Vulkan::Vulkan(Config* config)
-	: m_loaded{ false }, m_instance{ VK_NULL_HANDLE }, m_debugMessenger{ VK_NULL_HANDLE },
-	m_surface{ VK_NULL_HANDLE }, m_physicalDevice{ VK_NULL_HANDLE }, m_device{ VK_NULL_HANDLE }
+Vulkan::Vulkan(Config* config) :
+	m_loaded{ false }, m_instance{ VK_NULL_HANDLE }, m_debugMessenger{ VK_NULL_HANDLE },
+	m_surface{ VK_NULL_HANDLE }, m_physicalDevice{ VK_NULL_HANDLE }, m_device{ VK_NULL_HANDLE },
+	m_swapChain{ VK_NULL_HANDLE }, m_swapChainFormat{}, m_swapChainExtent{}
 {
 	m_engineTitle = config->Get<string>("Engine.Title");
 	m_engineVersion = new Version{ "Engine.Version", config };
@@ -420,6 +620,7 @@ void Vulkan::Create(GLFWwindow* window)
 		CreateSurface(window);
 		PickPhysicalDevice();
 		CreateLogicalDevice();
+		CreateSwapChain(window);
 
 		// Vulkan fully setup correctly
 		m_loaded = true;
@@ -438,6 +639,8 @@ void Vulkan::Destroy()
 	{
 		return;
 	}
+
+	vkDestroySwapchainKHR(m_device, m_swapChain, nullptr);
 
 	vkDestroyDevice(m_device, nullptr);
 

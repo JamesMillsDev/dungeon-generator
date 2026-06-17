@@ -23,6 +23,12 @@ private:
 
 	static uint32 RateDeviceSuitability(VkPhysicalDevice device, VkSurfaceKHR surface);
 	static QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface);
+	static bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
+
+	static SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface);
+	static VkSurfaceFormatKHR ChooseSwapChainFormat(const vector<VkSurfaceFormatKHR>& availableFormats);
+	static VkPresentModeKHR ChooseSwapPresentMode(const vector<VkPresentModeKHR>& availablePresetModes);
+	static VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, GLFWwindow* window);
 
 private:
 	string m_engineTitle;
@@ -41,6 +47,11 @@ private:
 	VkPhysicalDevice m_physicalDevice;
 	VkDevice m_device;
 
+	VkSwapchainKHR m_swapChain;
+	vector<VkImage> m_swapChainImages;
+	VkFormat m_swapChainFormat;
+	VkExtent2D m_swapChainExtent;
+
 private:
 	Vulkan(Config* config);
 	~Vulkan();
@@ -58,5 +69,7 @@ private:
 
 	void PickPhysicalDevice();
 	void CreateLogicalDevice();
+
+	void CreateSwapChain(GLFWwindow* window);
 
 };
