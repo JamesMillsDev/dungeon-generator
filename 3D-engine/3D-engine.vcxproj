@@ -190,6 +190,7 @@
     <ClInclude Include="Application.h" />
     <ClInclude Include="GameInstance.h" />
     <ClInclude Include="GameTime.h" />
+    <ClInclude Include="Maths\Alias.h" />
     <ClInclude Include="Maths\Maths.h" />
     <ClInclude Include="Maths\Color.h" />
     <ClInclude Include="Maths\Matrix3.h" />
@@ -201,6 +202,7 @@
     <ClInclude Include="Utility\Config.h" />
     <ClInclude Include="Utility\Version.h" />
     <ClInclude Include="Window.h" />
+    <ClInclude Include="VulkanHelpers\Common.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />

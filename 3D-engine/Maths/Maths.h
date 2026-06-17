@@ -1,5 +1,6 @@
 #pragma once
 
+<<<<<<< HEAD
 #include <array>
 
 using std::array;
@@ -9,12 +10,13 @@ using uint16 = unsigned short;
 using uint32 = unsigned int;
 using uint32l = unsigned long;
 using uint64 = unsigned long long;
+=======
+#include "Alias.h"
+>>>>>>> feature/engine/maths
 
-using int8 = char;
-using int16 = short;
-using int32 = int;
-using int32l = long;
-using int64 = long long;
+#include <array>
+
+using std::array;
 
 /** @brief A collection of useful mathematical operations and types. */
 class Maths
