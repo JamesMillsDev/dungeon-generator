@@ -5,7 +5,7 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
-#include "Maths.h"
+#include "Alias.h"
 
 using std::ostream;
 using std::string;
