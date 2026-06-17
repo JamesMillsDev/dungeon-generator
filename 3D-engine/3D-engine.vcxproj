@@ -200,6 +200,8 @@
     <ClInclude Include="Maths\Vector4.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Renderer.h" />
+    <ClInclude Include="Rendering\Mesh.h" />
+    <ClInclude Include="Rendering\Shader.h" />
     <ClInclude Include="Utility\Config.h" />
     <ClInclude Include="Utility\Version.h" />
     <ClInclude Include="VulkanHelpers\Buffer.h" />
@@ -225,6 +227,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="Rendering\Mesh.cpp" />
+    <ClCompile Include="Rendering\Shader.cpp" />
     <ClCompile Include="Utility\Config.cpp" />
     <ClCompile Include="Utility\Version.cpp" />
     <ClCompile Include="VulkanHelpers\Buffer.cpp" />

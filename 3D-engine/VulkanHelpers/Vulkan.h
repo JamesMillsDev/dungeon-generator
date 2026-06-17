@@ -1,16 +1,25 @@
 #pragma once
 
+#include <initializer_list>
 #include <string>
 
 #include "Common.h"
 #include "Structs.h"
 #include "Maths/Alias.h"
 
+using std::initializer_list;
 using std::string;
 
 class Config;
 struct GLFWwindow;
 class Version;
+
+struct ShaderInfo
+{
+	VkShaderStageFlagBits stage;
+	string shader;
+	string entryPoint = "main";
+};
 
 class Vulkan
 {
@@ -52,6 +61,11 @@ private:
 	VkFormat m_swapChainFormat;
 	VkExtent2D m_swapChainExtent;
 	vector<VkImageView> m_swapChainImageViews;
+	vector<VkFramebuffer> m_swapChainFrameBuffers;
+
+	VkRenderPass m_renderPass;
+	VkPipelineLayout m_pipelineLayout;
+	vector<VkPipeline> m_pipelines;
 
 private:
 	explicit Vulkan(Config* config);
@@ -60,7 +74,7 @@ private:
 private:
 	[[nodiscard]] bool Loaded() const;
 
-	void Create(GLFWwindow* window);
+	void Create(GLFWwindow* window, const vector<initializer_list<ShaderInfo>>& shaderInfos);
 	void Destroy();
 
 	void CreateInstance();
@@ -74,6 +88,9 @@ private:
 	void CreateSwapChain(GLFWwindow* window);
 	void CreateImageViews();
 
-	void CreateGraphicsPipeline();
+	void CreateRenderPass();
+	void CreateGraphicsPipeline(const vector<initializer_list<ShaderInfo>>& shaderInfos);
+
+	void CreateFrameBuffers();
 
 };

@@ -16,7 +16,14 @@ Renderer::~Renderer()
 
 void Renderer::Create(GLFWwindow* window) const
 {
-	m_vulkan->Create(window);
+	m_vulkan->Create(window, 
+		{
+			{
+				{.stage = VK_SHADER_STAGE_VERTEX_BIT,   .shader = "Triangle.vert" },
+				{.stage = VK_SHADER_STAGE_FRAGMENT_BIT, .shader = "Triangle.frag" }
+			}
+		}
+	);
 }
 
 void Renderer::Destroy() const
