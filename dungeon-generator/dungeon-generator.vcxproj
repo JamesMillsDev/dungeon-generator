@@ -102,10 +102,11 @@
       <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;3dengine.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y /q "$(SolutionDir)Dependencies\native\" "$(OutDir)"
-xcopy /y /q /s "$(ProjectDir)Content\" "$(OutDir)Content\"
-xcopy /y /q /s "$(ProjectDir)Config\" "$(OutDir)Config\"</Command>
+      <Command>"$(ProjectDir)BuildTools/PostBuild.bat" "$(OutDir)/" "$(ProjectDir)" "$(SolutionDir)Dependencies/native/" "Config/" "Content/" "Shaders"</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>"$(ProjectDir)BuildTools\CompileShaders.bat" "$(VULKAN_SDK)\Bin\glslc.exe" "$(ProjectDir)Content\Shaders" "$(ProjectDir)Content\SPIRV"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -125,10 +126,11 @@ xcopy /y /q /s "$(ProjectDir)Config\" "$(OutDir)Config\"</Command>
       <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;3dengine.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y /q "$(SolutionDir)Dependencies\native\" "$(OutDir)"
-xcopy /y /q /s "$(ProjectDir)Content\" "$(OutDir)Content\"
-xcopy /y /q /s "$(ProjectDir)Config\" "$(OutDir)Config\"</Command>
+      <Command>"$(ProjectDir)BuildTools/PostBuild.bat" "$(OutDir)/" "$(ProjectDir)" "$(SolutionDir)Dependencies/native/" "Config/" "Content/" "Shaders"</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>"$(ProjectDir)BuildTools\CompileShaders.bat" "$(VULKAN_SDK)\Bin\glslc.exe" "$(ProjectDir)Content\Shaders" "$(ProjectDir)Content\SPIRV"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -146,10 +148,11 @@ xcopy /y /q /s "$(ProjectDir)Config\" "$(OutDir)Config\"</Command>
       <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;3dengine.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y /q "$(SolutionDir)Dependencies\native\" "$(OutDir)"
-xcopy /y /q /s "$(ProjectDir)Content\" "$(OutDir)Content\"
-xcopy /y /q /s "$(ProjectDir)Config\" "$(OutDir)Config\"</Command>
+      <Command>"$(ProjectDir)BuildTools/PostBuild.bat" "$(OutDir)/" "$(ProjectDir)" "$(SolutionDir)Dependencies/native/" "Config/" "Content/" "Shaders"</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>"$(ProjectDir)BuildTools\CompileShaders.bat" "$(VULKAN_SDK)\Bin\glslc.exe" "$(ProjectDir)Content\Shaders" "$(ProjectDir)Content\SPIRV"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -169,16 +172,19 @@ xcopy /y /q /s "$(ProjectDir)Config\" "$(OutDir)Config\"</Command>
       <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;3dengine.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y /q "$(SolutionDir)Dependencies\native\" "$(OutDir)"
-xcopy /y /q /s "$(ProjectDir)Content\" "$(OutDir)Content\"
-xcopy /y /q /s "$(ProjectDir)Config\" "$(OutDir)Config\"</Command>
+      <Command>"$(ProjectDir)BuildTools/PostBuild.bat" "$(OutDir)/" "$(ProjectDir)" "$(SolutionDir)Dependencies/native/" "Config/" "Content/" "Shaders"</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>"$(ProjectDir)BuildTools\CompileShaders.bat" "$(VULKAN_SDK)\Bin\glslc.exe" "$(ProjectDir)Content\Shaders" "$(ProjectDir)Content\SPIRV"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Config\Engine.json" />
+    <None Include="Content\Shaders\triangle.fs.glsl" />
+    <None Include="Content\Shaders\triangle.vs.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

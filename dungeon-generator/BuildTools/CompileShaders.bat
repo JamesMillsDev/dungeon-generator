@@ -2,11 +2,11 @@
 setlocal enabledelayedexpansion
 
 :: ============================================================
-:: compile_shaders.bat
-:: Usage: compile_shaders.bat <compiler_exe> <input_dir> <output_dir>
+:: CompileShaders.bat
+:: Usage: CompileShader.bat <compiler_exe> <input_dir> <output_dir>
 ::
 :: Example (Visual Studio Pre-Build Event):
-::   "$(SolutionDir)scripts\compile_shaders.bat" "C:\VulkanSDK\1.x.x\Bin\glslc.exe" "$(SolutionDir)shaders" "$(SolutionDir)shaders\compiled"
+::   "$(SolutionDir)BuildTools\CompileShaders.bat" "C:\VulkanSDK\1.x.x\Bin\glslc.exe" "$(SolutionDir)Content\Shaders" "$(SolutionDir)Content/SPIRV"
 :: ============================================================
 
 :: --- Argument validation ---

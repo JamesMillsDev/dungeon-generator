@@ -74,4 +74,6 @@ private:
 	void CreateSwapChain(GLFWwindow* window);
 	void CreateImageViews();
 
+	void CreateGraphicsPipeline();
+
 };
