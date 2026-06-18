@@ -73,6 +73,7 @@ void Renderer::EndFrame() const
 		return;
 	}
 
+	m_vulkan->UpdateUniformBuffer(m_vulkan->m_currentFrame);
 	m_vulkan->EndRender();
 }
 

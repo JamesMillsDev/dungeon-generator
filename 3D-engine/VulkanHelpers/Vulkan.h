@@ -16,6 +16,7 @@ struct GLFWwindow;
 
 class Buffer;
 class Config;
+class UniformBuffer;
 class Version;
 
 struct ShaderInfo
@@ -86,6 +87,10 @@ private:
 	vector<VkFramebuffer> m_swapChainFrameBuffers;
 
 	VkRenderPass m_renderPass;
+
+	VkDescriptorSetLayout m_descriptorSetLayout;
+	VkDescriptorPool m_descriptorPool;
+
 	VkPipelineLayout m_pipelineLayout;
 	vector<VkPipeline> m_pipelines;
 
@@ -100,6 +105,8 @@ private:
 	uint32 m_currentFrame;
 	uint32 m_currentImageIndex;
 
+	vector<UniformBuffer*> m_uniformBuffers;
+
 private:
 	Vulkan(GLFWwindow* window, Config* config);
 	~Vulkan();
@@ -108,6 +115,7 @@ public:
 	[[nodiscard]] Buffer* MakeVertexBuffer(size_t vertexCount) const;
 	[[nodiscard]] Buffer* MakeIndexBuffer(size_t indexCount) const;
 	[[nodiscard]] Buffer* MakeStagingBuffer(size_t size, size_t count) const;
+	[[nodiscard]] UniformBuffer* MakeUniformBuffer(size_t size, size_t count) const;
 
 private:
 	[[nodiscard]] bool Loaded() const;
@@ -129,6 +137,11 @@ private:
 	void CreateImageViews();
 
 	void CreateRenderPass();
+
+	void CreateUniformBuffers();
+	void CreateDescriptorPool();
+
+	void CreateDescriptorSetLayout();
 	void CreateGraphicsPipeline(const vector<initializer_list<ShaderInfo>>& shaderInfos);
 
 	void CreateFrameBuffers();
@@ -137,6 +150,7 @@ private:
 
 	void CreateCommandBuffer();
 	void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32 imageIndex, const function<void()>& drawCommand) const;
+	void UpdateUniformBuffer(uint32 imageIndex) const;
 
 	void CreateSyncObjects();
 

@@ -7,7 +7,7 @@ class Buffer
 {
 	friend class Vulkan;
 
-private:
+protected:
 	VkBuffer m_buffer;
 	VkDeviceMemory m_bufferMemory;
 	VkBufferUsageFlags m_usage;
@@ -22,21 +22,22 @@ private:
 	VkCommandPool m_commandPool;
 	VkQueue m_queue;
 
-private:
+protected:
 	Buffer(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, 
 		VkQueue queue, size_t elementSize, size_t dataCount, VkBufferUsageFlags usage, 
 		VkMemoryPropertyFlags memoryFlags, VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE);
+	virtual ~Buffer() = default;
 
 public:
-	void Fill(const void* data) const;
+	virtual void Fill(const void* data);
 	void Copy(const Buffer* src, VkDeviceSize size) const;
 
 	[[nodiscard]] VkBuffer Get() const;
 	[[nodiscard]] size_t Size() const;
 
-private:
-	void Create();
-	void Destroy();
+protected:
+	virtual void Create();
+	virtual void Destroy();
 
 	[[nodiscard]] uint32 FindMemoryType(uint32 typeFilter, VkMemoryPropertyFlags properties) const;
 

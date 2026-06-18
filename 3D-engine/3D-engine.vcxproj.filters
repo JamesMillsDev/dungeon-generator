@@ -23,6 +23,8 @@
     <ClInclude Include="Window.h" />
     <ClInclude Include="Rendering\Shader.h" />
     <ClInclude Include="Rendering\Mesh.h" />
+    <ClInclude Include="VulkanHelpers\UniformBuffer.h" />
+    <ClInclude Include="Rendering\MvpBufferObject.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
@@ -43,5 +45,7 @@
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="Rendering\Shader.cpp" />
     <ClCompile Include="Rendering\Mesh.cpp" />
+    <ClCompile Include="VulkanHelpers\UniformBuffer.cpp" />
+    <ClCompile Include="Rendering\MvpBufferObject.cpp" />
   </ItemGroup>
 </Project>

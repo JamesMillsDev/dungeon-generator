@@ -202,11 +202,13 @@
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Rendering\Mesh.h" />
     <ClInclude Include="Rendering\Shader.h" />
+    <ClInclude Include="Rendering\MvpBufferObject.h" />
     <ClInclude Include="Utility\Config.h" />
     <ClInclude Include="Utility\Version.h" />
     <ClInclude Include="VulkanHelpers\Buffer.h" />
     <ClInclude Include="VulkanHelpers\Common.h" />
     <ClInclude Include="VulkanHelpers\Structs.h" />
+    <ClInclude Include="VulkanHelpers\UniformBuffer.h" />
     <ClInclude Include="VulkanHelpers\Vulkan.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
@@ -228,10 +230,12 @@
     </ClCompile>
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Rendering\Mesh.cpp" />
+    <ClCompile Include="Rendering\MvpBufferObject.cpp" />
     <ClCompile Include="Rendering\Shader.cpp" />
     <ClCompile Include="Utility\Config.cpp" />
     <ClCompile Include="Utility\Version.cpp" />
     <ClCompile Include="VulkanHelpers\Buffer.cpp" />
+    <ClCompile Include="VulkanHelpers\UniformBuffer.cpp" />
     <ClCompile Include="VulkanHelpers\Vulkan.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>

@@ -10,7 +10,9 @@
 #include <GLFW/glfw3.h>
 
 #include "Buffer.h"
+#include "UniformBuffer.h"
 #include "Rendering/Mesh.h"
+#include "Rendering/MvpBufferObject.h"
 #include "Rendering/Shader.h"
 
 using std::exception;
@@ -723,9 +725,11 @@ void Vulkan::CreateRenderPass()
 	colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-	VkAttachmentReference colorAttachmentRef;
-	colorAttachmentRef.attachment = 0;
-	colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	constexpr VkAttachmentReference colorAttachmentRef
+	{
+		.attachment = 0,
+		.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+	};
 
 	VkSubpassDescription subpass{};
 	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
@@ -761,11 +765,70 @@ void Vulkan::CreateRenderPass()
 	}
 }
 
+void Vulkan::CreateUniformBuffers()
+{
+	m_uniformBuffers.reserve(MAX_FRAMES_IN_FLIGHT);
+
+	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+	{
+		m_uniformBuffers.emplace_back(MakeUniformBuffer(sizeof(MvpBufferObject), 1));
+	}
+}
+
+void Vulkan::CreateDescriptorPool()
+{
+	VkDescriptorPoolSize poolSize
+	{
+		.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+		.descriptorCount = MAX_FRAMES_IN_FLIGHT
+	};
+
+	VkDescriptorPoolCreateInfo poolInfo{};
+	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	poolInfo.poolSizeCount = 1;
+	poolInfo.pPoolSizes = &poolSize;
+	poolInfo.maxSets = MAX_FRAMES_IN_FLIGHT;
+
+	if (const VkResult result = vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &m_descriptorPool);
+		result != VK_SUCCESS)
+	{
+		throw runtime_error(
+			std::format("Failed to create Descriptor Pool! Error Code: {}", static_cast<uint32>(result))
+		);
+	}
+}
+
+void Vulkan::CreateDescriptorSetLayout()
+{
+	constexpr VkDescriptorSetLayoutBinding uboLayoutBinding
+	{
+		.binding = 0,
+		.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+		.descriptorCount = 1,
+		.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+		.pImmutableSamplers = nullptr // Optional
+	};
+
+	VkDescriptorSetLayoutCreateInfo layoutInfo{};
+	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	layoutInfo.bindingCount = 1;
+	layoutInfo.pBindings = &uboLayoutBinding;
+
+	if (const VkResult result = vkCreateDescriptorSetLayout(m_device, &layoutInfo, nullptr, &m_descriptorSetLayout);
+		result != VK_SUCCESS)
+	{
+		throw runtime_error(
+			std::format("Failed to create Descriptor Set Layout! Error Code: {}", static_cast<uint32>(result))
+		);
+	}
+}
+
 void Vulkan::CreateGraphicsPipeline(const vector<initializer_list<ShaderInfo>>& shaderInfos)
 {
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount = 0;
+	pipelineLayoutInfo.setLayoutCount = 1;
+	pipelineLayoutInfo.pSetLayouts = &m_descriptorSetLayout;
 	pipelineLayoutInfo.pushConstantRangeCount = 0;
 
 	if (const VkResult result = vkCreatePipelineLayout(m_device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout);
@@ -908,12 +971,12 @@ void Vulkan::CreateGraphicsPipeline(const vector<initializer_list<ShaderInfo>>& 
 #pragma region Commands
 void Vulkan::CreateCommandPool()
 {
-	QueueFamilyIndices queueFamilyIndices = FindQueueFamilies(m_physicalDevice, m_surface);
+	auto [graphicsFamily, presentFamily] = FindQueueFamilies(m_physicalDevice, m_surface);
 
 	VkCommandPoolCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	createInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT; // This is the best option for recreating every frame
-	createInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();  // NOLINT(bugprone-unchecked-optional-access)
+	createInfo.queueFamilyIndex = graphicsFamily.value();  // NOLINT(bugprone-unchecked-optional-access)
 
 	if (const VkResult result = vkCreateCommandPool(m_device, &createInfo, nullptr, &m_commandPool);
 		result != VK_SUCCESS)
@@ -997,6 +1060,24 @@ void Vulkan::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const uint
 			std::format("Failed to end recording Command Buffer! Error Code: {}", static_cast<uint32>(result))
 		);
 	}
+}
+
+void Vulkan::UpdateUniformBuffer(const uint32 imageIndex) const
+{
+	MvpBufferObject mvp
+	{
+		.model = Matrix4::MakeRotate({ 0, 0, GameTime::Time() * 90.f }),
+		.view = Matrix4::MakeLookAt({ 2.f, 2.f, 2.f }, { 0.f, 0.f, 0.f }, { 0.f, 0.f, 1.f }),
+		.proj = Matrix4::MakePerspective(
+			Maths::Radians(45.f), 
+			static_cast<float>(m_swapChainExtent.width) / static_cast<float>(m_swapChainExtent.height),
+			.1f, 10.f
+		)
+	};
+
+	mvp.proj[1][1] *= -1.f;
+
+	m_uniformBuffers[imageIndex]->Fill(&mvp);
 }
 #pragma endregion
 
@@ -1124,6 +1205,20 @@ Buffer* Vulkan::MakeStagingBuffer(const size_t size, const size_t count) const
 	return buffer;
 }
 
+UniformBuffer* Vulkan::MakeUniformBuffer(size_t size, size_t count) const
+{
+	UniformBuffer* buffer = new UniformBuffer
+	{
+		m_physicalDevice, m_device, m_commandPool, m_graphicsQueue,
+		size, count, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+	};
+
+	buffer->Create();
+
+	return buffer;
+}
+
 void Vulkan::DestroyBuffer(Buffer*& buffer)
 {
 	buffer->Destroy();
@@ -1148,10 +1243,12 @@ void Vulkan::Create(const vector<initializer_list<ShaderInfo>>& shaderInfos)
 		CreateSwapChain();
 		CreateImageViews();
 		CreateRenderPass();
+		CreateDescriptorSetLayout();
 		CreateGraphicsPipeline(shaderInfos);
 		CreateFrameBuffers();
 		CreateCommandPool();
 		CreateCommandBuffer();
+		CreateUniformBuffers();
 		CreateSyncObjects();
 
 		// Vulkan fully setup correctly
@@ -1173,6 +1270,15 @@ void Vulkan::Destroy()
 	}
 
 	CleanupSwapChain();
+
+	for (UniformBuffer* buffer : m_uniformBuffers)
+	{
+		buffer->Destroy();
+		delete buffer;
+	}
+	m_uniformBuffers.clear();
+
+	vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout, nullptr);
 
 	for (const VkPipeline& pipeline : m_pipelines)
 	{

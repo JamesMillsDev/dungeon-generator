@@ -18,7 +18,10 @@ public:
 		m_renderer->UnloadMesh(m_mesh);
 	}
 
-	void Tick() override {}
+	void Tick() override
+	{
+		
+	}
 
 	void Render() override
 	{

@@ -15,11 +15,11 @@ Buffer::Buffer(const VkPhysicalDevice physicalDevice, const VkDevice device, con
 
 }
 
-void Buffer::Fill(const void* data) const
+void Buffer::Fill(const void* data)
 {
 	void* memory;
-	vkMapMemory(m_device, m_bufferMemory, 0, m_elementSize * m_dataCount, 0, &memory);
-	memcpy(memory, data, m_elementSize * m_dataCount);
+	vkMapMemory(m_device, m_bufferMemory, 0, Size(), 0, &memory);
+	memcpy(memory, data, Size());
 	vkUnmapMemory(m_device, m_bufferMemory);
 }
 
@@ -78,7 +78,7 @@ void Buffer::Create()
 {
 	VkBufferCreateInfo bufferInfo{};
 	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	bufferInfo.size = m_elementSize * m_dataCount;
+	bufferInfo.size = Size();
 	bufferInfo.usage = m_usage;
 	bufferInfo.sharingMode = m_sharingMode;
 
