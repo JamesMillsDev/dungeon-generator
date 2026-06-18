@@ -12,7 +12,7 @@
       "b": 240,
       "a": 255
     },
-    "Resizable": false
+    "Resizable": true
   },
   "Engine": {
     "Title": "TinyVulkan",

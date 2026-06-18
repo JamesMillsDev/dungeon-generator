@@ -84,7 +84,7 @@ private:
 	 * @brief Executes the main game loop until the game signals an exit.
 	 * @return The exit code indicating why the loop terminated.
 	 */
-	[[nodiscard]] EExitCode Run() const;
+	[[nodiscard]] EExitCode Run();
 
 };
 

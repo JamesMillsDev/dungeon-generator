@@ -3,8 +3,8 @@
 
 #include "VulkanHelpers/Vulkan.h"
 
-Renderer::Renderer(Config* config)
-	: m_vulkan{ new Vulkan{ config } }
+Renderer::Renderer(GLFWwindow* window, Config* config)
+	: m_vulkan{ new Vulkan{ window, config } }
 {
 }
 
@@ -14,9 +14,9 @@ Renderer::~Renderer()
 	m_vulkan = nullptr;
 }
 
-void Renderer::Create(GLFWwindow* window) const
+void Renderer::Create() const
 {
-	m_vulkan->Create(window, 
+	m_vulkan->Create( 
 		{
 			{
 				{.stage = VK_SHADER_STAGE_VERTEX_BIT,   .shader = "Triangle.vert" },
@@ -39,4 +39,14 @@ void Renderer::Destroy() const
 bool Renderer::IsValid() const
 {
 	return m_vulkan != nullptr && m_vulkan->m_loaded;
+}
+
+void Renderer::RenderFrame() const
+{
+	m_vulkan->RenderFrame();
+}
+
+void Renderer::WaitDeviceIdle() const
+{
+	vkDeviceWaitIdle(m_vulkan->m_device);
 }

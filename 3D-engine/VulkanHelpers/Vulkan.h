@@ -21,9 +21,20 @@ struct ShaderInfo
 	string entryPoint = "main";
 };
 
+struct BufferInfo
+{
+	uint32 vertexCount;
+	uint32 instanceCount;
+	uint32 firstVertex = 0;
+	uint32 firstInstance = 0;
+};
+
 class Vulkan
 {
 	friend class Renderer;
+
+public:
+	static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);
 
 private:
 	static bool CheckValidationLayerSupport();
@@ -45,7 +56,10 @@ private:
 	Version* m_vulkanVersion;
 	string m_appTitle;
 	Version* m_appVersion;
+	Color m_clearColor;
 
+	GLFWwindow* m_window;
+	uint32 m_currentFrame;
 	bool m_loaded;
 
 	VkInstance m_instance;
@@ -55,6 +69,9 @@ private:
 
 	VkPhysicalDevice m_physicalDevice;
 	VkDevice m_device;
+
+	VkQueue m_graphicsQueue;
+	VkQueue m_presentQueue;
 
 	VkSwapchainKHR m_swapChain;
 	vector<VkImage> m_swapChainImages;
@@ -67,30 +84,49 @@ private:
 	VkPipelineLayout m_pipelineLayout;
 	vector<VkPipeline> m_pipelines;
 
+	VkCommandPool m_commandPool;
+	vector<VkCommandBuffer> m_commandBuffers;
+
+	vector<VkSemaphore> m_imageAvailableSemaphores;
+	vector<VkSemaphore> m_renderFinishedSemaphores;
+	vector<VkFence> m_inFlightFences;
+
+	bool m_frameBufferResized;
+
 private:
-	explicit Vulkan(Config* config);
+	Vulkan(GLFWwindow* window, Config* config);
 	~Vulkan();
 
 private:
 	[[nodiscard]] bool Loaded() const;
 
-	void Create(GLFWwindow* window, const vector<initializer_list<ShaderInfo>>& shaderInfos);
+	void Create(const vector<initializer_list<ShaderInfo>>& shaderInfos);
 	void Destroy();
 
 	void CreateInstance();
 	void SetupDebugMessenger();
 
-	void CreateSurface(GLFWwindow* window);
+	void CreateSurface();
 
 	void PickPhysicalDevice();
 	void CreateLogicalDevice();
 
-	void CreateSwapChain(GLFWwindow* window);
+	void RecreateSwapChain();
+	void CleanupSwapChain();
+	void CreateSwapChain();
 	void CreateImageViews();
 
 	void CreateRenderPass();
 	void CreateGraphicsPipeline(const vector<initializer_list<ShaderInfo>>& shaderInfos);
 
 	void CreateFrameBuffers();
+
+	void CreateCommandPool();
+	void CreateCommandBuffer();
+	void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32 imageIndex, const BufferInfo& bufferInfo) const;
+
+	void CreateSyncObjects();
+
+	void RenderFrame();
 
 };

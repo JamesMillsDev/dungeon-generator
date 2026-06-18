@@ -12,14 +12,17 @@ private:
 	Vulkan* m_vulkan;
 
 private:
-	explicit Renderer(Config* config);
+	explicit Renderer(GLFWwindow* window, Config* config);
 	~Renderer();
 
 private:
-	void Create(GLFWwindow* window) const;
+	void Create() const;
 	void Destroy() const;
 
 	[[nodiscard]] bool IsValid() const;
+
+	void RenderFrame() const;
+	void WaitDeviceIdle() const;
 
 };
 

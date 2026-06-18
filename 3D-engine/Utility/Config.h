@@ -6,6 +6,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "Maths/Color.h"
+
 using std::string;
 using std::stringstream;
 using std::vector;
@@ -95,3 +97,5 @@ T Config::Get(const string& id)
 	// Return the node data if it was found, otherwise the default value
 	return json.is_null() ? T{} : json.get<T>();
 }
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Color, r, g, b, a)

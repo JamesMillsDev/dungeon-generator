@@ -26,7 +26,7 @@ void Application::Quit()
 
 Application::Application()
 	: m_config{ new Config{ "Engine" } }, m_window{ new Window{ m_config } }, m_game{ nullptr },
-	m_renderer{ new Renderer{ m_config } }
+	m_renderer{ nullptr }
 {}
 
 Application::~Application()
@@ -44,7 +44,7 @@ Application::~Application()
 	m_config = nullptr;
 }
 
-EExitCode Application::Run() const
+EExitCode Application::Run()
 {
 	// Attempt to open the window, returning fail code if it does not succeed
 	try
@@ -57,7 +57,8 @@ EExitCode Application::Run() const
 		return EExitCode::WindowFailedToOpen;
 	}
 
-	m_renderer->Create(m_window->m_window);
+	m_renderer = new Renderer{ m_window->m_window, m_config };
+	m_renderer->Create();
 	// Validate the renderer succeeded to initialise
 	if (!m_renderer->IsValid())
 	{
@@ -79,7 +80,12 @@ EExitCode Application::Run() const
 		glfwPollEvents();
 
 		m_game->Tick();
+		m_game->Render();
+
+		m_renderer->RenderFrame();
 	}
+
+	m_renderer->WaitDeviceIdle();
 
 	// Shutdown the game instance and close the window
 	m_renderer->Destroy();
