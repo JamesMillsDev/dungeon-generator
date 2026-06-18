@@ -7,6 +7,7 @@
 #include "Structs.h"
 #include "Maths/Alias.h"
 
+class Buffer;
 using std::initializer_list;
 using std::string;
 
@@ -35,6 +36,8 @@ class Vulkan
 
 public:
 	static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);
+
+	static void DestroyBuffer(Buffer*& buffer);
 
 private:
 	static bool CheckValidationLayerSupport();
@@ -97,6 +100,9 @@ private:
 	Vulkan(GLFWwindow* window, Config* config);
 	~Vulkan();
 
+public:
+	Buffer* MakeVertexBuffer(size_t vertexCount) const;
+
 private:
 	[[nodiscard]] bool Loaded() const;
 
@@ -122,6 +128,9 @@ private:
 	void CreateFrameBuffers();
 
 	void CreateCommandPool();
+
+	void CreateVertexBuffer();
+
 	void CreateCommandBuffer();
 	void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32 imageIndex, const BufferInfo& bufferInfo) const;
 

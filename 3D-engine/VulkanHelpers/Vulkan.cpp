@@ -9,6 +9,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include "Buffer.h"
 #include "Rendering/Mesh.h"
 #include "Rendering/Shader.h"
 
@@ -985,10 +986,8 @@ void Vulkan::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const uint
 	scissor.extent = m_swapChainExtent;
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-	vkCmdDraw(
-		commandBuffer, bufferInfo.vertexCount, bufferInfo.instanceCount,
-		bufferInfo.firstVertex, bufferInfo.firstInstance
-	);
+	screenTriangleMesh->Render(commandBuffer);
+
 	vkCmdEndRenderPass(commandBuffer);
 
 	if (const VkResult result = vkEndCommandBuffer(commandBuffer);
@@ -998,6 +997,14 @@ void Vulkan::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const uint
 			std::format("Failed to end recording Command Buffer! Error Code: {}", static_cast<uint32>(result))
 		);
 	}
+}
+#pragma endregion
+
+#pragma region Vertex Buffer
+void Vulkan::CreateVertexBuffer()
+{
+	screenTriangleMesh = Mesh::MakeScreenTriangle();
+	screenTriangleMesh->CreateBuffer(this);
 }
 #pragma endregion
 
@@ -1081,6 +1088,28 @@ Vulkan::~Vulkan()
 	m_appVersion = nullptr;
 }
 
+Buffer* Vulkan::MakeVertexBuffer(const size_t vertexCount) const
+{
+	Buffer* buffer = new Buffer
+	{
+		m_physicalDevice, m_device,
+		sizeof(Vertex), vertexCount,
+		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+	};
+
+	buffer->Create();
+
+	return buffer;
+}
+
+void Vulkan::DestroyBuffer(Buffer*& buffer)
+{
+	buffer->Destroy();
+	delete buffer;
+	buffer = nullptr;
+}
+
 bool Vulkan::Loaded() const
 {
 	return m_loaded;
@@ -1101,6 +1130,7 @@ void Vulkan::Create(const vector<initializer_list<ShaderInfo>>& shaderInfos)
 		CreateGraphicsPipeline(shaderInfos);
 		CreateFrameBuffers();
 		CreateCommandPool();
+		CreateVertexBuffer();
 		CreateCommandBuffer();
 		CreateSyncObjects();
 
@@ -1123,6 +1153,9 @@ void Vulkan::Destroy()
 	}
 
 	CleanupSwapChain();
+
+	screenTriangleMesh->DestroyBuffer();
+	delete screenTriangleMesh;
 
 	for (const VkPipeline& pipeline : m_pipelines)
 	{

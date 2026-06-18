@@ -83,9 +83,9 @@ Color Color::FromHex(const char* hex)
 void Color::RGBToHSV(const Color& rgb, float& h, float& s, float& v)
 {
 	// Normalise each channel
-	const float normR = rgb.r / 255.f;
-	const float normG = rgb.g / 255.f;
-	const float normB = rgb.b / 255.f;
+	const float normR = rgb.r;
+	const float normG = rgb.g;
+	const float normB = rgb.b;
 
 	// Find the minimum and maximum channel and difference between them
 	const float cMin = Maths::Min<float>(3, normR, normG, normB);
@@ -198,19 +198,19 @@ Color::Color(const uint32 hex)
 }
 
 Color::Color(const uint8 r, const uint8 g, const uint8 b)
-	: r{ static_cast<float>(r) }, g{ static_cast<float>(g) },
-	b{ static_cast<float>(b) }, a{ 255.f }
+	: r{ static_cast<float>(r) / 255.f }, g{ static_cast<float>(g) / 255.f },
+	b{ static_cast<float>(b) / 255.f }, a{ 1.f }
 {
 
 }
 
 Color::Color(const uint8 r, const uint8 g, const uint8 b, const uint8 a)
-	: r{ static_cast<float>(r) }, g{ static_cast<float>(g) },
-	b{ static_cast<float>(b) }, a{ static_cast<float>(a) }
+	: r{ static_cast<float>(r) / 255.f }, g{ static_cast<float>(g) / 255.f },
+	b{ static_cast<float>(b) / 255.f }, a{ static_cast<float>(a) / 255.f }
 {}
 
 Color::Color(const float r, const float g, const float b)
-	: r{ r }, g{ g }, b{ b }, a{ 255.f }
+	: r{ r }, g{ g }, b{ b }, a{ 1.f }
 {}
 
 Color::Color(const float r, const float g, const float b, const float a)
@@ -218,7 +218,7 @@ Color::Color(const float r, const float g, const float b, const float a)
 {}
 
 Color::Color(const vec3& rgb)
-	: r{ rgb.r }, g{ rgb.g }, b{ rgb.b }, a{ 255.f }
+	: r{ rgb.r }, g{ rgb.g }, b{ rgb.b }, a{ 1.f }
 {
 	
 }
@@ -235,9 +235,9 @@ Color Color::Linear() const
 
 	return Color
 	{
-		255.f * Maths::Pow(r / 255.f, p),
-		255.f * Maths::Pow(g / 255.f, p),
-		255.f * Maths::Pow(b / 255.f, p),
+		Maths::Pow(r, p),
+		Maths::Pow(g, p),
+		Maths::Pow(b, p),
 		a
 	};
 }
@@ -246,9 +246,9 @@ void Color::ToLinear()
 {
 	constexpr float p = 2.2f;
 
-	r = 255.f * Maths::Pow(r / 255.f, p);
-	g = 255.f * Maths::Pow(g / 255.f, p);
-	b = 255.f * Maths::Pow(b / 255.f, p);
+	r = Maths::Pow(r, p);
+	g = Maths::Pow(g, p);
+	b = Maths::Pow(b, p);
 }
 
 Color Color::Gamma() const
@@ -257,9 +257,9 @@ Color Color::Gamma() const
 
 	return Color
 	{  
-		255.f * Maths::Pow(r / 255.f, p),
-		255.f * Maths::Pow(g / 255.f, p),
-		255.f * Maths::Pow(b / 255.f, p),
+		Maths::Pow(r, p),
+		Maths::Pow(g, p),
+		Maths::Pow(b, p),
 		a
 	};
 }
@@ -268,14 +268,14 @@ void Color::ToGamma()
 {
 	constexpr float p = 1.f / 2.2f;
 
-	r = 255.f * Maths::Pow(r / 255.f, p);
-	g = 255.f * Maths::Pow(g / 255.f, p);
-	b = 255.f * Maths::Pow(b / 255.f, p);
+	r = Maths::Pow(r, p);
+	g = Maths::Pow(g, p);
+	b = Maths::Pow(b, p);
 }
 
 float Color::Luminance() const
 {
-	return .2126f * (r / 255.f) + .7152f * (g / 255.f) + .0722f * (b / 255.f);
+	return .2126f * r + .7152f * g + .0722f * b;
 }
 
 float Color::Hue() const

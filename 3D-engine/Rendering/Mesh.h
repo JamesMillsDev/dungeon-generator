@@ -2,53 +2,73 @@
 
 #include <array>
 
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
-
 #include <vulkan/vulkan.h>
+
+#include "Maths/Vector2.h"
+#include "Maths/Vector3.h"
+#include "Maths/Vector4.h"
+#include "Maths/Color.h"
 
 class Buffer;
 
-// TODO: Clean this up
+using std::array;
+
+enum : uint8
+{
+	LocationIndex,
+	NormalIndex,
+	TangentIndex,
+	BiTangentIndex,
+	UvIndex,
+	ColorIndex,
+	VertexAttributeCount
+};
+
 struct Vertex
 {
-	vec2 pos;
-	vec3 color;
+public:
+	static VkVertexInputBindingDescription GetBindingDescription();
+	static array<VkVertexInputAttributeDescription, VertexAttributeCount> GetAttributeDescriptions();
 
-	static VkVertexInputBindingDescription GetBindingDescription()
-	{
-		VkVertexInputBindingDescription bindingDescription{};
+public:
+	/** @brief The location of the vertex in model space. */
+	Vector3 location;
+	/** @brief The normal of the vertex in model space. */
+	Vector4 normal;
+	/** @brief The tangent of the vertex in model space. */
+	Vector4 tangent;
+	/** @brief The bitangent of the vertex in model space. */
+	Vector4 biTangent;
 
-		bindingDescription.binding = 0;
-		bindingDescription.stride = sizeof(Vertex);
-		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+	/** @brief The first texture coordinate of the vertex. */
+	Vector2 uv;
+	/** @brief The first color of the vertex. */
+	Color color;
 
-		return bindingDescription;
-	}
-
-	static std::array<VkVertexInputAttributeDescription, 2> GetAttributeDescriptions()
-	{
-		std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions;
-
-		attributeDescriptions[0].binding = 0;
-		attributeDescriptions[0].location = 0;
-		attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
-		attributeDescriptions[0].offset = offsetof(Vertex, pos);
-
-		attributeDescriptions[1].binding = 0;
-		attributeDescriptions[1].location = 1;
-		attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-		attributeDescriptions[1].offset = offsetof(Vertex, color);
-
-		return attributeDescriptions;
-	}
 };
 
-// TODO: Not this.
-const std::vector<Vertex> vertices = {
-	{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-	{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-	{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+class Mesh
+{
+	friend class Vulkan;
+
+public:
+	static Mesh* MakeScreenTriangle();
+
+public:
+	vector<Vertex> vertices;
+
+private:
+	Buffer* m_buffer;
+
+public:
+	explicit Mesh(const vector<Vertex>& vertices);
+
+private:
+	void CreateBuffer(const Vulkan* vulkan);
+	void DestroyBuffer();
+
+	void Render(VkCommandBuffer buffer, uint32 instances = 1, uint32 firstInstance = 0) const;
+
 };
 
-extern Buffer* vertexBuffer;
+extern Mesh* screenTriangleMesh;
