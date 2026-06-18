@@ -7,16 +7,27 @@
 class TestGameInstance : public GameInstance
 {
 public:
-	void Init() override {}
+	void Init() override
+	{
+		m_mesh = Mesh::MakeQuad();
+		m_renderer->LoadMesh(m_mesh);
+	}
 
-	void Shutdown() override {}
+	void Shutdown() override
+	{
+		m_renderer->UnloadMesh(m_mesh);
+	}
 
 	void Tick() override {}
 
-	void Render(Renderer* renderer) override
+	void Render() override
 	{
-		renderer->RenderMesh(screenTriangleMesh);
+		m_renderer->RenderMesh(m_mesh);
 	}
+
+private:
+	Mesh* m_mesh = nullptr;
+
 };
 
 int main()

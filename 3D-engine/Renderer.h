@@ -21,6 +21,9 @@ private:
 	~Renderer();
 
 public:
+	void LoadMesh(Mesh* mesh) const;
+	void UnloadMesh(Mesh*& mesh) const;
+
 	void RenderMesh(const Mesh* mesh) const;
 
 private:

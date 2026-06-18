@@ -70,6 +70,7 @@ EExitCode Application::Run()
 	GameTime::Init();
 
 	// Initialise the game instance
+	m_game->m_renderer = m_renderer;
 	m_game->Init();
 
 	// Continue to loop until the window requests a close
@@ -83,7 +84,7 @@ EExitCode Application::Run()
 
 		m_renderer->BeginFrame();
 
-		m_game->Render(m_renderer);
+		m_game->Render();
 
 		m_renderer->EndFrame();
 	}
@@ -91,8 +92,8 @@ EExitCode Application::Run()
 	m_renderer->WaitDeviceIdle();
 
 	// Shutdown the game instance and close the window
-	m_renderer->Destroy();
 	m_game->Shutdown();
+	m_renderer->Destroy();
 	m_window->Close();
 
 	// Return success as the whole gameplay loop ran successfully.

@@ -135,8 +135,6 @@ private:
 
 	void CreateCommandPool();
 
-	void CreateVertexBuffer();
-
 	void CreateCommandBuffer();
 	void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32 imageIndex, const function<void()>& drawCommand) const;
 

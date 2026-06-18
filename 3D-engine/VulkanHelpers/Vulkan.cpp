@@ -1000,14 +1000,6 @@ void Vulkan::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const uint
 }
 #pragma endregion
 
-#pragma region Vertex Buffer
-void Vulkan::CreateVertexBuffer()
-{
-	screenTriangleMesh = Mesh::MakeQuad();
-	screenTriangleMesh->CreateBuffers(this);
-}
-#pragma endregion
-
 #pragma region Semaphores
 void Vulkan::CreateSyncObjects()
 {
@@ -1159,7 +1151,6 @@ void Vulkan::Create(const vector<initializer_list<ShaderInfo>>& shaderInfos)
 		CreateGraphicsPipeline(shaderInfos);
 		CreateFrameBuffers();
 		CreateCommandPool();
-		CreateVertexBuffer();
 		CreateCommandBuffer();
 		CreateSyncObjects();
 
@@ -1182,9 +1173,6 @@ void Vulkan::Destroy()
 	}
 
 	CleanupSwapChain();
-
-	screenTriangleMesh->DestroyBuffer();
-	delete screenTriangleMesh;
 
 	for (const VkPipeline& pipeline : m_pipelines)
 	{

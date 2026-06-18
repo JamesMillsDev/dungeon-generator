@@ -1,6 +1,7 @@
 #pragma once
 
 class Renderer;
+
 /**
  * @brief Abstract base class for the game logic layer.
  *
@@ -12,6 +13,12 @@ class Renderer;
  */
 class GameInstance
 {
+	friend class Application;
+
+protected:
+	/** @brief The renderer that the system needs to use. */
+	Renderer* m_renderer;
+
 public:
 	/** @brief Constructs the GameInstance and creates the root Actor. */
 	GameInstance() = default;
@@ -50,9 +57,7 @@ public:
 	 * Invoked by Application between BeginFrame() and EndFrame(), so
 	 * the raylib drawing context is already active when this is called.
 	 * All rendering should be performed here rather than in Tick().
-	 * 
-	 * @param renderer The renderer that the system needs to use.
 	 */
-	virtual void Render(Renderer* renderer) = 0;
+	virtual void Render() = 0;
 
 };

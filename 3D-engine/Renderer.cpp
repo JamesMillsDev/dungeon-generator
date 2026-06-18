@@ -14,6 +14,18 @@ Renderer::~Renderer()
 	m_vulkan = nullptr;
 }
 
+void Renderer::LoadMesh(Mesh* mesh) const
+{
+	mesh->CreateBuffers(m_vulkan);
+}
+
+void Renderer::UnloadMesh(Mesh*& mesh) const
+{
+	mesh->DestroyBuffer();
+	delete mesh;
+	mesh = nullptr;
+}
+
 void Renderer::RenderMesh(const Mesh* mesh) const
 {
 	m_vulkan->RecordCommandBuffer(m_frameCommandBuffer, m_vulkan->m_currentImageIndex, [this, mesh]
