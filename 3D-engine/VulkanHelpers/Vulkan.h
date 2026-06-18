@@ -95,13 +95,15 @@ private:
 	vector<VkFence> m_inFlightFences;
 
 	bool m_frameBufferResized;
+	Buffer* m_stagingBuffer;
 
 private:
 	Vulkan(GLFWwindow* window, Config* config);
 	~Vulkan();
 
 public:
-	Buffer* MakeVertexBuffer(size_t vertexCount) const;
+	[[nodiscard]] Buffer* MakeVertexBuffer(size_t vertexCount) const;
+	[[nodiscard]] Buffer* MakeStagingBuffer(size_t size, size_t count) const;
 
 private:
 	[[nodiscard]] bool Loaded() const;

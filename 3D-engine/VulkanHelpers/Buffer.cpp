@@ -5,12 +5,12 @@
 
 using std::runtime_error;
 
-Buffer::Buffer(const VkPhysicalDevice physicalDevice, const VkDevice device, const size_t elementSize, 
-	const size_t dataCount, const VkBufferUsageFlags usage, const VkMemoryPropertyFlags memoryFlags,
-	const VkSharingMode sharingMode)
+Buffer::Buffer(const VkPhysicalDevice physicalDevice, const VkDevice device, const VkCommandPool commandPool,
+	const VkQueue queue, const size_t elementSize, const size_t dataCount, const VkBufferUsageFlags usage,
+	const VkMemoryPropertyFlags memoryFlags, const VkSharingMode sharingMode)
 	: m_buffer{ VK_NULL_HANDLE }, m_bufferMemory{ VK_NULL_HANDLE }, m_usage{ usage }, m_sharingMode{ sharingMode },
 	m_memoryFlags{ memoryFlags }, m_elementSize{ elementSize }, m_dataCount{ dataCount }, m_device{ device },
-	m_physicalDevice{ physicalDevice }
+	m_physicalDevice{ physicalDevice }, m_commandPool{ commandPool }, m_queue{ queue }
 {
 
 }
@@ -23,9 +23,55 @@ void Buffer::Fill(const void* data) const
 	vkUnmapMemory(m_device, m_bufferMemory);
 }
 
+void Buffer::Copy(const Buffer* src, const VkDeviceSize size) const
+{
+	VkCommandBufferAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocInfo.commandPool = m_commandPool;
+	allocInfo.commandBufferCount = 1;
+
+	// Allocate temporary memory buffer
+	VkCommandBuffer commandBuffer;
+	vkAllocateCommandBuffers(m_device, &allocInfo, &commandBuffer);
+
+	// Immediately begin the command buffer
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+	vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+	// Run the command for copying
+	VkBufferCopy copyRegion;
+	copyRegion.srcOffset = 0; // optional
+	copyRegion.dstOffset = 0; // optional
+	copyRegion.size = size;
+	vkCmdCopyBuffer(commandBuffer, src->m_buffer, m_buffer, 1, &copyRegion);
+
+	// End the command and submit
+	vkEndCommandBuffer(commandBuffer);
+
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &commandBuffer;
+
+	vkQueueSubmit(m_queue, 1, &submitInfo, VK_NULL_HANDLE);
+	vkQueueWaitIdle(m_queue);
+
+	// Run the final cleanup
+	vkFreeCommandBuffers(m_device, m_commandPool, 1, &commandBuffer);
+}
+
 VkBuffer Buffer::Get() const
 {
 	return m_buffer;
+}
+
+size_t Buffer::Size() const
+{
+	return m_elementSize * m_dataCount;
 }
 
 void Buffer::Create()

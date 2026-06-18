@@ -1003,8 +1003,8 @@ void Vulkan::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const uint
 #pragma region Vertex Buffer
 void Vulkan::CreateVertexBuffer()
 {
-	screenTriangleMesh = Mesh::MakeScreenTriangle();
-	screenTriangleMesh->CreateBuffer(this);
+	screenTriangleMesh = Mesh::MakeQuad();
+	screenTriangleMesh->CreateBuffers(this);
 }
 #pragma endregion
 
@@ -1062,7 +1062,7 @@ Vulkan::Vulkan(GLFWwindow* window, Config* config) :
 	m_renderPass{ VK_NULL_HANDLE }, m_pipelineLayout{ VK_NULL_HANDLE }, m_commandPool{ VK_NULL_HANDLE },
 	m_commandBuffers{ VK_NULL_HANDLE }, m_imageAvailableSemaphores{ VK_NULL_HANDLE },
 	m_renderFinishedSemaphores{ VK_NULL_HANDLE }, m_inFlightFences{ VK_NULL_HANDLE },
-	m_frameBufferResized{ false }
+	m_frameBufferResized{ false }, m_stagingBuffer{ nullptr }
 {
 	m_engineTitle = config->Get<string>("Engine.Title");
 	m_engineVersion = new Version{ "Engine.Version", config };
@@ -1092,9 +1092,23 @@ Buffer* Vulkan::MakeVertexBuffer(const size_t vertexCount) const
 {
 	Buffer* buffer = new Buffer
 	{
-		m_physicalDevice, m_device,
+		m_physicalDevice, m_device, m_commandPool, m_graphicsQueue,
 		sizeof(Vertex), vertexCount,
-		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+		VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+	};
+
+	buffer->Create();
+
+	return buffer;
+}
+
+Buffer* Vulkan::MakeStagingBuffer(const size_t size, const size_t count) const
+{
+	Buffer* buffer = new Buffer
+	{
+		m_physicalDevice, m_device, m_commandPool, m_graphicsQueue,
+		size, count, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
 	};
 

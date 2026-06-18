@@ -52,19 +52,20 @@ class Mesh
 	friend class Vulkan;
 
 public:
-	static Mesh* MakeScreenTriangle();
+	static Mesh* MakeQuad();
 
 public:
 	vector<Vertex> vertices;
 
 private:
-	Buffer* m_buffer;
+	Buffer* m_stagingBuffer;
+	Buffer* m_vertexBuffer;
 
 public:
 	explicit Mesh(const vector<Vertex>& vertices);
 
 private:
-	void CreateBuffer(const Vulkan* vulkan);
+	void CreateBuffers(const Vulkan* vulkan);
 	void DestroyBuffer();
 
 	void Render(VkCommandBuffer buffer, uint32 instances = 1, uint32 firstInstance = 0) const;

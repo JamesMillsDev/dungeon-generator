@@ -19,16 +19,20 @@ private:
 
 	VkDevice m_device;
 	VkPhysicalDevice m_physicalDevice;
+	VkCommandPool m_commandPool;
+	VkQueue m_queue;
 
 private:
-	Buffer(VkPhysicalDevice physicalDevice, VkDevice device, size_t elementSize, size_t dataCount, 
-		VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryFlags, 
-		VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE);
+	Buffer(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, 
+		VkQueue queue, size_t elementSize, size_t dataCount, VkBufferUsageFlags usage, 
+		VkMemoryPropertyFlags memoryFlags, VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE);
 
 public:
 	void Fill(const void* data) const;
+	void Copy(const Buffer* src, VkDeviceSize size) const;
 
 	[[nodiscard]] VkBuffer Get() const;
+	[[nodiscard]] size_t Size() const;
 
 private:
 	void Create();

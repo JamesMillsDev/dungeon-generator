@@ -46,13 +46,13 @@ array<VkVertexInputAttributeDescription, VertexAttributeCount> Vertex::GetAttrib
 	return attributeDescriptions;
 }
 
-Mesh* Mesh::MakeScreenTriangle()
+Mesh* Mesh::MakeQuad()
 {
 	return new Mesh
 	{
 		{
 			{
-				.location = { 0.0f, -0.5f, 0.f },
+				.location = { .0f, -.5f, 0.f },
 				.normal = { 0.f, 0.f, 0.f, 0.f },
 				.tangent = { 0.f, 0.f, 0.f, 0.f },
 				.biTangent = { 0.f, 0.f, 0.f, 0.f },
@@ -60,44 +60,59 @@ Mesh* Mesh::MakeScreenTriangle()
 				.color = { 1.f, 0.f, 0.f, 1.f }
 			},
 			{
-				.location = { 0.5f, 0.5f, 0.f },
+				.location = { .5f, -.5f, 0.f },
 				.normal = { 0.f, 0.f, 0.f, 0.f },
 				.tangent = { 0.f, 0.f, 0.f, 0.f },
 				.biTangent = { 0.f, 0.f, 0.f, 0.f },
 				.uv = { 0.f, 0.f },
-				.color = { 0.0f, 1.f, 0.0f, 1.f }},
+				.color = { 0.f, 1.f, 0.0f, 1.f }
+			},
 			{
-				.location = { -0.5f, 0.5f, 0.f },
+				.location = { .5f, .5f, 0.f },
 				.normal = { 0.f, 0.f, 0.f, 0.f },
 				.tangent = { 0.f, 0.f, 0.f, 0.f },
 				.biTangent = { 0.f, 0.f, 0.f, 0.f },
 				.uv = { 0.f, 0.f },
-				.color = { 0.0f, 0.0f, 1.f, 1.f }
+				.color = { 0.f, 0.f, 1.f, 1.f }
+			},
+			{
+				.location = { -.5f, .5f, 0.f },
+				.normal = { 0.f, 0.f, 0.f, 0.f },
+				.tangent = { 0.f, 0.f, 0.f, 0.f },
+				.biTangent = { 0.f, 0.f, 0.f, 0.f },
+				.uv = { 0.f, 0.f },
+				.color = { 1.f, 1.f, 1.f, 1.f }
 			}
 		}
 	};
 }
 
 Mesh::Mesh(const vector<Vertex>& vertices)
-	: vertices{ vertices }, m_buffer{ nullptr }
+	: vertices{ vertices }, m_stagingBuffer{ nullptr }, m_vertexBuffer{ nullptr }
 {
 
 }
 
-void Mesh::CreateBuffer(const Vulkan* vulkan)
+void Mesh::CreateBuffers(const Vulkan* vulkan)
 {
-	m_buffer = vulkan->MakeVertexBuffer(vertices.size());
-	m_buffer->Fill(vertices.data());
+	m_stagingBuffer = vulkan->MakeStagingBuffer(sizeof(Vertex), vertices.size());
+	m_stagingBuffer->Fill(vertices.data());
+
+	m_vertexBuffer = vulkan->MakeVertexBuffer(vertices.size());
+	m_vertexBuffer->Copy(m_stagingBuffer, m_stagingBuffer->Size());
+
+	Vulkan::DestroyBuffer(m_stagingBuffer);
+	m_stagingBuffer = nullptr;
 }
 
 void Mesh::DestroyBuffer()
 {
-	Vulkan::DestroyBuffer(m_buffer);
+	Vulkan::DestroyBuffer(m_vertexBuffer);
 }
 
 void Mesh::Render(const VkCommandBuffer buffer, const uint32 instances, const uint32 firstInstance) const
 {
-	VkBuffer vertexBuffers[] = { m_buffer->Get() };
+	VkBuffer vertexBuffers[] = { m_vertexBuffer->Get() };
 	VkDeviceSize offsets[] = { 0 };
 	vkCmdBindVertexBuffers(buffer, 0, 1, vertexBuffers, offsets);
 
