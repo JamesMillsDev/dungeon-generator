@@ -80,9 +80,12 @@ EExitCode Application::Run()
 		glfwPollEvents();
 
 		m_game->Tick();
-		m_game->Render();
 
-		m_renderer->RenderFrame();
+		m_renderer->BeginFrame();
+
+		m_game->Render(m_renderer);
+
+		m_renderer->EndFrame();
 	}
 
 	m_renderer->WaitDeviceIdle();

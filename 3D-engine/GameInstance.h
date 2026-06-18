@@ -1,5 +1,6 @@
 #pragma once
 
+class Renderer;
 /**
  * @brief Abstract base class for the game logic layer.
  *
@@ -49,7 +50,9 @@ public:
 	 * Invoked by Application between BeginFrame() and EndFrame(), so
 	 * the raylib drawing context is already active when this is called.
 	 * All rendering should be performed here rather than in Tick().
+	 * 
+	 * @param renderer The renderer that the system needs to use.
 	 */
-	virtual void Render() = 0;
+	virtual void Render(Renderer* renderer) = 0;
 
 };

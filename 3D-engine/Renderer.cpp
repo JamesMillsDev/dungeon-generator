@@ -1,12 +1,12 @@
 #include "pch.h"
 #include "Renderer.h"
 
+#include "Rendering/Mesh.h"
 #include "VulkanHelpers/Vulkan.h"
 
-Renderer::Renderer(GLFWwindow* window, Config* config)
-	: m_vulkan{ new Vulkan{ window, config } }
-{
-}
+Renderer::Renderer(GLFWwindow* window, Config* config) :
+	m_vulkan{ new Vulkan{window, config} }, m_frameCommandBuffer{ VK_NULL_HANDLE }
+{}
 
 Renderer::~Renderer()
 {
@@ -14,9 +14,17 @@ Renderer::~Renderer()
 	m_vulkan = nullptr;
 }
 
+void Renderer::RenderMesh(const Mesh* mesh) const
+{
+	m_vulkan->RecordCommandBuffer(m_frameCommandBuffer, m_vulkan->m_currentImageIndex, [this, mesh]
+		{
+			mesh->Render(m_frameCommandBuffer);
+		});
+}
+
 void Renderer::Create() const
 {
-	m_vulkan->Create( 
+	m_vulkan->Create(
 		{
 			{
 				{.stage = VK_SHADER_STAGE_VERTEX_BIT,   .shader = "Triangle.vert" },
@@ -41,9 +49,19 @@ bool Renderer::IsValid() const
 	return m_vulkan != nullptr && m_vulkan->m_loaded;
 }
 
-void Renderer::RenderFrame() const
+void Renderer::BeginFrame()
 {
-	m_vulkan->RenderFrame();
+	m_frameCommandBuffer = m_vulkan->BeginRender();
+}
+
+void Renderer::EndFrame() const
+{
+	if (m_frameCommandBuffer == nullptr)
+	{
+		return;
+	}
+
+	m_vulkan->EndRender();
 }
 
 void Renderer::WaitDeviceIdle() const

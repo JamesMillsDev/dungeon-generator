@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <initializer_list>
 #include <string>
 
@@ -7,12 +8,14 @@
 #include "Structs.h"
 #include "Maths/Alias.h"
 
-class Buffer;
+using std::function;
 using std::initializer_list;
 using std::string;
 
-class Config;
 struct GLFWwindow;
+
+class Buffer;
+class Config;
 class Version;
 
 struct ShaderInfo
@@ -62,7 +65,6 @@ private:
 	Color m_clearColor;
 
 	GLFWwindow* m_window;
-	uint32 m_currentFrame;
 	bool m_loaded;
 
 	VkInstance m_instance;
@@ -95,7 +97,8 @@ private:
 	vector<VkFence> m_inFlightFences;
 
 	bool m_frameBufferResized;
-	Buffer* m_stagingBuffer;
+	uint32 m_currentFrame;
+	uint32 m_currentImageIndex;
 
 private:
 	Vulkan(GLFWwindow* window, Config* config);
@@ -120,7 +123,7 @@ private:
 	void CreateLogicalDevice();
 
 	void RecreateSwapChain();
-	void CleanupSwapChain();
+	void CleanupSwapChain() const;
 	void CreateSwapChain();
 	void CreateImageViews();
 
@@ -134,10 +137,11 @@ private:
 	void CreateVertexBuffer();
 
 	void CreateCommandBuffer();
-	void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32 imageIndex, const BufferInfo& bufferInfo) const;
+	void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32 imageIndex, const function<void()>& drawCommand) const;
 
 	void CreateSyncObjects();
 
-	void RenderFrame();
+	VkCommandBuffer BeginRender();
+	void EndRender();
 
 };

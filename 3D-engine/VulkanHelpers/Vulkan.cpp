@@ -521,8 +521,8 @@ void Vulkan::CreateLogicalDevice()
 		);
 	}
 
-	vkGetDeviceQueue(m_device, indices.graphicsFamily.value(), 0, &m_graphicsQueue);
-	vkGetDeviceQueue(m_device, indices.presentFamily.value(), 0, &m_presentQueue);
+	vkGetDeviceQueue(m_device, indices.graphicsFamily.value(), 0, &m_graphicsQueue);  // NOLINT(bugprone-unchecked-optional-access, bugprone-unchecked-optional-access, bugprone-unchecked-optional-access)
+	vkGetDeviceQueue(m_device, indices.presentFamily.value(), 0, &m_presentQueue);  // NOLINT(bugprone-unchecked-optional-access)
 }
 #pragma endregion
 
@@ -549,7 +549,7 @@ void Vulkan::RecreateSwapChain()
 	CreateFrameBuffers();
 }
 
-void Vulkan::CleanupSwapChain()
+void Vulkan::CleanupSwapChain() const
 {
 	for (const VkFramebuffer& framebuffer : m_swapChainFrameBuffers)
 	{
@@ -943,7 +943,7 @@ void Vulkan::CreateCommandBuffer()
 	}
 }
 
-void Vulkan::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const uint32 imageIndex, const BufferInfo& bufferInfo) const
+void Vulkan::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const uint32 imageIndex, const function<void()>& drawCommand) const
 {
 	VkCommandBufferBeginInfo beginInfo{};
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -986,7 +986,7 @@ void Vulkan::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const uint
 	scissor.extent = m_swapChainExtent;
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-	screenTriangleMesh->Render(commandBuffer);
+	drawCommand();
 
 	vkCmdEndRenderPass(commandBuffer);
 
@@ -1055,14 +1055,14 @@ void Vulkan::CreateSyncObjects()
 
 #pragma region Common
 Vulkan::Vulkan(GLFWwindow* window, Config* config) :
-	m_window{ window }, m_currentFrame{ 0 }, m_loaded{ false }, m_instance{ VK_NULL_HANDLE },
-	m_debugMessenger{ VK_NULL_HANDLE }, m_surface{ VK_NULL_HANDLE }, m_physicalDevice{ VK_NULL_HANDLE },
-	m_device{ VK_NULL_HANDLE }, m_graphicsQueue{ VK_NULL_HANDLE }, m_presentQueue{ VK_NULL_HANDLE },
-	m_swapChain{ VK_NULL_HANDLE }, m_swapChainFormat{}, m_swapChainExtent{},
-	m_renderPass{ VK_NULL_HANDLE }, m_pipelineLayout{ VK_NULL_HANDLE }, m_commandPool{ VK_NULL_HANDLE },
-	m_commandBuffers{ VK_NULL_HANDLE }, m_imageAvailableSemaphores{ VK_NULL_HANDLE },
-	m_renderFinishedSemaphores{ VK_NULL_HANDLE }, m_inFlightFences{ VK_NULL_HANDLE },
-	m_frameBufferResized{ false }, m_stagingBuffer{ nullptr }
+	m_window{ window }, m_loaded{ false }, m_instance{ VK_NULL_HANDLE }, m_debugMessenger{ VK_NULL_HANDLE },
+	m_surface{ VK_NULL_HANDLE }, m_physicalDevice{ VK_NULL_HANDLE }, m_device{ VK_NULL_HANDLE },
+	m_graphicsQueue{ VK_NULL_HANDLE }, m_presentQueue{ VK_NULL_HANDLE }, m_swapChain{ VK_NULL_HANDLE },
+	m_swapChainFormat{}, m_swapChainExtent{}, m_renderPass{ VK_NULL_HANDLE },
+	m_pipelineLayout{ VK_NULL_HANDLE }, m_commandPool{ VK_NULL_HANDLE }, m_commandBuffers{ VK_NULL_HANDLE },
+	m_imageAvailableSemaphores{ VK_NULL_HANDLE }, m_renderFinishedSemaphores{ VK_NULL_HANDLE },
+	m_inFlightFences{ VK_NULL_HANDLE }, m_frameBufferResized{ false },
+	m_currentFrame{ 0 }, m_currentImageIndex{ 0 }
 {
 	m_engineTitle = config->Get<string>("Engine.Title");
 	m_engineVersion = new Version{ "Engine.Version", config };
@@ -1204,19 +1204,19 @@ void Vulkan::Destroy()
 	m_loaded = false;
 }
 
-void Vulkan::RenderFrame()
+VkCommandBuffer Vulkan::BeginRender()
 {
 	vkWaitForFences(m_device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, UINT64_MAX);
 
-	uint32 imageIndex;
+	m_currentImageIndex = 0;
 	const VkResult nIResult = vkAcquireNextImageKHR(
-		m_device, m_swapChain, UINT64_MAX, m_imageAvailableSemaphores[m_currentFrame], VK_NULL_HANDLE, &imageIndex
+		m_device, m_swapChain, UINT64_MAX, m_imageAvailableSemaphores[m_currentFrame], VK_NULL_HANDLE, &m_currentImageIndex
 	);
 
 	if (nIResult == VK_ERROR_OUT_OF_DATE_KHR)
 	{
 		RecreateSwapChain();
-		return;
+		return nullptr;
 	}
 
 	if (nIResult != VK_SUCCESS && nIResult != VK_SUBOPTIMAL_KHR)
@@ -1229,8 +1229,12 @@ void Vulkan::RenderFrame()
 	vkResetFences(m_device, 1, &m_inFlightFences[m_currentFrame]);
 
 	vkResetCommandBuffer(m_commandBuffers[m_currentFrame], 0);
-	RecordCommandBuffer(m_commandBuffers[m_currentFrame], imageIndex, { .vertexCount = 3, .instanceCount = 1 });
 
+	return m_commandBuffers[m_currentFrame];
+}
+
+void Vulkan::EndRender()
+{
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
@@ -1264,7 +1268,7 @@ void Vulkan::RenderFrame()
 	VkSwapchainKHR swapchains[] = { m_swapChain };
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = swapchains;
-	presentInfo.pImageIndices = &imageIndex;
+	presentInfo.pImageIndices = &m_currentImageIndex;
 
 	presentInfo.pResults = nullptr; // Only useful if doing more than one swap chain
 

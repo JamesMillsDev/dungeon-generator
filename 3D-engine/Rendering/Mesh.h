@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <vector>
 
 #include <vulkan/vulkan.h>
 
@@ -12,6 +13,7 @@
 class Buffer;
 
 using std::array;
+using std::vector;
 
 enum : uint8
 {
@@ -49,6 +51,7 @@ public:
 
 class Mesh
 {
+	friend class Renderer;
 	friend class Vulkan;
 
 public:
