@@ -52,7 +52,7 @@ Mesh* Mesh::MakeQuad()
 	{
 		{
 			{
-				.location = { .0f, -.5f, 0.f },
+				.location = { -.5f, -.5f, 0.f },
 				.normal = { 0.f, 0.f, 0.f, 0.f },
 				.tangent = { 0.f, 0.f, 0.f, 0.f },
 				.biTangent = { 0.f, 0.f, 0.f, 0.f },
@@ -83,31 +83,42 @@ Mesh* Mesh::MakeQuad()
 				.uv = { 0.f, 0.f },
 				.color = { 1.f, 1.f, 1.f, 1.f }
 			}
+		},
+		{
+			0, 1, 2, 2, 3, 0
 		}
 	};
 }
 
-Mesh::Mesh(const vector<Vertex>& vertices)
-	: vertices{ vertices }, m_stagingBuffer{ nullptr }, m_vertexBuffer{ nullptr }
+Mesh::Mesh(const vector<Vertex>& vertices, const vector<uint16>& indices)
+	: vertices{ vertices }, indices{ indices }, m_vertexBuffer{ nullptr }, m_indexBuffer{ nullptr }
 {
 
 }
 
 void Mesh::CreateBuffers(const Vulkan* vulkan)
 {
-	m_stagingBuffer = vulkan->MakeStagingBuffer(sizeof(Vertex), vertices.size());
-	m_stagingBuffer->Fill(vertices.data());
+	Buffer* stagingBuffer = vulkan->MakeStagingBuffer(sizeof(Vertex), vertices.size());
+	stagingBuffer->Fill(vertices.data());
 
 	m_vertexBuffer = vulkan->MakeVertexBuffer(vertices.size());
-	m_vertexBuffer->Copy(m_stagingBuffer, m_stagingBuffer->Size());
+	m_vertexBuffer->Copy(stagingBuffer, stagingBuffer->Size());
 
-	Vulkan::DestroyBuffer(m_stagingBuffer);
-	m_stagingBuffer = nullptr;
+	Vulkan::DestroyBuffer(stagingBuffer);
+
+	stagingBuffer = vulkan->MakeStagingBuffer(sizeof(uint16), indices.size());
+	stagingBuffer->Fill(indices.data());
+
+	m_indexBuffer = vulkan->MakeIndexBuffer(indices.size());
+	m_indexBuffer->Copy(stagingBuffer, stagingBuffer->Size());
+
+	Vulkan::DestroyBuffer(stagingBuffer);
 }
 
 void Mesh::DestroyBuffer()
 {
 	Vulkan::DestroyBuffer(m_vertexBuffer);
+	Vulkan::DestroyBuffer(m_indexBuffer);
 }
 
 void Mesh::Render(const VkCommandBuffer buffer, const uint32 instances, const uint32 firstInstance) const
@@ -116,8 +127,11 @@ void Mesh::Render(const VkCommandBuffer buffer, const uint32 instances, const ui
 	VkDeviceSize offsets[] = { 0 };
 	vkCmdBindVertexBuffers(buffer, 0, 1, vertexBuffers, offsets);
 
-	vkCmdDraw(
-		buffer, static_cast<uint32>(vertices.size()), instances, 0, firstInstance
+	vkCmdBindVertexBuffers(buffer, 0, 1, vertexBuffers, offsets);
+	vkCmdBindIndexBuffer(buffer, m_indexBuffer->Get(), 0, VK_INDEX_TYPE_UINT16);
+
+	vkCmdDrawIndexed(
+		buffer, static_cast<uint32>(indices.size()), instances, 0, 0, firstInstance
 	);
 }
 

@@ -59,13 +59,14 @@ public:
 
 public:
 	vector<Vertex> vertices;
+	vector<uint16> indices;
 
 private:
-	Buffer* m_stagingBuffer;
 	Buffer* m_vertexBuffer;
+	Buffer* m_indexBuffer;
 
 public:
-	explicit Mesh(const vector<Vertex>& vertices);
+	Mesh(const vector<Vertex>& vertices, const vector<uint16>& indices);
 
 private:
 	void CreateBuffers(const Vulkan* vulkan);

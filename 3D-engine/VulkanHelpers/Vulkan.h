@@ -106,6 +106,7 @@ private:
 
 public:
 	[[nodiscard]] Buffer* MakeVertexBuffer(size_t vertexCount) const;
+	[[nodiscard]] Buffer* MakeIndexBuffer(size_t indexCount) const;
 	[[nodiscard]] Buffer* MakeStagingBuffer(size_t size, size_t count) const;
 
 private:

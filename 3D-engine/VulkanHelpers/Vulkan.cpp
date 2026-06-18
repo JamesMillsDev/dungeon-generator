@@ -1103,6 +1103,21 @@ Buffer* Vulkan::MakeVertexBuffer(const size_t vertexCount) const
 	return buffer;
 }
 
+Buffer* Vulkan::MakeIndexBuffer(const size_t indexCount) const
+{
+	Buffer* buffer = new Buffer
+	{
+		m_physicalDevice, m_device, m_commandPool, m_graphicsQueue,
+		sizeof(uint16), indexCount,
+		VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+	};
+
+	buffer->Create();
+
+	return buffer;
+}
+
 Buffer* Vulkan::MakeStagingBuffer(const size_t size, const size_t count) const
 {
 	Buffer* buffer = new Buffer
