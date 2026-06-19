@@ -96,10 +96,10 @@ Matrix4 Matrix4::MakePerspective(const float fovY, const float aspect, const flo
 
 	return Matrix4
 	{
-		1 / (aspect * tanFov), 0.f, 0.f, 0.f,
-		0.f, 1 / tanFov, 0.f, 0.f,
-		0.f, 0.f, -((far + near) / (far - near)), -(2.f * far * near / (far - near)),
-		0.f, 0.f, -1.f, 0.f
+		1.f / (aspect * tanFov), 0.f, 0.f, 0.f,
+		0.f, 1.f / tanFov, 0.f, 0.f,
+		0.f, 0.f, -(far + near) / (far - near), -1.f,
+		0.f, 0.f, -(2.f * far * near) / (far - near), 0.f
 	};
 }
 
@@ -114,18 +114,18 @@ Matrix4 Matrix4::MakeOrthographic(const float left, const float right, const flo
 	};
 }
 
-Matrix4 Matrix4::MakeLookAt(const Vector3& eye, const Vector3& target, const Vector3& up)
+Matrix4 Matrix4::MakeLookAt(const Vector3& eye, const Vector3& center, const Vector3& up)
 {
-	const Vector3 zAxis = (eye - target).Normalised();
-	const Vector3 xAxis = Vector3::Cross(up, zAxis).Normalised();
-	const Vector3 yAxis = Vector3::Cross(zAxis, xAxis);
+	const Vector3 f = (center - eye).Normalised();
+	const Vector3 s = Vector3::Cross(f, up).Normalised();
+	const Vector3 u = Vector3::Cross(s, f);
 
 	return Matrix4
 	{
-		xAxis.x, yAxis.x, zAxis.x, -Vector3::Dot(xAxis, eye),
-		xAxis.y, yAxis.y, zAxis.y, -Vector3::Dot(yAxis, eye),
-		xAxis.z, yAxis.z, zAxis.z, -Vector3::Dot(zAxis, eye),
-		0.f, 0.f, 0.f, 1.f
+		s.x, u.x, -f.x, 0.f,
+		s.y, u.y, -f.y, 0.f,
+		s.z, u.z, -f.z, 0.f,
+		-Vector3::Dot(s, eye), -Vector3::Dot(u, eye), Vector3::Dot(f, eye), 1.f
 	};
 }
 
@@ -362,17 +362,17 @@ Matrix4 Matrix4::operator*(const Matrix4& rhs) const
 		column2.x * rhs.column1.x + column2.y * rhs.column2.x + column2.z * rhs.column3.x + column2.w * rhs.column4.x,
 		column3.x * rhs.column1.x + column3.y * rhs.column2.x + column3.z * rhs.column3.x + column3.w * rhs.column4.x,
 		column4.x * rhs.column1.x + column4.y * rhs.column2.x + column4.z * rhs.column3.x + column4.w * rhs.column4.x,
-		
+
 		column1.x * rhs.column1.y + column1.y * rhs.column2.y + column1.z * rhs.column3.y + column1.w * rhs.column4.y,
 		column2.x * rhs.column1.y + column2.y * rhs.column2.y + column2.z * rhs.column3.y + column2.w * rhs.column4.y,
 		column3.x * rhs.column1.y + column3.y * rhs.column2.y + column3.z * rhs.column3.y + column3.w * rhs.column4.y,
 		column4.x * rhs.column1.y + column4.y * rhs.column2.y + column4.z * rhs.column3.y + column4.w * rhs.column4.y,
-		
+
 		column1.x * rhs.column1.z + column1.y * rhs.column2.z + column1.z * rhs.column3.z + column1.w * rhs.column4.z,
 		column2.x * rhs.column1.z + column2.y * rhs.column2.z + column2.z * rhs.column3.z + column2.w * rhs.column4.z,
 		column3.x * rhs.column1.z + column3.y * rhs.column2.z + column3.z * rhs.column3.z + column3.w * rhs.column4.z,
 		column4.x * rhs.column1.z + column4.y * rhs.column2.z + column4.z * rhs.column3.z + column4.w * rhs.column4.z,
-		
+
 		column1.x * rhs.column1.w + column1.y * rhs.column2.w + column1.z * rhs.column3.w + column1.w * rhs.column4.w,
 		column2.x * rhs.column1.w + column2.y * rhs.column2.w + column2.z * rhs.column3.w + column2.w * rhs.column4.w,
 		column3.x * rhs.column1.w + column3.y * rhs.column2.w + column3.z * rhs.column3.w + column3.w * rhs.column4.w,
