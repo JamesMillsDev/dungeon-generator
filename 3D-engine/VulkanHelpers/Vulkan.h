@@ -90,6 +90,7 @@ private:
 
 	VkDescriptorSetLayout m_descriptorSetLayout;
 	VkDescriptorPool m_descriptorPool;
+	vector<VkDescriptorSet> m_descriptorSets;
 
 	VkPipelineLayout m_pipelineLayout;
 	vector<VkPipeline> m_pipelines;
@@ -140,6 +141,7 @@ private:
 
 	void CreateUniformBuffers();
 	void CreateDescriptorPool();
+	void CreateDescriptorSets();
 
 	void CreateDescriptorSetLayout();
 	void CreateGraphicsPipeline(const vector<initializer_list<ShaderInfo>>& shaderInfos);

@@ -5,6 +5,8 @@
 #include <map>
 #include <set>
 #include <stdexcept>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/transform.hpp>
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -12,7 +14,7 @@
 #include "Buffer.h"
 #include "UniformBuffer.h"
 #include "Rendering/Mesh.h"
-#include "Rendering/MvpBufferObject.h"
+#include "Rendering/UniformBufferObject.h"
 #include "Rendering/Shader.h"
 
 using std::exception;
@@ -771,7 +773,7 @@ void Vulkan::CreateUniformBuffers()
 
 	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 	{
-		m_uniformBuffers.emplace_back(MakeUniformBuffer(sizeof(MvpBufferObject), 1));
+		m_uniformBuffers.emplace_back(MakeUniformBuffer(sizeof(UniformBufferObject), 1));
 	}
 }
 
@@ -795,6 +797,55 @@ void Vulkan::CreateDescriptorPool()
 		throw runtime_error(
 			std::format("Failed to create Descriptor Pool! Error Code: {}", static_cast<uint32>(result))
 		);
+	}
+}
+
+void Vulkan::CreateDescriptorSets()
+{
+	vector layouts(MAX_FRAMES_IN_FLIGHT, m_descriptorSetLayout);
+
+	const VkDescriptorSetAllocateInfo allocInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+		.pNext = nullptr,
+		.descriptorPool = m_descriptorPool,
+		.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT),
+		.pSetLayouts = layouts.data()
+	};
+
+	m_descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+	if (const VkResult result = vkAllocateDescriptorSets(m_device, &allocInfo, m_descriptorSets.data());
+		result != VK_SUCCESS)
+	{
+		throw runtime_error(
+			std::format("Failed to create Descriptor Sets! Error Code: {}", static_cast<uint32>(result))
+		);
+	}
+
+	for (uint32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+	{
+		VkDescriptorBufferInfo bufferInfo
+		{
+			.buffer = m_uniformBuffers[i]->Get(),
+			.offset = 0,
+			.range = sizeof(UniformBufferObject)
+		};
+
+		const VkWriteDescriptorSet descriptorWrite
+		{
+			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+			.pNext = nullptr,
+			.dstSet = m_descriptorSets[i],
+			.dstBinding = 0,
+			.dstArrayElement = 0,
+			.descriptorCount = 1,
+			.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+			.pImageInfo = nullptr, // Optional
+			.pBufferInfo = &bufferInfo,
+			.pTexelBufferView = nullptr, // Optional
+		};
+
+		vkUpdateDescriptorSets(m_device, 1, &descriptorWrite, 0, nullptr);
 	}
 }
 
@@ -899,7 +950,7 @@ void Vulkan::CreateGraphicsPipeline(const vector<initializer_list<ShaderInfo>>& 
 		rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 		rasterizer.lineWidth = 1.0f;
 		rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-		rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+		rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 		rasterizer.depthBiasEnable = VK_FALSE;
 
 		VkPipelineMultisampleStateCreateInfo multisampling{};
@@ -1049,6 +1100,10 @@ void Vulkan::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const uint
 	scissor.extent = m_swapChainExtent;
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
+	vkCmdBindDescriptorSets(
+		commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout,
+		0, 1, &m_descriptorSets[m_currentFrame], 0, nullptr
+	);
 	drawCommand();
 
 	vkCmdEndRenderPass(commandBuffer);
@@ -1064,12 +1119,12 @@ void Vulkan::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const uint
 
 void Vulkan::UpdateUniformBuffer(const uint32 imageIndex) const
 {
-	MvpBufferObject mvp
+	UniformBufferObject mvp
 	{
 		.model = Matrix4::MakeRotate({ 0, 0, GameTime::Time() * 90.f }),
 		.view = Matrix4::MakeLookAt({ 2.f, 2.f, 2.f }, { 0.f, 0.f, 0.f }, { 0.f, 0.f, 1.f }),
 		.proj = Matrix4::MakePerspective(
-			Maths::Radians(45.f), 
+			Maths::Radians(45.f),
 			static_cast<float>(m_swapChainExtent.width) / static_cast<float>(m_swapChainExtent.height),
 			.1f, 10.f
 		)
@@ -1247,8 +1302,10 @@ void Vulkan::Create(const vector<initializer_list<ShaderInfo>>& shaderInfos)
 		CreateGraphicsPipeline(shaderInfos);
 		CreateFrameBuffers();
 		CreateCommandPool();
-		CreateCommandBuffer();
 		CreateUniformBuffers();
+		CreateDescriptorPool();
+		CreateDescriptorSets();
+		CreateCommandBuffer();
 		CreateSyncObjects();
 
 		// Vulkan fully setup correctly
@@ -1278,6 +1335,7 @@ void Vulkan::Destroy()
 	}
 	m_uniformBuffers.clear();
 
+	vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
 	vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout, nullptr);
 
 	for (const VkPipeline& pipeline : m_pipelines)

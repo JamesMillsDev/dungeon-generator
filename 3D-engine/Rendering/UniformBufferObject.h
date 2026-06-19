@@ -2,7 +2,7 @@
 
 #include "Maths/Matrix4.h"
 
-struct MvpBufferObject
+struct UniformBufferObject
 {
 public:
 	Matrix4 model;

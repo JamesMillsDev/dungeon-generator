@@ -64,6 +64,7 @@ bool Renderer::IsValid() const
 void Renderer::BeginFrame()
 {
 	m_frameCommandBuffer = m_vulkan->BeginRender();
+	m_vulkan->UpdateUniformBuffer(m_vulkan->m_currentFrame);
 }
 
 void Renderer::EndFrame() const
@@ -73,7 +74,6 @@ void Renderer::EndFrame() const
 		return;
 	}
 
-	m_vulkan->UpdateUniformBuffer(m_vulkan->m_currentFrame);
 	m_vulkan->EndRender();
 }
 
