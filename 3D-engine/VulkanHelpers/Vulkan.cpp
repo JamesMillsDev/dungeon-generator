@@ -12,8 +12,8 @@
 #include "Buffer.h"
 #include "UniformBuffer.h"
 #include "Rendering/Mesh.h"
-#include "Rendering/UniformBufferObject.h"
 #include "Rendering/Shader.h"
+#include "Rendering/Uniforms.h"
 
 using std::exception;
 using std::multimap;
@@ -1120,7 +1120,7 @@ void Vulkan::UpdateUniformBuffer(const uint32 imageIndex) const
 {
 	UniformBufferObject mvp
 	{
-		.model = Matrix4::MakeRotate({ 0, 0, GameTime::Time() * 90.f }),
+		.model = Matrix4::Identity(),
 		.view = Matrix4::MakeLookAt({ 2.f, 2.f, 2.f }, { 0.f, 0.f, 0.f }, { 0.f, 0.f, 1.f }),
 		.proj = Matrix4::MakePerspective(
 			Maths::Radians(45.f),

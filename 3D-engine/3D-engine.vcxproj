@@ -202,7 +202,7 @@
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Rendering\Mesh.h" />
     <ClInclude Include="Rendering\Shader.h" />
-    <ClInclude Include="Rendering\UniformBufferObject.h" />
+    <ClInclude Include="Rendering\Uniforms.h" />
     <ClInclude Include="Utility\Config.h" />
     <ClInclude Include="Utility\Version.h" />
     <ClInclude Include="VulkanHelpers\Buffer.h" />
@@ -230,7 +230,6 @@
     </ClCompile>
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Rendering\Mesh.cpp" />
-    <ClCompile Include="Rendering\UniformBufferObject.cpp" />
     <ClCompile Include="Rendering\Shader.cpp" />
     <ClCompile Include="Utility\Config.cpp" />
     <ClCompile Include="Utility\Version.cpp" />

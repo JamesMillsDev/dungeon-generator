@@ -10,7 +10,7 @@ out gl_PerVertex {
     vec4 gl_Position;
 };
 
-layout(binding = 0) uniform UniformBufferObject {
+layout(binding = 0) uniform VPBufferObject {
     mat4 model;
     mat4 view;
     mat4 proj;
