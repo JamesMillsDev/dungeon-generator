@@ -3,6 +3,7 @@
 
 #include "Renderer.h"
 #include "Rendering/Mesh.h"
+#include "Rendering/Texture.h"
 
 class TestGameInstance : public GameInstance
 {
@@ -10,12 +11,12 @@ public:
 	void Init() override
 	{
 		m_mesh = Mesh::MakeQuad();
-		m_renderer->LoadMesh(m_mesh);
+		Renderer::Load(m_mesh);
 	}
 
 	void Shutdown() override
 	{
-		m_renderer->UnloadMesh(m_mesh);
+		Renderer::Unload(m_mesh);
 	}
 
 	void Tick() override
@@ -25,7 +26,7 @@ public:
 
 	void Render() override
 	{
-		m_renderer->RenderMesh(m_mesh);
+		m_renderer->Render(m_mesh);
 	}
 
 private:

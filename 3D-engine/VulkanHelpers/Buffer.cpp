@@ -3,7 +3,26 @@
 
 #include <stdexcept>
 
+#include "Vulkan.h"
+
 using std::runtime_error;
+
+uint32 Buffer::FindMemoryType(VkPhysicalDevice physicalDevice, const uint32 typeFilter, const VkMemoryPropertyFlags properties)
+{
+	VkPhysicalDeviceMemoryProperties memProperties;
+	vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+
+	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+	{
+		if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+		{
+			return i;
+		}
+	}
+
+	throw runtime_error("failed to find suitable memory type!");
+}
+
 
 Buffer::Buffer(const VkPhysicalDevice physicalDevice, const VkDevice device, const VkCommandPool commandPool,
 	const VkQueue queue, const size_t elementSize, const size_t dataCount, const VkBufferUsageFlags usage,
@@ -25,22 +44,8 @@ void Buffer::Fill(const void* data)
 
 void Buffer::Copy(const Buffer* src, const VkDeviceSize size) const
 {
-	VkCommandBufferAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandPool = m_commandPool;
-	allocInfo.commandBufferCount = 1;
-
 	// Allocate temporary memory buffer
-	VkCommandBuffer commandBuffer;
-	vkAllocateCommandBuffers(m_device, &allocInfo, &commandBuffer);
-
-	// Immediately begin the command buffer
-	VkCommandBufferBeginInfo beginInfo{};
-	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-	vkBeginCommandBuffer(commandBuffer, &beginInfo);
+	const VkCommandBuffer commandBuffer = Vulkan::Instance()->BeginSingleTimeCommands();
 
 	// Run the command for copying
 	VkBufferCopy copyRegion;
@@ -50,18 +55,7 @@ void Buffer::Copy(const Buffer* src, const VkDeviceSize size) const
 	vkCmdCopyBuffer(commandBuffer, src->m_buffer, m_buffer, 1, &copyRegion);
 
 	// End the command and submit
-	vkEndCommandBuffer(commandBuffer);
-
-	VkSubmitInfo submitInfo{};
-	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &commandBuffer;
-
-	vkQueueSubmit(m_queue, 1, &submitInfo, VK_NULL_HANDLE);
-	vkQueueWaitIdle(m_queue);
-
-	// Run the final cleanup
-	vkFreeCommandBuffers(m_device, m_commandPool, 1, &commandBuffer);
+	Vulkan::Instance()->EndSingleTimeCommands(commandBuffer);
 }
 
 VkBuffer Buffer::Get() const
@@ -94,6 +88,7 @@ void Buffer::Create()
 	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	allocInfo.allocationSize = memRequirements.size;
 	allocInfo.memoryTypeIndex = FindMemoryType(
+		m_physicalDevice,
 		memRequirements.memoryTypeBits,
 		m_memoryFlags
 	);
@@ -113,20 +108,4 @@ void Buffer::Destroy()
 
 	m_buffer = VK_NULL_HANDLE;
 	m_bufferMemory = VK_NULL_HANDLE;
-}
-
-uint32 Buffer::FindMemoryType(const uint32 typeFilter, const VkMemoryPropertyFlags properties) const
-{
-	VkPhysicalDeviceMemoryProperties memProperties;
-	vkGetPhysicalDeviceMemoryProperties(m_physicalDevice, &memProperties);
-
-	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
-	{
-		if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
-		{
-			return i;
-		}
-	}
-
-	throw runtime_error("failed to find suitable memory type!");
 }

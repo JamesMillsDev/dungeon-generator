@@ -2,7 +2,32 @@
 #include "Renderer.h"
 
 #include "Rendering/Mesh.h"
+#include "Rendering/Texture.h"
 #include "VulkanHelpers/Vulkan.h"
+
+void Renderer::Load(Mesh* mesh)
+{
+	mesh->CreateBuffers();
+}
+
+void Renderer::Unload(Mesh*& mesh)
+{
+	mesh->DestroyBuffers();
+	delete mesh;
+	mesh = nullptr;
+}
+
+void Renderer::Load(Texture* texture)
+{
+	texture->CreateBuffer();
+}
+
+void Renderer::Unload(Texture*& texture)
+{
+	texture->DestroyBuffer();
+	delete texture;
+	texture = nullptr;
+}
 
 Renderer::Renderer(GLFWwindow* window, Config* config) :
 	m_vulkan{ new Vulkan{window, config} }, m_frameCommandBuffer{ VK_NULL_HANDLE }
@@ -14,19 +39,7 @@ Renderer::~Renderer()
 	m_vulkan = nullptr;
 }
 
-void Renderer::LoadMesh(Mesh* mesh) const
-{
-	mesh->CreateBuffers(m_vulkan);
-}
-
-void Renderer::UnloadMesh(Mesh*& mesh) const
-{
-	mesh->DestroyBuffer();
-	delete mesh;
-	mesh = nullptr;
-}
-
-void Renderer::RenderMesh(const Mesh* mesh) const
+void Renderer::Render(const Mesh* mesh) const
 {
 	m_vulkan->RecordCommandBuffer(m_frameCommandBuffer, m_vulkan->m_currentImageIndex, [this, mesh]
 		{

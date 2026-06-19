@@ -6,11 +6,19 @@ struct GLFWwindow;
 
 class Config;
 class Mesh;
+class Texture;
 class Vulkan;
 
 class Renderer
 {
 	friend class Application;
+
+public:
+	static void Load(Mesh* mesh);
+	static void Unload(Mesh*& mesh);
+
+	static void Load(Texture* texture);
+	static void Unload(Texture*& texture);
 
 private:
 	Vulkan* m_vulkan;
@@ -21,10 +29,7 @@ private:
 	~Renderer();
 
 public:
-	void LoadMesh(Mesh* mesh) const;
-	void UnloadMesh(Mesh*& mesh) const;
-
-	void RenderMesh(const Mesh* mesh) const;
+	void Render(const Mesh* mesh) const;
 
 private:
 	void Create() const;

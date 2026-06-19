@@ -69,8 +69,8 @@ public:
 	Mesh(const vector<Vertex>& vertices, const vector<uint16>& indices);
 
 private:
-	void CreateBuffers(const Vulkan* vulkan);
-	void DestroyBuffer();
+	void CreateBuffers();
+	void DestroyBuffers();
 
 	void Render(VkCommandBuffer buffer, uint32 instances = 1, uint32 firstInstance = 0) const;
 

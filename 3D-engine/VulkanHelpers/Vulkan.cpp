@@ -13,14 +13,21 @@
 #include "UniformBuffer.h"
 #include "Rendering/Mesh.h"
 #include "Rendering/Shader.h"
+#include "Rendering/Texture.h"
 #include "Rendering/Uniforms.h"
 
 using std::exception;
+using std::invalid_argument;
 using std::multimap;
 using std::runtime_error;
 using std::set;
 
+// TODO: REMOVE THIS
+Texture* texture;
+
 #pragma region VkInstance / Debug Messenger
+Vulkan* Vulkan::m_singleton = nullptr;
+
 namespace
 {
 	VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
@@ -63,9 +70,14 @@ namespace
 	}
 }
 
+Vulkan* Vulkan::Instance()
+{
+	return m_singleton;
+}
+
 void Vulkan::FramebufferResizeCallback(GLFWwindow* window, int width, int height)
 {
-	Vulkan* vulkan = static_cast<Vulkan*>(glfwGetWindowUserPointer(window));
+	Vulkan* vulkan = m_singleton;
 	if (vulkan != nullptr)
 	{
 		vulkan->m_frameBufferResized = true;
@@ -274,6 +286,12 @@ uint32 Vulkan::RateDeviceSuitability(VkPhysicalDevice device, VkSurfaceKHR surfa
 
 	// Application can't function without swap chain support
 	if (!swapChainAdequate)
+	{
+		return 0;
+	}
+
+	// It would be weird to not have anisotropy...
+	if (!deviceFeatures.samplerAnisotropy)
 	{
 		return 0;
 	}
@@ -501,6 +519,8 @@ void Vulkan::CreateLogicalDevice()
 	createInfo.pQueueCreateInfos = queueCreateInfos.data();
 
 	VkPhysicalDeviceFeatures deviceFeatures{};
+	deviceFeatures.samplerAnisotropy = VK_TRUE;
+
 	createInfo.pEnabledFeatures = &deviceFeatures;
 
 	createInfo.enabledExtensionCount = static_cast<uint32>(DEVICE_EXTENSIONS.size());
@@ -561,7 +581,7 @@ void Vulkan::CleanupSwapChain() const
 
 	for (const VkImageView& imageView : m_swapChainImageViews)
 	{
-		vkDestroyImageView(m_device, imageView, nullptr);
+		DestroyTextureView(imageView);
 	}
 
 	vkDestroySwapchainKHR(m_device, m_swapChain, nullptr);
@@ -641,39 +661,10 @@ void Vulkan::CreateImageViews()
 	// Match the image view vector size to the other one
 	m_swapChainImageViews.resize(m_swapChainImages.size());
 
-	// Iterate over each image
+	// Iterate over each image and create their image view
 	for (uint64 i = 0; i < m_swapChainImages.size(); ++i)
 	{
-		// Set up the create info struct for this image view
-		VkImageViewCreateInfo createInfo{};
-		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		createInfo.image = m_swapChainImages[i];
-
-		// Notify the struct of the view type (this can be used for 1,2,3D or cube map images)
-		createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-		createInfo.format = m_swapChainFormat;
-
-		// Assign the swizzles, in case you want to handle mono-chromatics
-		createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-		createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-		createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-		createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-
-		// Assign the purpose of this image view
-		createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		createInfo.subresourceRange.baseMipLevel = 0;
-		createInfo.subresourceRange.levelCount = 1;
-		createInfo.subresourceRange.baseArrayLayer = 0;
-		createInfo.subresourceRange.layerCount = 1;
-
-		// Attempt to create the image view for this index
-		if (const VkResult result = vkCreateImageView(m_device, &createInfo, nullptr, &m_swapChainImageViews[i]);
-			result != VK_SUCCESS)
-		{
-			throw runtime_error(
-				std::format("Failed to create Image View for index '{}'! Error Code: {}", i, static_cast<uint32>(result))
-			);
-		}
+		m_swapChainImageViews[i] = MakeImageViewFor(m_swapChainImages[i], m_swapChainFormat);
 	}
 }
 
@@ -778,16 +769,24 @@ void Vulkan::CreateUniformBuffers()
 
 void Vulkan::CreateDescriptorPool()
 {
-	VkDescriptorPoolSize poolSize
+	array poolSizes =
 	{
-		.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-		.descriptorCount = MAX_FRAMES_IN_FLIGHT
+		VkDescriptorPoolSize
+		{
+			.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+			.descriptorCount = MAX_FRAMES_IN_FLIGHT
+		},
+		VkDescriptorPoolSize
+		{
+			.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+			.descriptorCount = MAX_FRAMES_IN_FLIGHT
+		}
 	};
 
 	VkDescriptorPoolCreateInfo poolInfo{};
 	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	poolInfo.poolSizeCount = 1;
-	poolInfo.pPoolSizes = &poolSize;
+	poolInfo.poolSizeCount = static_cast<uint32>(poolSizes.size());
+	poolInfo.pPoolSizes = poolSizes.data();
 	poolInfo.maxSets = MAX_FRAMES_IN_FLIGHT;
 
 	if (const VkResult result = vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &m_descriptorPool);
@@ -830,21 +829,46 @@ void Vulkan::CreateDescriptorSets()
 			.range = sizeof(UniformBufferObject)
 		};
 
-		const VkWriteDescriptorSet descriptorWrite
+		VkDescriptorImageInfo imageInfo
 		{
-			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-			.pNext = nullptr,
-			.dstSet = m_descriptorSets[i],
-			.dstBinding = 0,
-			.dstArrayElement = 0,
-			.descriptorCount = 1,
-			.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-			.pImageInfo = nullptr, // Optional
-			.pBufferInfo = &bufferInfo,
-			.pTexelBufferView = nullptr, // Optional
+			.sampler = texture->m_textureSampler,
+			.imageView = texture->m_textureView,
+			.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 		};
 
-		vkUpdateDescriptorSets(m_device, 1, &descriptorWrite, 0, nullptr);
+		array descriptorWrites
+		{
+			VkWriteDescriptorSet
+			{
+				.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+				.pNext = nullptr,
+				.dstSet = m_descriptorSets[i],
+				.dstBinding = 0,
+				.dstArrayElement = 0,
+				.descriptorCount = 1,
+				.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+				.pImageInfo = nullptr, // Optional
+				.pBufferInfo = &bufferInfo,
+				.pTexelBufferView = nullptr, // Optional
+			},
+			VkWriteDescriptorSet
+			{
+				.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+				.pNext = nullptr,
+				.dstSet = m_descriptorSets[i],
+				.dstBinding = 1,
+				.dstArrayElement = 0,
+				.descriptorCount = 1,
+				.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+				.pImageInfo = &imageInfo,
+				.pBufferInfo = nullptr,
+				.pTexelBufferView = nullptr, // Optional
+			}
+		};
+
+		vkUpdateDescriptorSets(
+			m_device, descriptorWrites.size(), descriptorWrites.data(), 0, nullptr
+		);
 	}
 }
 
@@ -859,10 +883,20 @@ void Vulkan::CreateDescriptorSetLayout()
 		.pImmutableSamplers = nullptr // Optional
 	};
 
+	constexpr VkDescriptorSetLayoutBinding samplerLayoutBinding
+	{
+		.binding = 1,
+		.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+		.descriptorCount = 1,
+		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+		.pImmutableSamplers = nullptr
+	};
+
+	array bindings = { uboLayoutBinding, samplerLayoutBinding };
 	VkDescriptorSetLayoutCreateInfo layoutInfo{};
 	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	layoutInfo.bindingCount = 1;
-	layoutInfo.pBindings = &uboLayoutBinding;
+	layoutInfo.bindingCount = static_cast<uint32>(bindings.size());
+	layoutInfo.pBindings = bindings.data();
 
 	if (const VkResult result = vkCreateDescriptorSetLayout(m_device, &layoutInfo, nullptr, &m_descriptorSetLayout);
 		result != VK_SUCCESS)
@@ -1181,6 +1215,13 @@ void Vulkan::CreateSyncObjects()
 #pragma endregion
 
 #pragma region Common
+void Vulkan::DestroyBuffer(Buffer*& buffer)
+{
+	buffer->Destroy();
+	delete buffer;
+	buffer = nullptr;
+}
+
 Vulkan::Vulkan(GLFWwindow* window, Config* config) :
 	m_window{ window }, m_loaded{ false }, m_instance{ VK_NULL_HANDLE }, m_debugMessenger{ VK_NULL_HANDLE },
 	m_surface{ VK_NULL_HANDLE }, m_physicalDevice{ VK_NULL_HANDLE }, m_device{ VK_NULL_HANDLE },
@@ -1201,6 +1242,8 @@ Vulkan::Vulkan(GLFWwindow* window, Config* config) :
 
 	glfwSetWindowUserPointer(window, this);
 	glfwSetFramebufferSizeCallback(window, FramebufferResizeCallback);
+
+	m_singleton = this;
 }
 
 Vulkan::~Vulkan()
@@ -1259,7 +1302,7 @@ Buffer* Vulkan::MakeStagingBuffer(const size_t size, const size_t count) const
 	return buffer;
 }
 
-UniformBuffer* Vulkan::MakeUniformBuffer(size_t size, size_t count) const
+UniformBuffer* Vulkan::MakeUniformBuffer(const size_t size, const size_t count) const
 {
 	UniformBuffer* buffer = new UniformBuffer
 	{
@@ -1273,11 +1316,239 @@ UniformBuffer* Vulkan::MakeUniformBuffer(size_t size, size_t count) const
 	return buffer;
 }
 
-void Vulkan::DestroyBuffer(Buffer*& buffer)
+VkImage Vulkan::MakeTexture(const uint32 w, const uint32 h, const VkFormat format,
+	const VkImageTiling tiling, const VkImageUsageFlags usage,
+	const VkMemoryPropertyFlags properties, VkDeviceMemory& imageMemory) const
 {
-	buffer->Destroy();
-	delete buffer;
-	buffer = nullptr;
+	// Set up the create info for this texture
+	VkImageCreateInfo imageInfo{};
+	imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	imageInfo.imageType = VK_IMAGE_TYPE_2D;
+	imageInfo.extent.width = w;
+	imageInfo.extent.height = h;
+	imageInfo.extent.depth = 1;
+	imageInfo.mipLevels = 1;
+	imageInfo.arrayLayers = 1;
+
+	imageInfo.format = format;
+	imageInfo.tiling = tiling;
+	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+	imageInfo.usage = usage;
+	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+	imageInfo.flags = 0; // Optional
+
+	VkImage image;
+	if (const VkResult result = vkCreateImage(m_device, &imageInfo, nullptr, &image);
+		result != VK_SUCCESS)
+	{
+		throw runtime_error(
+			std::format("Failed to create Texture Image! Error Code: {}", static_cast<uint32>(result))
+		);
+	}
+
+	VkMemoryRequirements memoryRequirements;
+	vkGetImageMemoryRequirements(m_device, image, &memoryRequirements);
+
+	VkMemoryAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	allocInfo.allocationSize = memoryRequirements.size;
+	allocInfo.memoryTypeIndex = Buffer::FindMemoryType(m_physicalDevice, memoryRequirements.memoryTypeBits, properties);
+
+	if (const VkResult result = vkAllocateMemory(m_device, &allocInfo, nullptr, &imageMemory);
+		result != VK_SUCCESS)
+	{
+		throw runtime_error(
+			std::format("Failed to allocate Image Memory! Error Code: {}", static_cast<uint32>(result))
+		);
+	}
+
+	vkBindImageMemory(m_device, image, imageMemory, 0);
+	return image;
+}
+
+void Vulkan::DestroyTexture(const VkImage texture, const VkDeviceMemory textureMemory) const
+{
+	vkDestroyImage(m_device, texture, nullptr);
+	vkFreeMemory(m_device, textureMemory, nullptr);
+}
+
+VkImageView Vulkan::MakeImageViewFor(const VkImage image, const VkFormat format) const
+{
+	VkImageView imageView;
+
+	VkImageViewCreateInfo viewInfo{};
+	viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	viewInfo.image = image;
+	viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	viewInfo.format = format;
+	viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	viewInfo.subresourceRange.baseMipLevel = 0;
+	viewInfo.subresourceRange.levelCount = 1;
+	viewInfo.subresourceRange.baseArrayLayer = 0;
+	viewInfo.subresourceRange.layerCount = 1;
+
+	if (const VkResult result = vkCreateImageView(m_device, &viewInfo, nullptr, &imageView);
+		result != VK_SUCCESS)
+	{
+		throw runtime_error(
+			std::format("Failed to create Texture Image View! Error Code: {}", static_cast<uint32>(result))
+		);
+	}
+
+	return imageView;
+}
+
+void Vulkan::DestroyTextureView(const VkImageView textureView) const
+{
+	vkDestroyImageView(m_device, textureView, nullptr);
+}
+
+VkSampler Vulkan::MakeTextureSampler(
+	const VkFilter filter, const VkSamplerAddressMode addressMode,
+	const bool anisotropyEnabled, const bool normalisedCoords,
+	const VkSamplerMipmapMode mipmapMode, const float mipLodBias, const float minLod,
+	const float maxLod, const bool enableCompare, const VkCompareOp compareOp,
+	const VkBorderColor borderColor) const
+{
+	VkSampler sampler;
+
+	// Get the physical device properties to retrieve the max anisotropy value
+	VkPhysicalDeviceProperties properties{};
+	vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
+
+	VkSamplerCreateInfo samplerInfo{};
+	samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+
+	// Initialise the filter mode
+	samplerInfo.magFilter = filter;
+	samplerInfo.minFilter = filter;
+
+	// Initialise the wrapping mode
+	samplerInfo.addressModeU = addressMode;
+	samplerInfo.addressModeV = addressMode;
+	samplerInfo.addressModeW = addressMode;
+
+	// Initialise anisotropy
+	samplerInfo.anisotropyEnable = anisotropyEnabled;
+	samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+
+	samplerInfo.borderColor = borderColor;
+	samplerInfo.unnormalizedCoordinates = !normalisedCoords;
+
+	// Initialise the comparison operations
+	samplerInfo.compareEnable = enableCompare;
+	samplerInfo.compareOp = compareOp;
+
+	// Initialise the mipmap values
+	samplerInfo.mipmapMode = mipmapMode;
+	samplerInfo.mipLodBias = mipLodBias;
+	samplerInfo.minLod = minLod;
+	samplerInfo.maxLod = maxLod;
+
+	if (const VkResult result = vkCreateSampler(m_device, &samplerInfo, nullptr, &sampler);
+		result != VK_SUCCESS)
+	{
+		throw runtime_error(
+			std::format("Failed to create Texture Sampler! Error Code: {}", static_cast<uint32>(result))
+		);
+	}
+
+	return sampler;
+}
+
+void Vulkan::DestroyTextureSampler(const VkSampler sampler) const
+{
+	vkDestroySampler(m_device, sampler, nullptr);
+}
+
+VkCommandBuffer Vulkan::BeginSingleTimeCommands() const
+{
+	VkCommandBufferAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocInfo.commandPool = m_commandPool;
+	allocInfo.commandBufferCount = 1;
+
+	VkCommandBuffer commandBuffer;
+	vkAllocateCommandBuffers(m_device, &allocInfo, &commandBuffer);
+
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+	vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+	return commandBuffer;
+}
+
+void Vulkan::EndSingleTimeCommands(const VkCommandBuffer commandBuffer) const
+{
+	vkEndCommandBuffer(commandBuffer);
+
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &commandBuffer;
+
+	vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+	vkQueueWaitIdle(m_graphicsQueue);
+
+	vkFreeCommandBuffers(m_device, m_commandPool, 1, &commandBuffer);
+}
+
+void Vulkan::TransitionImageLayout(const VkImage image, VkFormat format, const VkImageLayout oldLayout, const VkImageLayout newLayout) const
+{
+	const VkCommandBuffer commandBuffer = BeginSingleTimeCommands();
+
+	VkPipelineStageFlags sourceStage;
+	VkPipelineStageFlags destinationStage;
+
+	VkImageMemoryBarrier barrier{};
+	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	barrier.oldLayout = oldLayout;
+	barrier.newLayout = newLayout;
+
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+	barrier.image = image;
+	barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	barrier.subresourceRange.baseMipLevel = 0;
+	barrier.subresourceRange.levelCount = 1;
+	barrier.subresourceRange.baseArrayLayer = 0;
+	barrier.subresourceRange.layerCount = 1;
+
+	if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED &&
+		newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+	{
+		barrier.srcAccessMask = 0;
+		barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+	}
+	else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL &&
+		newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+	{
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+		sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+	}
+	else
+	{
+		throw invalid_argument("Unsupported layout transition!");
+	}
+
+	vkCmdPipelineBarrier(commandBuffer,
+		sourceStage, destinationStage,
+		0, 0, nullptr, 0, nullptr, 1, &barrier
+	);
+
+	EndSingleTimeCommands(commandBuffer);
 }
 
 bool Vulkan::Loaded() const
@@ -1301,6 +1572,11 @@ void Vulkan::Create(const vector<initializer_list<ShaderInfo>>& shaderInfos)
 		CreateGraphicsPipeline(shaderInfos);
 		CreateFrameBuffers();
 		CreateCommandPool();
+
+		// TODO: REMOVE THIS
+		texture = new Texture{ "Content/Textures/colormap.png" };
+		texture->CreateBuffer();
+
 		CreateUniformBuffers();
 		CreateDescriptorPool();
 		CreateDescriptorSets();
@@ -1324,6 +1600,10 @@ void Vulkan::Destroy()
 	{
 		return;
 	}
+
+	// TODO: REMOVE THIS
+	texture->DestroyBuffer();
+	delete texture;
 
 	CleanupSwapChain();
 

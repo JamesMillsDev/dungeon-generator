@@ -56,7 +56,7 @@ Mesh* Mesh::MakeQuad()
 				.normal = { 0.f, 0.f, 0.f, 0.f },
 				.tangent = { 0.f, 0.f, 0.f, 0.f },
 				.biTangent = { 0.f, 0.f, 0.f, 0.f },
-				.uv = { 0.f, 0.f },
+				.uv = { 1.f, 0.f },
 				.color = { 1.f, 0.f, 0.f, 1.f }
 			},
 			{
@@ -72,7 +72,7 @@ Mesh* Mesh::MakeQuad()
 				.normal = { 0.f, 0.f, 0.f, 0.f },
 				.tangent = { 0.f, 0.f, 0.f, 0.f },
 				.biTangent = { 0.f, 0.f, 0.f, 0.f },
-				.uv = { 0.f, 0.f },
+				.uv = { 0.f, 1.f },
 				.color = { 0.f, 0.f, 1.f, 1.f }
 			},
 			{
@@ -80,7 +80,7 @@ Mesh* Mesh::MakeQuad()
 				.normal = { 0.f, 0.f, 0.f, 0.f },
 				.tangent = { 0.f, 0.f, 0.f, 0.f },
 				.biTangent = { 0.f, 0.f, 0.f, 0.f },
-				.uv = { 0.f, 0.f },
+				.uv = { 1.f, 1.f },
 				.color = { 1.f, 1.f, 1.f, 1.f }
 			}
 		},
@@ -96,8 +96,10 @@ Mesh::Mesh(const vector<Vertex>& vertices, const vector<uint16>& indices)
 
 }
 
-void Mesh::CreateBuffers(const Vulkan* vulkan)
+void Mesh::CreateBuffers()
 {
+	Vulkan* vulkan = Vulkan::Instance();
+
 	Buffer* stagingBuffer = vulkan->MakeStagingBuffer(sizeof(Vertex), vertices.size());
 	stagingBuffer->Fill(vertices.data());
 
@@ -115,7 +117,7 @@ void Mesh::CreateBuffers(const Vulkan* vulkan)
 	Vulkan::DestroyBuffer(stagingBuffer);
 }
 
-void Mesh::DestroyBuffer()
+void Mesh::DestroyBuffers()
 {
 	Vulkan::DestroyBuffer(m_vertexBuffer);
 	Vulkan::DestroyBuffer(m_indexBuffer);

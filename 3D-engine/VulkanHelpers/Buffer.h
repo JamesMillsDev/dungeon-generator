@@ -7,6 +7,9 @@ class Buffer
 {
 	friend class Vulkan;
 
+public:
+	[[nodiscard]] static uint32 FindMemoryType(VkPhysicalDevice physicalDevice, uint32 typeFilter, VkMemoryPropertyFlags properties);
+
 protected:
 	VkBuffer m_buffer;
 	VkDeviceMemory m_bufferMemory;
@@ -39,6 +42,5 @@ protected:
 	virtual void Create();
 	virtual void Destroy();
 
-	[[nodiscard]] uint32 FindMemoryType(uint32 typeFilter, VkMemoryPropertyFlags properties) const;
 
 };

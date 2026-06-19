@@ -38,7 +38,11 @@ class Vulkan
 {
 	friend class Renderer;
 
+private:
+	static Vulkan* m_singleton;
+
 public:
+	static Vulkan* Instance();
 	static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);
 
 	static void DestroyBuffer(Buffer*& buffer);
@@ -117,6 +121,32 @@ public:
 	[[nodiscard]] Buffer* MakeIndexBuffer(size_t indexCount) const;
 	[[nodiscard]] Buffer* MakeStagingBuffer(size_t size, size_t count) const;
 	[[nodiscard]] UniformBuffer* MakeUniformBuffer(size_t size, size_t count) const;
+
+	[[nodiscard]] VkImage MakeTexture(
+		uint32 w, uint32 h, VkFormat format,
+		VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties,
+		VkDeviceMemory& imageMemory
+	) const;
+	void DestroyTexture(VkImage texture, VkDeviceMemory textureMemory) const;
+
+	[[nodiscard]] VkImageView MakeImageViewFor(VkImage image, VkFormat format) const;
+	void DestroyTextureView(VkImageView textureView) const;
+
+	[[nodiscard]] VkSampler MakeTextureSampler(
+		VkFilter filter = VK_FILTER_LINEAR,
+		VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+		bool anisotropyEnabled = VK_TRUE, bool normalisedCoords = VK_TRUE,
+		VkSamplerMipmapMode mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR, 
+		float mipLodBias = 0.f, float minLod = 0.f, float maxLod = 0.f,
+		bool enableCompare = VK_FALSE, VkCompareOp compareOp = VK_COMPARE_OP_ALWAYS,
+		VkBorderColor borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK
+	) const;
+	void DestroyTextureSampler(VkSampler sampler) const;
+
+	[[nodiscard]] VkCommandBuffer BeginSingleTimeCommands() const;
+	void EndSingleTimeCommands(VkCommandBuffer commandBuffer) const;
+
+	void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) const;
 
 private:
 	[[nodiscard]] bool Loaded() const;

@@ -25,6 +25,7 @@
     <ClInclude Include="Rendering\Mesh.h" />
     <ClInclude Include="VulkanHelpers\UniformBuffer.h" />
     <ClInclude Include="Rendering\Uniforms.h" />
+    <ClInclude Include="Rendering\Texture.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
@@ -46,5 +47,6 @@
     <ClCompile Include="Rendering\Shader.cpp" />
     <ClCompile Include="Rendering\Mesh.cpp" />
     <ClCompile Include="VulkanHelpers\UniformBuffer.cpp" />
+    <ClCompile Include="Rendering\Texture.cpp" />
   </ItemGroup>
 </Project>

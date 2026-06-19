@@ -202,6 +202,7 @@
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Rendering\Mesh.h" />
     <ClInclude Include="Rendering\Shader.h" />
+    <ClInclude Include="Rendering\Texture.h" />
     <ClInclude Include="Rendering\Uniforms.h" />
     <ClInclude Include="Utility\Config.h" />
     <ClInclude Include="Utility\Version.h" />
@@ -231,6 +232,7 @@
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Rendering\Mesh.cpp" />
     <ClCompile Include="Rendering\Shader.cpp" />
+    <ClCompile Include="Rendering\Texture.cpp" />
     <ClCompile Include="Utility\Config.cpp" />
     <ClCompile Include="Utility\Version.cpp" />
     <ClCompile Include="VulkanHelpers\Buffer.cpp" />
