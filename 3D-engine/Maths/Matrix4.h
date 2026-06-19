@@ -39,7 +39,7 @@ public:
 
 	static Matrix4 MakeOrthographic(float left, float right, float bottom, float top, float near, float far);
 
-	static Matrix4 MakeLookAt(const Vector3& eye, const Vector3& target, const Vector3& up);
+	static Matrix4 MakeLookAt(const Vector3& eye, const Vector3& center, const Vector3& up);
 
 	static Matrix4 Identity();
 
