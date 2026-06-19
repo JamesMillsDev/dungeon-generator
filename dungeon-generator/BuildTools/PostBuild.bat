@@ -6,7 +6,7 @@ setlocal enabledelayedexpansion
 :: Usage: PostBuild.bat <compiler_exe> <input_dir> <output_dir>
 ::
 :: Example (Visual Studio Post-Build Event):
-::   "$(SolutionDir)scripts\PostBuild.bat" "$(OutDir)" "$(ProjectDir)" "$(SolutionDir)Dependencies\native\" "$(ProjectDir)Config\" "$(ProjectDir)Content\" "$(ProjectDir)Content\Shaders\"
+::   "$(SolutionDir)scripts\PostBuild.bat" "$(OutDir)" "$(ProjectDir)" "$(SolutionDir)Dependencies\native\" "Config\" "Content\" "*.vert *.frag"
 :: ============================================================
 
 if "%~1"=="" (
@@ -35,7 +35,7 @@ if "%~5"=="" (
 )
 
 if "%~6"=="" (
-	echo [ERROR] Argument 6 missing: shader directory path
+	echo [ERROR] Argument 6 missing: compiled shader extension
 	exit /b 1
 )
 
@@ -44,10 +44,10 @@ set PROJECT_DIR=%~2
 set NATIVE_BIN_DIR=%~3
 set CONFIG_DIR=%~4
 set CONTENT_DIR=%~5
-set SHADER_DIR=%~6
+set SHADER_EXTENSIONS=%~6
 
 robocopy "%NATIVE_BIN_DIR%" "%OUTPUT_DIR%" /e /ns /nc /nfl /ndl /np /njh /njs
 robocopy "%PROJECT_DIR%/%CONFIG_DIR%" "%OUTPUT_DIR%/%CONFIG_DIR%" /e /ns /nc /nfl /ndl /np /njh /njs
-robocopy "%PROJECT_DIR%/%CONTENT_DIR%" "%OUTPUT_DIR%/%CONTENT_DIR%" /e /ns /nc /nfl /ndl /np /njh /njs /xd "%SHADER_DIR%" 
+robocopy "%PROJECT_DIR%/%CONTENT_DIR%" "%OUTPUT_DIR%/%CONTENT_DIR%" /e /ns /nc /nfl /ndl /np /njh /njs /xf %SHADER_EXTENSIONS%
 
 exit /b 0

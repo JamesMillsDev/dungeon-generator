@@ -102,10 +102,10 @@
       <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;3dengine.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>"$(ProjectDir)BuildTools/PostBuild.bat" "$(OutDir)/" "$(ProjectDir)" "$(SolutionDir)Dependencies/native/" "Config/" "Content/" "Shaders"</Command>
+      <Command>"$(ProjectDir)BuildTools/PostBuild.bat" "$(OutDir)/" "$(ProjectDir)" "$(SolutionDir)Dependencies/native/" "Config/" "Content/" "*.frag *.vert"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>"$(ProjectDir)BuildTools\CompileShaders.bat" "$(VULKAN_SDK)\Bin\glslc.exe" "$(ProjectDir)Content\Shaders" "$(ProjectDir)Content\SPIRV"</Command>
+      <Command>"$(ProjectDir)BuildTools\CompileShaders.bat" "$(VULKAN_SDK)\Bin\glslc.exe" "$(ProjectDir)Content\Shaders" "$(ProjectDir)Content\Shaders"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -126,10 +126,10 @@
       <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;3dengine.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>"$(ProjectDir)BuildTools/PostBuild.bat" "$(OutDir)/" "$(ProjectDir)" "$(SolutionDir)Dependencies/native/" "Config/" "Content/" "Shaders"</Command>
+      <Command>"$(ProjectDir)BuildTools/PostBuild.bat" "$(OutDir)/" "$(ProjectDir)" "$(SolutionDir)Dependencies/native/" "Config/" "Content/" "*.frag *.vert"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>"$(ProjectDir)BuildTools\CompileShaders.bat" "$(VULKAN_SDK)\Bin\glslc.exe" "$(ProjectDir)Content\Shaders" "$(ProjectDir)Content\SPIRV"</Command>
+      <Command>"$(ProjectDir)BuildTools\CompileShaders.bat" "$(VULKAN_SDK)\Bin\glslc.exe" "$(ProjectDir)Content\Shaders" "$(ProjectDir)Content\Shaders"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -148,10 +148,10 @@
       <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;3dengine.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>"$(ProjectDir)BuildTools/PostBuild.bat" "$(OutDir)/" "$(ProjectDir)" "$(SolutionDir)Dependencies/native/" "Config/" "Content/" "Shaders"</Command>
+      <Command>"$(ProjectDir)BuildTools/PostBuild.bat" "$(OutDir)/" "$(ProjectDir)" "$(SolutionDir)Dependencies/native/" "Config/" "Content/" "*.frag *.vert"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>"$(ProjectDir)BuildTools\CompileShaders.bat" "$(VULKAN_SDK)\Bin\glslc.exe" "$(ProjectDir)Content\Shaders" "$(ProjectDir)Content\SPIRV"</Command>
+      <Command>"$(ProjectDir)BuildTools\CompileShaders.bat" "$(VULKAN_SDK)\Bin\glslc.exe" "$(ProjectDir)Content\Shaders" "$(ProjectDir)Content\Shaders"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -172,10 +172,10 @@
       <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;3dengine.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>"$(ProjectDir)BuildTools/PostBuild.bat" "$(OutDir)/" "$(ProjectDir)" "$(SolutionDir)Dependencies/native/" "Config/" "Content/" "Shaders"</Command>
+      <Command>"$(ProjectDir)BuildTools/PostBuild.bat" "$(OutDir)/" "$(ProjectDir)" "$(SolutionDir)Dependencies/native/" "Config/" "Content/" "*.frag *.vert"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>"$(ProjectDir)BuildTools\CompileShaders.bat" "$(VULKAN_SDK)\Bin\glslc.exe" "$(ProjectDir)Content\Shaders" "$(ProjectDir)Content\SPIRV"</Command>
+      <Command>"$(ProjectDir)BuildTools\CompileShaders.bat" "$(VULKAN_SDK)\Bin\glslc.exe" "$(ProjectDir)Content\Shaders" "$(ProjectDir)Content\Shaders"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

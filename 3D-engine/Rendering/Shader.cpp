@@ -11,7 +11,7 @@ using std::streamsize;
 
 vector<char> Shader::ReadShaderFile(const string& fileName)
 {
-	ifstream file(std::format("Content/SPIRV/{}.spv", fileName), std::ios::ate | std::ios::binary);
+	ifstream file(std::format("Content/Shaders/{}.spv", fileName), std::ios::ate | std::ios::binary);
 
 	if (!file.is_open())
 	{

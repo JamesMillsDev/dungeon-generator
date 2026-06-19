@@ -5,8 +5,6 @@
 #include <map>
 #include <set>
 #include <stdexcept>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/transform.hpp>
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -31,7 +29,8 @@ namespace
 		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
 		void* pUserData)
 	{
-		if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+		if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT &&
+			pCallbackData->pObjects->objectType != VK_OBJECT_TYPE_SHADER_MODULE)
 		{
 			std::cerr << "validation layer: " << pCallbackData->pMessage << "\n";
 		}
