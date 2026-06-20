@@ -13,7 +13,7 @@ public:
 	explicit MeshComponent(Mesh* mesh);
 	~MeshComponent() override;
 
-protected:
+public:
 	void BeginPlay() override;
 	void Render() override;
 	void EndPlay() override;

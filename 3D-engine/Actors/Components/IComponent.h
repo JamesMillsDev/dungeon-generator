@@ -20,7 +20,7 @@ protected:
 public:
 	Actor* Owner() const;
 
-protected:
+public:
 	virtual void BeginPlay()
 	{}
 

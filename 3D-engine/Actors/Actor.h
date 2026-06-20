@@ -12,7 +12,7 @@ using std::function;
 using std::pair;
 using std::vector;
 
-using ComponentListChange = pair<IComponent*, function<void(IComponent*)>>;
+using ComponentListChange = function<void()>;
 
 class Actor
 {
@@ -39,7 +39,7 @@ public:
 	template<typename T, typename... ARGS>
 	T* MakeComponent(ARGS... args);
 
-	void DestroyComponent(IComponent*& component);
+	void DestroyComponent(IComponent* component);
 
 	Transform* GetTransform() const;
 
@@ -54,10 +54,10 @@ T* Actor::MakeComponent(ARGS... args)
 	static_assert(std::is_base_of_v<IComponent, T>, "T must derive from IComponent");
 
 	T* newComp = new T{ std::forward<ARGS...>(args...) };
-	m_componentListChanges.emplace_back(newComp, [this](IComponent* comp)
+	m_componentListChanges.emplace_back([this, newComp]
 		{
-			comp->BeginPlay();
-			m_components.emplace_back(comp);
+			newComp->BeginPlay();
+			m_components.emplace_back(newComp);
 		});
 
 	newComp->m_owner = this;

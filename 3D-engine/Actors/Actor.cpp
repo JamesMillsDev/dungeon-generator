@@ -11,18 +11,18 @@ Actor::Actor()
 
 Actor::~Actor()
 {
-	for (IComponent* component : m_components)
-	{
-		DestroyComponent(component);
-	}
-	ApplyComponentListChanges();
-
 	for (Transform* child : m_transform->Children())
 	{
 		delete child->Owner();
 	}
 
 	delete m_transform;
+
+	for (IComponent* component : m_components)
+	{
+		DestroyComponent(component);
+	}
+	ApplyComponentListChanges();
 }
 
 void Actor::BeginPlay()
@@ -37,17 +37,16 @@ void Actor::Render()
 void Actor::EndPlay()
 {}
 
-void Actor::DestroyComponent(IComponent*& component)
+void Actor::DestroyComponent(IComponent* component)
 {
-	m_componentListChanges.emplace_back(component, [this](IComponent* comp)
-		{
-			std::erase_if(m_components, [comp](IComponent* c)
+	m_componentListChanges.emplace_back([this, component]
+	{
+			std::erase_if(m_components, [component](const IComponent* comp)
 				{
-					return c == comp;
+					return comp == component;
 				});
-			comp->EndPlay();
-			delete comp;
-			comp = nullptr;
+			component->EndPlay();
+			delete component;
 		});
 }
 
@@ -58,9 +57,9 @@ Transform* Actor::GetTransform() const
 
 void Actor::ApplyComponentListChanges()
 {
-	for (const auto& [component, change] : m_componentListChanges)
+	for (const ComponentListChange& change : m_componentListChanges)
 	{
-		change(component);
+		change();
 	}
 	m_componentListChanges.clear();
 }

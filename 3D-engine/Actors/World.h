@@ -11,7 +11,7 @@ using std::function;
 using std::pair;
 using std::vector;
 
-using ActorLifetimeChange = pair<Actor*, function<void(Actor*)>>;
+using ActorLifetimeChange = function<void()>;
 
 class World
 {
@@ -31,7 +31,7 @@ public:
 	template<typename T, typename... ARGS>
 	T* MakeActor(ARGS... args);
 
-	void DestroyActor(Actor*& actor);
+	void DestroyActor(Actor* actor);
 
 private:
 	void Tick(Actor* actor = nullptr);
@@ -44,21 +44,21 @@ T* World::MakeActor(ARGS... args)
 {
 	static_assert(std::is_base_of_v<Actor, T>, "T must derive from Actor");
 
-	T* newActor = new T{ args... };
-	m_lifetimeChanges.emplace_back(newActor, [this](Actor* toSpawn)
+	T* actor = new T{ args... };
+	m_lifetimeChanges.emplace_back([this, actor]()
 		{
-			toSpawn->GetTransform()->SetParent(m_root->GetTransform());
-			toSpawn->GetTransform()->ApplyChildListChanges();
+			actor->GetTransform()->SetParent(m_root->GetTransform());
+			actor->GetTransform()->ApplyChildListChanges();
 
-			toSpawn->BeginPlay();
-			toSpawn->ApplyComponentListChanges();
+			actor->BeginPlay();
+			actor->ApplyComponentListChanges();
 
-			for (IComponent* component : toSpawn->m_components)
+			for (IComponent* component : actor->m_components)
 			{
 				component->BeginPlay();
 			}
 
 		});
 
-	return newActor;
+	return actor;
 }

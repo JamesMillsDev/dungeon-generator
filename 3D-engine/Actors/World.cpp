@@ -12,23 +12,22 @@ World::~World()
 	delete m_root;
 }
 
-void World::DestroyActor(Actor*& actor)
+void World::DestroyActor(Actor* actor)
 {
-	m_lifetimeChanges.emplace_back(actor, [this](Actor* toDestroy)
-		{
-			toDestroy->GetTransform()->SetParent(nullptr);
-			toDestroy->GetTransform()->ApplyChildListChanges();
+	m_lifetimeChanges.emplace_back([this, actor]
+	{
+			actor->GetTransform()->SetParent(nullptr);
+			actor->GetTransform()->ApplyChildListChanges();
 
-			toDestroy->EndPlay();
-			toDestroy->ApplyComponentListChanges();
+			actor->EndPlay();
+			actor->ApplyComponentListChanges();
 
-			for (IComponent* component : toDestroy->m_components)
+			for (IComponent* component : actor->m_components)
 			{
 				component->EndPlay();
 			}
 
-			delete toDestroy;
-			toDestroy = nullptr;
+			delete actor;
 		});
 }
 
@@ -37,9 +36,9 @@ void World::Tick(Actor* actor)
 	if (actor == nullptr)
 	{
 		actor = m_root;
-		for (const auto& [actor, change] : m_lifetimeChanges)
+		for (const ActorLifetimeChange& change : m_lifetimeChanges)
 		{
-			change(actor);
+			change();
 		}
 		m_lifetimeChanges.clear();
 	}

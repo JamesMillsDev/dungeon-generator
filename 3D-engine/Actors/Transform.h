@@ -12,7 +12,7 @@ using std::function;
 using std::pair;
 using std::vector;
 
-using TransformChildrenUpdate = pair<class Transform*, function<void(class Transform*)>>;
+using TransformChildrenUpdate = function<void()>;
 
 class Transform
 {

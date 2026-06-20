@@ -7,10 +7,18 @@ Transform::Transform()
 
 Transform::~Transform()
 {
+	if (m_parent != nullptr)
+	{
+		SetParent(nullptr);
+		ApplyChildListChanges();
+	}
+
+	m_owner = nullptr;
 	for (const Transform* child : m_children)
 	{
 		delete child;
 	}
+	m_children.clear();
 }
 
 Actor* Transform::Owner() const
@@ -32,8 +40,8 @@ void Transform::SetParent(Transform* parent)
 {
 	if (parent == nullptr && m_parent != nullptr)
 	{
-		m_childListUpdates.emplace_back(parent, [this](const Transform* newParent)
-			{
+		m_childListUpdates.emplace_back([this]
+		{
 				if (m_parent != nullptr)
 				{
 					std::erase_if(m_parent->m_children, [this](const Transform* child)
@@ -50,8 +58,8 @@ void Transform::SetParent(Transform* parent)
 
 	if (m_parent != parent)
 	{
-		m_childListUpdates.emplace_back(parent, [this](Transform* newParent)
-			{
+		m_childListUpdates.emplace_back([this, parent]
+		{
 				if (m_parent != nullptr)
 				{
 					std::erase_if(m_parent->m_children, [this](const Transform* child)
@@ -62,7 +70,7 @@ void Transform::SetParent(Transform* parent)
 					m_parent = nullptr;
 				}
 
-				m_parent = newParent;
+				m_parent = parent;
 				m_parent->m_children.emplace_back(this);
 			});
 	}
@@ -167,9 +175,9 @@ void Transform::AddRelativeScale(const Vector3& scale)
 
 void Transform::ApplyChildListChanges()
 {
-	for (const auto& [newParent, change] : m_childListUpdates)
+	for (const TransformChildrenUpdate& change : m_childListUpdates)
 	{
-		change(newParent);
+		change();
 	}
 	m_childListUpdates.clear();
 }
