@@ -26,6 +26,11 @@
     <ClInclude Include="VulkanHelpers\UniformBuffer.h" />
     <ClInclude Include="Rendering\Uniforms.h" />
     <ClInclude Include="Rendering\Texture.h" />
+    <ClInclude Include="Actors\Actor.h" />
+    <ClInclude Include="Actors\Transform.h" />
+    <ClInclude Include="Actors\Components\IComponent.h" />
+    <ClInclude Include="Actors\Components\Rendering\MeshComponent.h" />
+    <ClInclude Include="Actors\World.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
@@ -48,5 +53,10 @@
     <ClCompile Include="Rendering\Mesh.cpp" />
     <ClCompile Include="VulkanHelpers\UniformBuffer.cpp" />
     <ClCompile Include="Rendering\Texture.cpp" />
+    <ClCompile Include="Actors\Actor.cpp" />
+    <ClCompile Include="Actors\Transform.cpp" />
+    <ClCompile Include="Actors\Components\Rendering\MeshComponent.cpp" />
+    <ClCompile Include="Actors\World.cpp" />
+    <ClCompile Include="GameInstance.cpp" />
   </ItemGroup>
 </Project>

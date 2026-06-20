@@ -1,6 +1,7 @@
 #pragma once
 
 class Renderer;
+class World;
 
 /**
  * @brief Abstract base class for the game logic layer.
@@ -19,12 +20,15 @@ protected:
 	/** @brief The renderer that the system needs to use. */
 	Renderer* m_renderer;
 
+	/** @brief The world the Game is currently using */
+	World* m_world;
+
 public:
 	/** @brief Constructs the GameInstance and creates the root Actor. */
-	GameInstance() = default;
+	GameInstance();
 
 	/** @brief Virtual destructor to ensure correct cleanup of derived types. */
-	virtual ~GameInstance() = default;
+	virtual ~GameInstance();
 
 public:
 	/**
@@ -59,5 +63,11 @@ public:
 	 * All rendering should be performed here rather than in Tick().
 	 */
 	virtual void Render() = 0;
+
+	/**
+	 * @brief Gets the current world the game is using.
+	 * @return The current world.
+	 */
+	World* GetWorld() const;
 
 };

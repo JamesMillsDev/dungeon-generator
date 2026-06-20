@@ -13,6 +13,12 @@ class Renderer
 {
 	friend class Application;
 
+private:
+	static Renderer* m_instance;
+
+public:
+	static Renderer* GetInstance();
+
 public:
 	static void Load(Mesh* mesh);
 	static void Unload(Mesh*& mesh);

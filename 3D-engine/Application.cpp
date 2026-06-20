@@ -8,6 +8,8 @@
 #include "GameTime.h"
 #include "Renderer.h"
 
+#include "Actors/World.h"
+
 #include "Utility/Config.h"
 
 using std::runtime_error;
@@ -81,15 +83,20 @@ EExitCode Application::Run()
 		glfwPollEvents();
 
 		m_game->Tick();
+		m_game->GetWorld()->Tick();
 
 		m_renderer->BeginFrame();
 
 		m_game->Render();
+		m_game->GetWorld()->Render();
 
 		m_renderer->EndFrame();
 	}
 
 	m_renderer->WaitDeviceIdle();
+
+	// delete the current world to pre-cleanup
+	delete m_game->m_world;
 
 	// Shutdown the game instance and close the window
 	m_game->Shutdown();

@@ -5,6 +5,13 @@
 #include "Rendering/Texture.h"
 #include "VulkanHelpers/Vulkan.h"
 
+Renderer* Renderer::m_instance = nullptr;
+
+Renderer* Renderer::GetInstance()
+{
+	return m_instance;
+}
+
 void Renderer::Load(Mesh* mesh)
 {
 	mesh->CreateBuffers();
@@ -31,7 +38,9 @@ void Renderer::Unload(Texture*& texture)
 
 Renderer::Renderer(GLFWwindow* window, Config* config) :
 	m_vulkan{ new Vulkan{window, config} }, m_frameCommandBuffer{ VK_NULL_HANDLE }
-{}
+{
+	m_instance = this;
+}
 
 Renderer::~Renderer()
 {

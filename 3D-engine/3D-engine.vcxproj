@@ -187,6 +187,11 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Actors\Actor.h" />
+    <ClInclude Include="Actors\Components\IComponent.h" />
+    <ClInclude Include="Actors\Components\Rendering\MeshComponent.h" />
+    <ClInclude Include="Actors\Transform.h" />
+    <ClInclude Include="Actors\World.h" />
     <ClInclude Include="Application.h" />
     <ClInclude Include="GameInstance.h" />
     <ClInclude Include="GameTime.h" />
@@ -214,7 +219,12 @@
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Actors\Actor.cpp" />
+    <ClCompile Include="Actors\Components\Rendering\MeshComponent.cpp" />
+    <ClCompile Include="Actors\Transform.cpp" />
+    <ClCompile Include="Actors\World.cpp" />
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="GameInstance.cpp" />
     <ClCompile Include="GameTime.cpp" />
     <ClCompile Include="Maths\Maths.cpp" />
     <ClCompile Include="Maths\Color.cpp" />
