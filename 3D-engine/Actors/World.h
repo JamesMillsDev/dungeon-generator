@@ -53,11 +53,6 @@ T* World::MakeActor(ARGS... args)
 			actor->BeginPlay();
 			actor->ApplyComponentListChanges();
 
-			for (IComponent* component : actor->m_components)
-			{
-				component->BeginPlay();
-			}
-
 		});
 
 	return actor;

@@ -37,6 +37,3 @@ private:
 	void CopyBufferToImage() const;
 
 };
-
-// TODO: REMOVE THIS
-extern Texture* texture;

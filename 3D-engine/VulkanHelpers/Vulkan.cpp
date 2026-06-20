@@ -13,7 +13,6 @@
 #include "UniformBuffer.h"
 #include "Rendering/Mesh.h"
 #include "Rendering/Shader.h"
-#include "Rendering/Texture.h"
 #include "Rendering/Uniforms.h"
 
 using std::exception;
@@ -21,9 +20,6 @@ using std::invalid_argument;
 using std::multimap;
 using std::runtime_error;
 using std::set;
-
-// TODO: REMOVE THIS
-Texture* texture;
 
 #pragma region VkInstance / Debug Messenger
 Vulkan* Vulkan::m_singleton = nullptr;
@@ -829,12 +825,12 @@ void Vulkan::CreateDescriptorSets()
 			.range = sizeof(UniformBufferObject)
 		};
 
-		VkDescriptorImageInfo imageInfo
+		/*VkDescriptorImageInfo imageInfo
 		{
 			.sampler = texture->m_textureSampler,
 			.imageView = texture->m_textureView,
 			.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-		};
+		};*/
 
 		array descriptorWrites
 		{
@@ -851,19 +847,19 @@ void Vulkan::CreateDescriptorSets()
 				.pBufferInfo = &bufferInfo,
 				.pTexelBufferView = nullptr, // Optional
 			},
-			VkWriteDescriptorSet
-			{
-				.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-				.pNext = nullptr,
-				.dstSet = m_descriptorSets[i],
-				.dstBinding = 1,
-				.dstArrayElement = 0,
-				.descriptorCount = 1,
-				.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-				.pImageInfo = &imageInfo,
-				.pBufferInfo = nullptr,
-				.pTexelBufferView = nullptr, // Optional
-			}
+			//VkWriteDescriptorSet
+			//{
+			//	.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+			//	.pNext = nullptr,
+			//	.dstSet = m_descriptorSets[i],
+			//	.dstBinding = 1,
+			//	.dstArrayElement = 0,
+			//	.descriptorCount = 1,
+			//	.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+			//	.pImageInfo = &imageInfo,
+			//	.pBufferInfo = nullptr,
+			//	.pTexelBufferView = nullptr, // Optional
+			//}
 		};
 
 		vkUpdateDescriptorSets(
@@ -1572,11 +1568,6 @@ void Vulkan::Create(const vector<initializer_list<ShaderInfo>>& shaderInfos)
 		CreateGraphicsPipeline(shaderInfos);
 		CreateFrameBuffers();
 		CreateCommandPool();
-
-		// TODO: REMOVE THIS
-		texture = new Texture{ "Content/Textures/colormap.png" };
-		texture->CreateBuffer();
-
 		CreateUniformBuffers();
 		CreateDescriptorPool();
 		CreateDescriptorSets();
@@ -1600,10 +1591,6 @@ void Vulkan::Destroy()
 	{
 		return;
 	}
-
-	// TODO: REMOVE THIS
-	texture->DestroyBuffer();
-	delete texture;
 
 	CleanupSwapChain();
 

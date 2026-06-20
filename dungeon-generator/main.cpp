@@ -14,8 +14,10 @@ class TestGameInstance : public GameInstance
 public:
 	void Init() override
 	{
+		Mesh* mesh = Mesh::MakeQuad();
+
 		m_actor = GetWorld()->MakeActor<Actor>();
-		MeshComponent* comp = m_actor->MakeComponent<MeshComponent>(Mesh::MakeQuad());
+		MeshComponent* comp = m_actor->MakeComponent<MeshComponent>(mesh);
 	}
 
 	void Shutdown() override
