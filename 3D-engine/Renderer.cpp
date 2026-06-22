@@ -51,14 +51,16 @@ Renderer::~Renderer()
 void Renderer::Render(const Mesh* mesh) const
 {
 	m_vulkan->RecordCommandBuffer(m_frameCommandBuffer, m_vulkan->m_currentImageIndex, [this, mesh]
-	{
-		mesh->Render(m_frameCommandBuffer);
-	}, 0);
+		{
+			mesh->Render(m_frameCommandBuffer);
+		}, 0);
 }
 
 void Renderer::Create() const
 {
-	m_vulkan->Create(vector<GraphicsPipelineConfig>
+	m_vulkan->Create(vector
+	{
+		GraphicsPipelineConfig
 		{
 			vector<ShaderConfig>
 			{
@@ -66,7 +68,7 @@ void Renderer::Create() const
 				{.stage = VK_SHADER_STAGE_FRAGMENT_BIT, .shader = "Triangle.frag" }
 			}
 		}
-	);
+	});
 }
 
 void Renderer::Destroy() const

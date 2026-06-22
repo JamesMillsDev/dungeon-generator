@@ -17,77 +17,51 @@ struct ShaderConfig
 
 struct RasterizerConfig
 {
-	VkFrontFace frontFace;
-	VkCullModeFlags cullMode;
-	VkPolygonMode polygonMode;
-	bool depthBiasEnabled;
-	bool depthClampEnabled;
-	bool rasterizerDiscardEnabled;
-	float lineWidth;
+	VkFrontFace frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+	VkCullModeFlags cullMode = VK_CULL_MODE_BACK_BIT;
+	VkPolygonMode polygonMode = VK_POLYGON_MODE_FILL;
+	bool depthBiasEnabled = VK_FALSE;
+	bool depthClampEnabled = VK_FALSE;
+	bool rasterizerDiscardEnabled = VK_FALSE;
+	float lineWidth = 1.f;
 };
 
 struct ColorAttachmentConfig
 {
-	VkColorComponentFlags colorWriteMask;
-	bool blendEnabled;
+	VkColorComponentFlags colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+	bool blendEnabled = VK_FALSE;
 };
 
 struct ColorBlendStateConfig
 {
 	static constexpr int BLEND_CONSTANT_COUNT = 4;
 
-	bool logicOpEnabled;
-	VkLogicOp logicOp;
-	float blendConstants[BLEND_CONSTANT_COUNT];
+	bool logicOpEnabled = VK_FALSE;
+	VkLogicOp logicOp = VK_LOGIC_OP_COPY;
+	float blendConstants[BLEND_CONSTANT_COUNT] = { 0.f, 0.f, 0.f, 0.f };
 };
 
 struct PrimitiveConfig
 {
-	VkPrimitiveTopology topology;
-	bool primitiveRestartEnabled;
+	VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+	bool primitiveRestartEnabled = VK_FALSE;
 };
 
 struct MultisamplerConfig
 {
-	VkSampleCountFlagBits samples;
-	bool sampleShadingEnabled;
+	VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
+	bool sampleShadingEnabled = VK_FALSE;
 };
 
 struct GraphicsPipelineConfig
 {
 public:
 	vector<ShaderConfig> shaders;
-	RasterizerConfig rasterizer
-	{
-		.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
-		.cullMode = VK_CULL_MODE_BACK_BIT,
-		.polygonMode = VK_POLYGON_MODE_FILL,
-		.depthBiasEnabled = VK_FALSE,
-		.depthClampEnabled = VK_FALSE,
-		.rasterizerDiscardEnabled = VK_FALSE,
-		.lineWidth = 1.f
-	};
-	ColorAttachmentConfig colorAttachment
-	{
-		.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-		.blendEnabled = VK_FALSE
-	};
-	ColorBlendStateConfig blendState
-	{
-		.logicOpEnabled = VK_FALSE,
-		.logicOp = VK_LOGIC_OP_COPY,
-		.blendConstants = { 0.f, 0.f, 0.f, 0.f }
-	};
-	PrimitiveConfig primitive
-	{
-		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-		.primitiveRestartEnabled = VK_FALSE
-	};
-	MultisamplerConfig multisampler
-	{
-		.samples = VK_SAMPLE_COUNT_1_BIT,
-		.sampleShadingEnabled = VK_FALSE
-	};
+	RasterizerConfig rasterizer;
+	ColorAttachmentConfig colorAttachment;
+	ColorBlendStateConfig blendState;
+	PrimitiveConfig primitive;
+	MultisamplerConfig multisampler;
 
 public:
 	explicit GraphicsPipelineConfig(vector<ShaderConfig> shaders);
@@ -100,5 +74,22 @@ public:
 
 class GraphicsPipeline
 {
-	
+	friend class Vulkan;
+
+private:
+	VkPipeline m_pipeline;
+	VkDevice m_device;
+	GraphicsPipelineConfig m_config;
+
+private:
+	GraphicsPipeline(GraphicsPipelineConfig config, VkDevice device, VkPipelineLayout layout, VkRenderPass renderPass);
+	~GraphicsPipeline();
+
+public:
+	VkPipeline& Get();
+	void Bind(VkCommandBuffer cmdBuffer) const;
+
+private:
+	void CreateHandle(VkPipelineLayout layout, VkRenderPass renderPass);
+
 };

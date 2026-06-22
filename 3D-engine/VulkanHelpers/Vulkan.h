@@ -91,7 +91,7 @@ private:
 	vector<VkDescriptorSet> m_descriptorSets;
 
 	VkPipelineLayout m_pipelineLayout;
-	vector<VkPipeline> m_pipelines;
+	vector<GraphicsPipeline*> m_pipelines;
 
 	VkCommandPool m_commandPool;
 	vector<VkCommandBuffer> m_commandBuffers;
