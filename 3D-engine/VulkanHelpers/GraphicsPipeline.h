@@ -1,20 +1,27 @@
 #pragma once
 
-#include <initializer_list>
+#include <set>
 #include <string>
 
 #include "Common.h"
 
-using std::initializer_list;
+using std::pair;
+using std::set;
 using std::string;
 
 struct ShaderConfig
 {
-	VkShaderStageFlagBits stages;
-	uint32 passCount;
-	string name;
-	const char* entryPoint = "main";
+	struct StageComp
+	{
+		bool operator()(const VkShaderStageFlagBits& lhs, const VkShaderStageFlagBits& rhs) const;
+	};
 
+public:
+	set<VkShaderStageFlagBits, StageComp> stages;
+	string name;
+	string entryPoint = "main";
+
+public:
 	string PassName(VkShaderStageFlagBits pass);
 };
 

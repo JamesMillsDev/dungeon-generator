@@ -8,6 +8,11 @@
 
 using std::runtime_error;
 
+bool ShaderConfig::StageComp::operator()(const VkShaderStageFlagBits& lhs, const VkShaderStageFlagBits& rhs) const
+{
+	return lhs < rhs;
+}
+
 string ShaderConfig::PassName(const VkShaderStageFlagBits pass)
 {
 	switch (pass)  // NOLINT(clang-diagnostic-switch-enum)
@@ -49,12 +54,12 @@ GraphicsPipelineConfig::GraphicsPipelineConfig(ShaderConfig shader)
 
 uint32 GraphicsPipelineConfig::Size() const
 {
-	return shader.passCount;
+	return static_cast<uint32>(shader.stages.size());
 }
 
 bool GraphicsPipelineConfig::ContainsStage(const VkShaderStageFlagBits stage) const
 {
-	return (shader.stages & stage) == stage;
+	return shader.stages.contains(stage);
 }
 
 GraphicsPipeline::GraphicsPipeline(GraphicsPipelineConfig config, const VkDevice device,
@@ -118,7 +123,7 @@ void GraphicsPipeline::CreateHandle(VkPipelineLayout layout, VkRenderPass render
 		stageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		stageCreateInfo.stage = static_cast<VkShaderStageFlagBits>(i);
 		stageCreateInfo.module = shaders[shaderIndex++]->GetModule();
-		stageCreateInfo.pName = m_config.shader.entryPoint;
+		stageCreateInfo.pName = m_config.shader.entryPoint.c_str();
 
 		shaderStages.emplace_back(stageCreateInfo);
 	}
