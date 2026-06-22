@@ -1,4 +1,4 @@
-#include "DungeonGeneratorGameInstance.h"
+#include "DungeonGameInstance.h"
 
 #include "Renderer.h"
 
@@ -9,20 +9,21 @@
 
 #include "VulkanHelpers/GraphicsPipeline.h"
 
-DungeonGeneratorGameInstance::DungeonGeneratorGameInstance()
+DungeonGameInstance::DungeonGameInstance()
 	: m_actor{ nullptr }, m_pipeline{ nullptr }
 {
 	
 }
 
-void DungeonGeneratorGameInstance::Init()
+void DungeonGameInstance::Init()
 {
 	m_pipeline = m_renderer->CreatePipeline(GraphicsPipelineConfig
 		{
-			vector<ShaderConfig>
+			ShaderConfig
 			{
-				{.stage = VK_SHADER_STAGE_VERTEX_BIT,   .shader = "Triangle.vert" },
-				{.stage = VK_SHADER_STAGE_FRAGMENT_BIT, .shader = "Triangle.frag" }
+				.stages = static_cast<VkShaderStageFlagBits>(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT),
+				.passCount = 2,
+				.name = "Triangle"
 			}
 		});
 
@@ -32,8 +33,8 @@ void DungeonGeneratorGameInstance::Init()
 	m_actor->MakeComponent<MeshComponent>(mesh, m_pipeline);
 }
 
-void DungeonGeneratorGameInstance::Shutdown() { }
+void DungeonGameInstance::Shutdown() { }
 
-void DungeonGeneratorGameInstance::Tick() { }
+void DungeonGameInstance::Tick() { }
 
-void DungeonGeneratorGameInstance::Render() { }
+void DungeonGameInstance::Render() { }

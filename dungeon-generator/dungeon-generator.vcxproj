@@ -179,7 +179,7 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="DungeonGeneratorGameInstance.cpp" />
+    <ClCompile Include="DungeonGameInstance.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -188,7 +188,7 @@
     <None Include="Content\Shaders\triangle.vert" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DungeonGeneratorGameInstance.h" />
+    <ClInclude Include="DungeonGameInstance.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

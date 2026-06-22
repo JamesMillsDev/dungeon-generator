@@ -10,9 +10,12 @@ using std::string;
 
 struct ShaderConfig
 {
-	VkShaderStageFlagBits stage;
-	string shader;
+	VkShaderStageFlagBits stages;
+	uint32 passCount;
+	string name;
 	const char* entryPoint = "main";
+
+	string PassName(VkShaderStageFlagBits pass);
 };
 
 struct RasterizerConfig
@@ -56,7 +59,7 @@ struct MultisamplerConfig
 struct GraphicsPipelineConfig
 {
 public:
-	vector<ShaderConfig> shaders;
+	ShaderConfig shader;
 	RasterizerConfig rasterizer;
 	ColorAttachmentConfig colorAttachment;
 	ColorBlendStateConfig blendState;
@@ -64,11 +67,11 @@ public:
 	MultisamplerConfig multisampler;
 
 public:
-	explicit GraphicsPipelineConfig(vector<ShaderConfig> shaders);
+	explicit GraphicsPipelineConfig(ShaderConfig shader);
 
 public:
 	[[nodiscard]] uint32 Size() const;
-	[[nodiscard]] ShaderConfig ShaderAt(uint32 index) const;
+	[[nodiscard]] bool ContainsStage(VkShaderStageFlagBits stage) const;
 
 };
 

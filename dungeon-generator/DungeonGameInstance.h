@@ -5,14 +5,14 @@
 class GraphicsPipeline;
 class Actor;
 
-class DungeonGeneratorGameInstance final : public GameInstance
+class DungeonGameInstance final : public GameInstance
 {
 private:
 	Actor* m_actor;
 	GraphicsPipeline* m_pipeline;
 
 public:
-	DungeonGeneratorGameInstance();
+	DungeonGameInstance();
 
 public:
 	void Init() override;

@@ -8,18 +8,53 @@
 
 using std::runtime_error;
 
-GraphicsPipelineConfig::GraphicsPipelineConfig(vector<ShaderConfig> shaders)
-	: shaders{ std::move(shaders) }
+string ShaderConfig::PassName(const VkShaderStageFlagBits pass)
+{
+	switch (pass)  // NOLINT(clang-diagnostic-switch-enum)
+	{
+		case VK_SHADER_STAGE_VERTEX_BIT:
+		{
+			return name + ".vert";
+		}
+		case VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT:
+		{
+			return name + ".tessctrl";
+		}
+		case VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT:
+		{
+			return name + ".tesseval";
+		}
+		case VK_SHADER_STAGE_GEOMETRY_BIT:
+		{
+			return name + ".geom";
+		}
+		case VK_SHADER_STAGE_FRAGMENT_BIT:
+		{
+			return name + ".frag";
+		}
+		case VK_SHADER_STAGE_COMPUTE_BIT:
+		{
+			return name + ".compute";
+		}
+		default:
+		{
+			return name;
+		}
+	}
+}
+
+GraphicsPipelineConfig::GraphicsPipelineConfig(ShaderConfig shader)
+	: shader{ std::move(shader) }
 {}
 
 uint32 GraphicsPipelineConfig::Size() const
 {
-	return static_cast<uint32>(shaders.size());
+	return shader.passCount;
 }
 
-ShaderConfig GraphicsPipelineConfig::ShaderAt(const uint32 index) const
+bool GraphicsPipelineConfig::ContainsStage(const VkShaderStageFlagBits stage) const
 {
-	return shaders[index];
+	return (shader.stages & stage) == stage;
 }
 
 GraphicsPipeline::GraphicsPipeline(GraphicsPipelineConfig config, const VkDevice device,
@@ -54,11 +89,14 @@ void GraphicsPipeline::CreateHandle(VkPipelineLayout layout, VkRenderPass render
 	shaders.reserve(shaderCount);
 
 	// Load each shader inside the pipeline config
-	for (uint32 i = 0; i < shaderCount; ++i)
+	for (uint32 i = VK_SHADER_STAGE_VERTEX_BIT; i < VK_SHADER_STAGE_ALL_GRAPHICS; i <<= 1)
 	{
-		ShaderConfig info = m_config.ShaderAt(i);
+		if (!m_config.ContainsStage(static_cast<VkShaderStageFlagBits>(i)))
+		{
+			continue;
+		}
 
-		Shader* shader = new Shader{ info.shader };
+		Shader* shader = new Shader{ m_config.shader.PassName(static_cast<VkShaderStageFlagBits>(i)) };
 		shader->Load(m_device);
 
 		shaders.emplace_back(shader);
@@ -68,15 +106,19 @@ void GraphicsPipeline::CreateHandle(VkPipelineLayout layout, VkRenderPass render
 	shaderStages.reserve(shaderCount);
 
 	// Create the pipeline information for each shader
-	for (uint32 i = 0; i < shaderCount; ++i)
+	uint32 shaderIndex = 0;
+	for (uint32 i = VK_SHADER_STAGE_VERTEX_BIT; i < VK_SHADER_STAGE_ALL_GRAPHICS; i <<= 1)
 	{
-		const auto& [stage, shaderName, entryPoint] = m_config.ShaderAt(i);
+		if (!m_config.ContainsStage(static_cast<VkShaderStageFlagBits>(i)))
+		{
+			continue;
+		}
 
 		VkPipelineShaderStageCreateInfo stageCreateInfo{};
 		stageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		stageCreateInfo.stage = stage;
-		stageCreateInfo.module = shaders[i]->GetModule();
-		stageCreateInfo.pName = entryPoint;
+		stageCreateInfo.stage = static_cast<VkShaderStageFlagBits>(i);
+		stageCreateInfo.module = shaders[shaderIndex++]->GetModule();
+		stageCreateInfo.pName = m_config.shader.entryPoint;
 
 		shaderStages.emplace_back(stageCreateInfo);
 	}
