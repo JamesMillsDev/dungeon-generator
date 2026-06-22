@@ -903,7 +903,7 @@ void Vulkan::CreateDescriptorSetLayout()
 	}
 }
 
-void Vulkan::CreateGraphicsPipeline(const vector<initializer_list<ShaderInfo>>& shaderInfos)
+void Vulkan::CreateGraphicsPipeline(const vector<GraphicsPipelineConfig>& pipelineConfigs)
 {
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -919,16 +919,19 @@ void Vulkan::CreateGraphicsPipeline(const vector<initializer_list<ShaderInfo>>& 
 		);
 	}
 
-	m_pipelines.reserve(shaderInfos.size());
+	m_pipelines.reserve(pipelineConfigs.size());
 	int pipelineIndex = 0;
-	for (initializer_list shaderInfoSet : shaderInfos)
+	for (const GraphicsPipelineConfig& pipelineConfig : pipelineConfigs)
 	{
-		vector<Shader*> shaders;
-		shaders.reserve(shaderInfoSet.size());
+		const uint32 shaderCount = pipelineConfig.Size();
 
-		for (size_t i = 0; i < shaderInfoSet.size(); ++i)
+		vector<Shader*> shaders;
+		shaders.reserve(shaderCount);
+
+		// Load each shader inside the pipeline config
+		for (uint32 i = 0; i < shaderCount; ++i)
 		{
-			ShaderInfo info = *(shaderInfoSet.begin() + i);
+			ShaderConfig info = pipelineConfig.ShaderAt(i);
 
 			Shader* shader = new Shader{ info.shader };
 			shader->Load(m_device);
@@ -937,17 +940,18 @@ void Vulkan::CreateGraphicsPipeline(const vector<initializer_list<ShaderInfo>>& 
 		}
 
 		vector<VkPipelineShaderStageCreateInfo> shaderStages;
-		shaderStages.reserve(shaderInfoSet.size());
+		shaderStages.reserve(shaderCount);
 
-		for (size_t i = 0; i < shaderInfoSet.size(); ++i)
+		// Create the pipeline information for each shader
+		for (uint32 i = 0; i < shaderCount; ++i)
 		{
-			const auto& [stage, shaderName, entryPoint] = *(shaderInfoSet.begin() + i);
+			const auto& [stage, shaderName, entryPoint] = pipelineConfig.ShaderAt(i);
 
 			VkPipelineShaderStageCreateInfo stageCreateInfo{};
 			stageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 			stageCreateInfo.stage = stage;
 			stageCreateInfo.module = shaders[i]->GetModule();
-			stageCreateInfo.pName = entryPoint.c_str();
+			stageCreateInfo.pName = entryPoint;
 
 			shaderStages.emplace_back(stageCreateInfo);
 		}
@@ -964,8 +968,8 @@ void Vulkan::CreateGraphicsPipeline(const vector<initializer_list<ShaderInfo>>& 
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-		inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-		inputAssembly.primitiveRestartEnable = VK_FALSE;
+		inputAssembly.topology = pipelineConfig.primitive.topology;
+		inputAssembly.primitiveRestartEnable = pipelineConfig.primitive.primitiveRestartEnabled;
 
 		VkPipelineViewportStateCreateInfo viewportState{};
 		viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -974,33 +978,33 @@ void Vulkan::CreateGraphicsPipeline(const vector<initializer_list<ShaderInfo>>& 
 
 		VkPipelineRasterizationStateCreateInfo rasterizer{};
 		rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-		rasterizer.depthClampEnable = VK_FALSE;
-		rasterizer.rasterizerDiscardEnable = VK_FALSE;
-		rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-		rasterizer.lineWidth = 1.0f;
-		rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-		rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-		rasterizer.depthBiasEnable = VK_FALSE;
+		rasterizer.depthClampEnable = pipelineConfig.rasterizer.depthClampEnabled;
+		rasterizer.rasterizerDiscardEnable = pipelineConfig.rasterizer.rasterizerDiscardEnabled;
+		rasterizer.polygonMode = pipelineConfig.rasterizer.polygonMode;
+		rasterizer.lineWidth = pipelineConfig.rasterizer.lineWidth;
+		rasterizer.cullMode = pipelineConfig.rasterizer.cullMode;
+		rasterizer.frontFace = pipelineConfig.rasterizer.frontFace;
+		rasterizer.depthBiasEnable = pipelineConfig.rasterizer.depthBiasEnabled;
 
 		VkPipelineMultisampleStateCreateInfo multisampling{};
 		multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-		multisampling.sampleShadingEnable = VK_FALSE;
-		multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+		multisampling.sampleShadingEnable = pipelineConfig.multisampler.sampleShadingEnabled;
+		multisampling.rasterizationSamples = pipelineConfig.multisampler.samples;
 
 		VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-		colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-		colorBlendAttachment.blendEnable = VK_FALSE;
+		colorBlendAttachment.colorWriteMask = pipelineConfig.colorAttachment.colorWriteMask;
+		colorBlendAttachment.blendEnable = pipelineConfig.colorAttachment.blendEnabled;
 
 		VkPipelineColorBlendStateCreateInfo colorBlending{};
 		colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-		colorBlending.logicOpEnable = VK_FALSE;
-		colorBlending.logicOp = VK_LOGIC_OP_COPY;
+		colorBlending.logicOpEnable = pipelineConfig.blendState.logicOpEnabled;
+		colorBlending.logicOp = pipelineConfig.blendState.logicOp;
 		colorBlending.attachmentCount = 1;
 		colorBlending.pAttachments = &colorBlendAttachment;
-		colorBlending.blendConstants[0] = 0.0f;
-		colorBlending.blendConstants[1] = 0.0f;
-		colorBlending.blendConstants[2] = 0.0f;
-		colorBlending.blendConstants[3] = 0.0f;
+		for (int i = 0; i < ColorBlendStateConfig::BLEND_CONSTANT_COUNT; ++i)
+		{
+			colorBlending.blendConstants[i] = pipelineConfig.blendState.blendConstants[i];
+		}
 
 		vector dynamicStates =
 		{
@@ -1086,7 +1090,8 @@ void Vulkan::CreateCommandBuffer()
 	}
 }
 
-void Vulkan::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const uint32 imageIndex, const function<void()>& drawCommand) const
+void Vulkan::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const uint32 imageIndex, const function<void()>& drawCommand, const uint32
+	pipelineIndex) const
 {
 	VkCommandBufferBeginInfo beginInfo{};
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -1113,7 +1118,7 @@ void Vulkan::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const uint
 	renderPassInfo.pClearValues = &clearColor;
 
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelines[0]);
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelines[pipelineIndex]);
 
 	VkViewport viewport;
 	viewport.x = 0.0f;
@@ -1552,7 +1557,7 @@ bool Vulkan::Loaded() const
 	return m_loaded;
 }
 
-void Vulkan::Create(const vector<initializer_list<ShaderInfo>>& shaderInfos)
+void Vulkan::Create(const vector<GraphicsPipelineConfig>& shaderInfos)
 {
 	try
 	{

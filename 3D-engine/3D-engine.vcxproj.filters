@@ -31,6 +31,7 @@
     <ClInclude Include="Actors\Components\IComponent.h" />
     <ClInclude Include="Actors\Components\Rendering\MeshComponent.h" />
     <ClInclude Include="Actors\World.h" />
+    <ClInclude Include="VulkanHelpers\GraphicsPipeline.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
@@ -58,5 +59,6 @@
     <ClCompile Include="Actors\Components\Rendering\MeshComponent.cpp" />
     <ClCompile Include="Actors\World.cpp" />
     <ClCompile Include="GameInstance.cpp" />
+    <ClCompile Include="VulkanHelpers\GraphicsPipeline.cpp" />
   </ItemGroup>
 </Project>

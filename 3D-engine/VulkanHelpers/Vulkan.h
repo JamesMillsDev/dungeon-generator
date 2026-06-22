@@ -5,6 +5,7 @@
 #include <string>
 
 #include "Common.h"
+#include "GraphicsPipeline.h"
 #include "Structs.h"
 #include "Maths/Alias.h"
 
@@ -18,13 +19,6 @@ class Buffer;
 class Config;
 class UniformBuffer;
 class Version;
-
-struct ShaderInfo
-{
-	VkShaderStageFlagBits stage;
-	string shader;
-	string entryPoint = "main";
-};
 
 struct BufferInfo
 {
@@ -151,7 +145,7 @@ public:
 private:
 	[[nodiscard]] bool Loaded() const;
 
-	void Create(const vector<initializer_list<ShaderInfo>>& shaderInfos);
+	void Create(const vector<GraphicsPipelineConfig>& shaderInfos);
 	void Destroy();
 
 	void CreateInstance();
@@ -174,14 +168,14 @@ private:
 	void CreateDescriptorSets();
 
 	void CreateDescriptorSetLayout();
-	void CreateGraphicsPipeline(const vector<initializer_list<ShaderInfo>>& shaderInfos);
+	void CreateGraphicsPipeline(const vector<GraphicsPipelineConfig>& pipelineConfigs);
 
 	void CreateFrameBuffers();
 
 	void CreateCommandPool();
 
 	void CreateCommandBuffer();
-	void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32 imageIndex, const function<void()>& drawCommand) const;
+	void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32 imageIndex, const function<void()>& drawCommand, uint32 pipelineIndex) const;
 	void UpdateUniformBuffer(uint32 imageIndex) const;
 
 	void CreateSyncObjects();
