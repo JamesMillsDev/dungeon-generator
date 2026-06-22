@@ -12,7 +12,6 @@
 #include "Buffer.h"
 #include "UniformBuffer.h"
 #include "Rendering/Mesh.h"
-#include "Rendering/Shader.h"
 #include "Rendering/Uniforms.h"
 
 using std::exception;
@@ -903,7 +902,7 @@ void Vulkan::CreateDescriptorSetLayout()
 	}
 }
 
-void Vulkan::CreateGraphicsPipeline(const vector<GraphicsPipelineConfig>& pipelineConfigs)
+void Vulkan::CreateGraphicsPipelineLayout()
 {
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -917,16 +916,6 @@ void Vulkan::CreateGraphicsPipeline(const vector<GraphicsPipelineConfig>& pipeli
 		throw runtime_error(
 			std::format("Failed to create Pipeline Layout! Error Code: {}", static_cast<uint32>(result))
 		);
-	}
-
-	m_pipelines.resize(pipelineConfigs.size());
-	int pipelineIndex = 0;
-	for (const GraphicsPipelineConfig& pipelineConfig : pipelineConfigs)
-	{
-		m_pipelines[pipelineIndex++] = new GraphicsPipeline
-		{
-			pipelineConfig, m_device, m_pipelineLayout, m_renderPass
-		};
 	}
 }
 #pragma endregion
@@ -969,8 +958,7 @@ void Vulkan::CreateCommandBuffer()
 	}
 }
 
-void Vulkan::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const uint32 imageIndex, const function<void()>& drawCommand, const uint32
-	pipelineIndex) const
+void Vulkan::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const GraphicsPipeline* pipeline, const function<void()>& drawCommand) const
 {
 	VkCommandBufferBeginInfo beginInfo{};
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -988,7 +976,7 @@ void Vulkan::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const uint
 	VkRenderPassBeginInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	renderPassInfo.renderPass = m_renderPass;
-	renderPassInfo.framebuffer = m_swapChainFrameBuffers[imageIndex];
+	renderPassInfo.framebuffer = m_swapChainFrameBuffers[m_currentImageIndex];
 	renderPassInfo.renderArea.offset = { .x = 0, .y = 0 };
 	renderPassInfo.renderArea.extent = m_swapChainExtent;
 
@@ -997,7 +985,7 @@ void Vulkan::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const uint
 	renderPassInfo.pClearValues = &clearColor;
 
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-	m_pipelines[pipelineIndex]->Bind(commandBuffer);
+	pipeline->Bind(commandBuffer);
 
 	VkViewport viewport;
 	viewport.x = 0.0f;
@@ -1431,12 +1419,18 @@ void Vulkan::TransitionImageLayout(const VkImage image, VkFormat format, const V
 	EndSingleTimeCommands(commandBuffer);
 }
 
+GraphicsPipeline* Vulkan::CreatePipeline(const GraphicsPipelineConfig& config)
+{
+	m_pipelines.emplace_back(new GraphicsPipeline{ config, m_device, m_pipelineLayout, m_renderPass });
+	return m_pipelines.back();
+}
+
 bool Vulkan::Loaded() const
 {
 	return m_loaded;
 }
 
-void Vulkan::Create(const vector<GraphicsPipelineConfig>& shaderInfos)
+void Vulkan::Create()
 {
 	try
 	{
@@ -1449,7 +1443,7 @@ void Vulkan::Create(const vector<GraphicsPipelineConfig>& shaderInfos)
 		CreateImageViews();
 		CreateRenderPass();
 		CreateDescriptorSetLayout();
-		CreateGraphicsPipeline(shaderInfos);
+		CreateGraphicsPipelineLayout();
 		CreateFrameBuffers();
 		CreateCommandPool();
 		CreateUniformBuffers();

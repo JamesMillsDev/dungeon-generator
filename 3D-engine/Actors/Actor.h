@@ -53,7 +53,7 @@ T* Actor::MakeComponent(ARGS... args)
 {
 	static_assert(std::is_base_of_v<IComponent, T>, "T must derive from IComponent");
 
-	T* newComp = new T{ std::forward<ARGS...>(args...) };
+	T* newComp = new T{ args... };
 	m_componentListChanges.emplace_back([this, newComp]
 		{
 			newComp->BeginPlay();

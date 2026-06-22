@@ -142,10 +142,12 @@ public:
 
 	void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) const;
 
+	GraphicsPipeline* CreatePipeline(const GraphicsPipelineConfig& config);
+
 private:
 	[[nodiscard]] bool Loaded() const;
 
-	void Create(const vector<GraphicsPipelineConfig>& shaderInfos);
+	void Create();
 	void Destroy();
 
 	void CreateInstance();
@@ -168,14 +170,14 @@ private:
 	void CreateDescriptorSets();
 
 	void CreateDescriptorSetLayout();
-	void CreateGraphicsPipeline(const vector<GraphicsPipelineConfig>& pipelineConfigs);
+	void CreateGraphicsPipelineLayout();
 
 	void CreateFrameBuffers();
 
 	void CreateCommandPool();
 
 	void CreateCommandBuffer();
-	void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32 imageIndex, const function<void()>& drawCommand, uint32 pipelineIndex) const;
+	void RecordCommandBuffer(VkCommandBuffer commandBuffer, const GraphicsPipeline* pipeline, const function<void()>& drawCommand) const;
 	void UpdateUniformBuffer(uint32 imageIndex) const;
 
 	void CreateSyncObjects();

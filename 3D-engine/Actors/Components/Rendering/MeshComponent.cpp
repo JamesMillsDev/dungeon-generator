@@ -5,8 +5,8 @@
 
 #include "Rendering/Mesh.h"
 
-MeshComponent::MeshComponent(Mesh* mesh)
-	: m_mesh{ mesh }
+MeshComponent::MeshComponent(Mesh* mesh, GraphicsPipeline* pipeline)
+	: m_mesh{ mesh }, m_pipeline{ pipeline }
 {
 	
 }
@@ -23,7 +23,7 @@ void MeshComponent::BeginPlay()
 
 void MeshComponent::Render()
 {
-	Renderer::GetInstance()->Render(m_mesh);
+	Renderer::GetInstance()->Render(m_mesh, m_pipeline);
 }
 
 void MeshComponent::EndPlay()

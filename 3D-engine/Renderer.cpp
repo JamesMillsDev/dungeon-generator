@@ -48,27 +48,22 @@ Renderer::~Renderer()
 	m_vulkan = nullptr;
 }
 
-void Renderer::Render(const Mesh* mesh) const
+void Renderer::Render(const Mesh* mesh, const GraphicsPipeline* pipeline) const
 {
-	m_vulkan->RecordCommandBuffer(m_frameCommandBuffer, m_vulkan->m_currentImageIndex, [this, mesh]
+	m_vulkan->RecordCommandBuffer(m_frameCommandBuffer, pipeline, [this, mesh]
 		{
 			mesh->Render(m_frameCommandBuffer);
-		}, 0);
+		});
+}
+
+GraphicsPipeline* Renderer::CreatePipeline(const GraphicsPipelineConfig& config) const
+{
+	return m_vulkan->CreatePipeline(config);
 }
 
 void Renderer::Create() const
 {
-	m_vulkan->Create(vector
-	{
-		GraphicsPipelineConfig
-		{
-			vector<ShaderConfig>
-			{
-				{.stage = VK_SHADER_STAGE_VERTEX_BIT,   .shader = "Triangle.vert" },
-				{.stage = VK_SHADER_STAGE_FRAGMENT_BIT, .shader = "Triangle.frag" }
-			}
-		}
-	});
+	m_vulkan->Create();
 }
 
 void Renderer::Destroy() const

@@ -5,6 +5,8 @@
 struct GLFWwindow;
 
 class Config;
+struct GraphicsPipelineConfig;
+class GraphicsPipeline;
 class Mesh;
 class Texture;
 class Vulkan;
@@ -35,7 +37,8 @@ private:
 	~Renderer();
 
 public:
-	void Render(const Mesh* mesh) const;
+	void Render(const Mesh* mesh, const GraphicsPipeline* pipeline) const;
+	GraphicsPipeline* CreatePipeline(const GraphicsPipelineConfig& config) const;
 
 private:
 	void Create() const;
