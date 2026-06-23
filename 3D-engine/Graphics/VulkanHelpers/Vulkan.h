@@ -9,16 +9,16 @@
 #include "Graphics/Rendering/GraphicsPipeline.h"
 #include "Maths/Alias.h"
 
+class Buffer;
+class Config;
+struct DescriptorWriter;
+struct GLFWwindow;
+class UniformBuffer;
+class Version;
+
 using std::function;
 using std::initializer_list;
 using std::string;
-
-struct GLFWwindow;
-
-class Buffer;
-class Config;
-class UniformBuffer;
-class Version;
 
 struct BufferInfo
 {
@@ -105,6 +105,7 @@ private:
 	uint32 m_currentImageIndex;
 
 	vector<UniformBuffer*> m_uniformBuffers;
+	DescriptorWriter* m_writer;
 
 private:
 	Vulkan(GLFWwindow* window, Config* config);

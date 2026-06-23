@@ -38,6 +38,8 @@ private:
 	VkCommandBuffer m_frameCommandBuffer;
 	UniformBufferObject m_uniformBufferObj;
 
+	Texture* m_texture;
+
 private:
 	explicit Renderer(GLFWwindow* window, Config* config);
 	~Renderer();

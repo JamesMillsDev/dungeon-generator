@@ -10,6 +10,7 @@
 #include <GLFW/glfw3.h>
 
 #include "Buffer.h"
+#include "DescriptorWriter.h"
 #include "UniformBuffer.h"
 #include "Graphics/Rendering/Mesh.h"
 #include "Graphics/Rendering/Uniforms.h"
@@ -223,6 +224,8 @@ void Vulkan::CreateInstance()
 			std::format("Failed to create Vulkan Instance! Error Code: {}", static_cast<uint32>(result))
 		);
 	}
+
+	m_writer = new DescriptorWriter{ m_device };
 }
 
 void Vulkan::SetupDebugMessenger()
@@ -1112,7 +1115,7 @@ Vulkan::Vulkan(GLFWwindow* window, Config* config) :
 	m_pipelineLayout{ VK_NULL_HANDLE }, m_commandPool{ VK_NULL_HANDLE }, m_commandBuffers{ VK_NULL_HANDLE },
 	m_imageAvailableSemaphores{ VK_NULL_HANDLE }, m_renderFinishedSemaphores{ VK_NULL_HANDLE },
 	m_inFlightFences{ VK_NULL_HANDLE }, m_frameBufferResized{ false },
-	m_currentFrame{ 0 }, m_currentImageIndex{ 0 }
+	m_currentFrame{ 0 }, m_currentImageIndex{ 0 }, m_writer{ nullptr }
 {
 	m_engineTitle = config->Get<string>("Engine.Title");
 	m_engineVersion = new Version{ "Engine.Version", config };
@@ -1130,6 +1133,9 @@ Vulkan::Vulkan(GLFWwindow* window, Config* config) :
 
 Vulkan::~Vulkan()
 {
+	delete m_writer;
+	m_writer = nullptr;
+
 	delete m_engineVersion;
 	m_engineVersion = nullptr;
 

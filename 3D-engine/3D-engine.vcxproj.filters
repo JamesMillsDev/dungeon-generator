@@ -34,6 +34,8 @@
     <ClInclude Include="Graphics\Rendering\GraphicsPipeline.h" />
     <ClInclude Include="Utility\Console.h" />
     <ClInclude Include="Utility\EnumHelpers.h" />
+    <ClInclude Include="Graphics\VulkanHelpers\DescriptorPool.h" />
+    <ClInclude Include="Graphics\VulkanHelpers\DescriptorWriter.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
@@ -63,5 +65,7 @@
     <ClCompile Include="Gameplay\GameInstance.cpp" />
     <ClCompile Include="Graphics\Rendering\GraphicsPipeline.cpp" />
     <ClCompile Include="Utility\Console.cpp" />
+    <ClCompile Include="Graphics\VulkanHelpers\DescriptorPool.cpp" />
+    <ClCompile Include="Graphics\VulkanHelpers\DescriptorWriter.cpp" />
   </ItemGroup>
 </Project>
