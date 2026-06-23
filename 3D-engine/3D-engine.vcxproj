@@ -210,6 +210,8 @@
     <ClInclude Include="Rendering\Texture.h" />
     <ClInclude Include="Rendering\Uniforms.h" />
     <ClInclude Include="Utility\Config.h" />
+    <ClInclude Include="Utility\Console.h" />
+    <ClInclude Include="Utility\EnumHelpers.h" />
     <ClInclude Include="Utility\Version.h" />
     <ClInclude Include="VulkanHelpers\Buffer.h" />
     <ClInclude Include="VulkanHelpers\Common.h" />
@@ -245,6 +247,7 @@
     <ClCompile Include="Rendering\Shader.cpp" />
     <ClCompile Include="Rendering\Texture.cpp" />
     <ClCompile Include="Utility\Config.cpp" />
+    <ClCompile Include="Utility\Console.cpp" />
     <ClCompile Include="Utility\Version.cpp" />
     <ClCompile Include="VulkanHelpers\Buffer.cpp" />
     <ClCompile Include="VulkanHelpers\GraphicsPipeline.cpp" />

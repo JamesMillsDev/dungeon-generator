@@ -32,6 +32,8 @@
     <ClInclude Include="Actors\Components\Rendering\MeshComponent.h" />
     <ClInclude Include="Actors\World.h" />
     <ClInclude Include="VulkanHelpers\GraphicsPipeline.h" />
+    <ClInclude Include="Utility\Console.h" />
+    <ClInclude Include="Utility\EnumHelpers.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
@@ -60,5 +62,6 @@
     <ClCompile Include="Actors\World.cpp" />
     <ClCompile Include="GameInstance.cpp" />
     <ClCompile Include="VulkanHelpers\GraphicsPipeline.cpp" />
+    <ClCompile Include="Utility\Console.cpp" />
   </ItemGroup>
 </Project>
