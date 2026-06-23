@@ -5,10 +5,10 @@
 
 #include <vulkan/vulkan.h>
 
+#include "Maths/Color.h"
 #include "Maths/Vector2.h"
 #include "Maths/Vector3.h"
 #include "Maths/Vector4.h"
-#include "Maths/Color.h"
 
 class Buffer;
 
@@ -56,6 +56,7 @@ class Mesh
 
 public:
 	static Mesh* MakeQuad();
+	static Mesh* Load(const string& file);
 
 public:
 	vector<Vertex> vertices;

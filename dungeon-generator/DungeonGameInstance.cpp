@@ -16,8 +16,9 @@ DungeonGameInstance::DungeonGameInstance()
 void DungeonGameInstance::Init()
 {
 	m_actor = GetWorld()->MakeActor<Actor>();
+	m_actor->GetTransform()->AddRelativeScale({ 10.f, 10.f, 10.f });
 	m_actor->MakeComponent<MeshComponent>(
-		Mesh::MakeQuad(), m_renderer->CreatePipeline("Triangle")
+		Mesh::Load("Meshes/SM_Windmill.fbx"), m_renderer->CreatePipeline("Triangle")
 	);
 }
 

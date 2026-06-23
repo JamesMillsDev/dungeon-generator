@@ -3,6 +3,8 @@
 #include <string>
 #include <vulkan/vulkan.h>
 
+#include "Graphics/Rendering/Uniforms.h"
+
 struct GLFWwindow;
 
 class Config;
@@ -34,13 +36,14 @@ public:
 private:
 	Vulkan* m_vulkan;
 	VkCommandBuffer m_frameCommandBuffer;
+	UniformBufferObject m_uniformBufferObj;
 
 private:
 	explicit Renderer(GLFWwindow* window, Config* config);
 	~Renderer();
 
 public:
-	void Render(const Mesh* mesh, const GraphicsPipeline* pipeline) const;
+	void Render(const Mesh* mesh, const GraphicsPipeline* pipeline, const Matrix4& transform);
 	GraphicsPipeline* CreatePipeline(const GraphicsPipelineConfig& config) const;
 	GraphicsPipeline* CreatePipeline(const string& shaderName) const;
 

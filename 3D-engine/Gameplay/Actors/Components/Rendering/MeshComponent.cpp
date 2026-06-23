@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "MeshComponent.h"
 
+#include "Gameplay/Actors/Actor.h"
+#include "Gameplay/Actors/Transform.h"
+
 #include "Graphics/Renderer.h"
 
 #include "Graphics/Rendering/Mesh.h"
@@ -23,7 +26,7 @@ void MeshComponent::BeginPlay()
 
 void MeshComponent::Render()
 {
-	Renderer::GetInstance()->Render(m_mesh, m_pipeline);
+	Renderer::GetInstance()->Render(m_mesh, m_pipeline, Owner()->GetTransform()->GlobalTransform());
 }
 
 void MeshComponent::EndPlay()

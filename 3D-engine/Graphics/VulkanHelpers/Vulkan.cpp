@@ -1045,22 +1045,9 @@ void Vulkan::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const Grap
 	}
 }
 
-void Vulkan::UpdateUniformBuffer(const uint32 imageIndex) const
+void Vulkan::UpdateUniformBuffer(const uint32 imageIndex, void* data) const
 {
-	UniformBufferObject mvp
-	{
-		.model = Matrix4::Identity(),
-		.view = Matrix4::MakeLookAt({ 2.f, 2.f, 2.f }, { 0.f, 0.f, 0.f }, { 0.f, 0.f, 1.f }),
-		.proj = Matrix4::MakePerspective(
-			Maths::Radians(45.f),
-			static_cast<float>(m_swapChainExtent.width) / static_cast<float>(m_swapChainExtent.height),
-			.1f, 10.f
-		)
-	};
-
-	mvp.proj[1][1] *= -1.f;
-
-	m_uniformBuffers[imageIndex]->Fill(&mvp);
+	m_uniformBuffers[imageIndex]->Fill(data);
 }
 #pragma endregion
 

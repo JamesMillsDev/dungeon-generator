@@ -3,8 +3,12 @@
 
 #include <tuple>
 
-#include "VulkanHelpers/Buffer.h"
-#include "VulkanHelpers/Vulkan.h"
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
+
+#include "Graphics/VulkanHelpers/Buffer.h"
+#include "Graphics/VulkanHelpers/Vulkan.h"
 
 using std::vector;
 using VertexAttribData = std::tuple<uint8, uint8, VkFormat, size_t>;
@@ -88,6 +92,86 @@ Mesh* Mesh::MakeQuad()
 			0, 1, 2, 2, 3, 0
 		}
 	};
+}
+
+Mesh* Mesh::Load(const string& file)
+{
+	string path = "./Content/" + file;
+
+	Assimp::Importer importer;
+	const aiScene* scene = importer.ReadFile(
+		path.c_str(), 
+		aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_GlobalScale
+	);
+
+	vector<Vertex> vertices;
+	vector<uint16> indices;
+
+	for (uint32 i = 0; i < scene->mNumMeshes; ++i)
+	{
+		const aiMesh* mesh = scene->mMeshes[i];
+		vertices.resize(mesh->mNumVertices);
+
+		for (uint32 v = 0; v < mesh->mNumVertices; ++v)
+		{
+			Vertex vert;
+
+			if (mesh->HasPositions())
+			{
+				aiVector3D location = mesh->mVertices[v];
+
+				vert.location = { location.x, location.y, location.z };
+			}
+
+			if (mesh->HasNormals())
+			{
+				aiVector3D normal = mesh->mNormals[v];
+
+				vert.normal = { normal.x, normal.y, normal.z, 0.f };
+			}
+
+			if (mesh->HasTangentsAndBitangents())
+			{
+				aiVector3D tangent = mesh->mTangents[v];
+				aiVector3D biTangent = mesh->mBitangents[v];
+
+				vert.tangent = { tangent.x, tangent.y, tangent.z, 0.f };
+				vert.biTangent = { biTangent.x, biTangent.y, biTangent.z, 0.f };
+			}
+
+			if (mesh->HasTextureCoords(0))
+			{
+				aiVector3D uv0 = mesh->mTextureCoords[0][v];
+
+				vert.uv = { uv0.x, uv0.y };
+			}
+
+			if (mesh->HasVertexColors(0))
+			{
+				aiColor4D color0 = mesh->mColors[0][v];
+
+				vert.color = Color{ color0.r, color0.g, color0.b, color0.a };
+			}
+
+			vertices[v] = vert;
+		}
+
+		if (mesh->HasFaces())
+		{
+			indices.reserve((size_t)(mesh->mNumFaces * 3));
+			for (uint32 f = 0; f < mesh->mNumFaces; ++f)
+			{
+				aiFace face = mesh->mFaces[f];
+
+				for (uint32 index = 0; index < face.mNumIndices; ++index)
+				{
+					indices.emplace_back(face.mIndices[index]);
+				}
+			}
+		}
+	}
+
+	return new Mesh{ vertices, indices };
 }
 
 Mesh::Mesh(const vector<Vertex>& vertices, const vector<uint16>& indices)

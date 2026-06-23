@@ -18,7 +18,10 @@ protected:
 	virtual ~IComponent() = default;
 
 public:
-	Actor* Owner() const;
+	Actor* Owner() const
+	{
+		return m_owner;
+	}
 
 public:
 	virtual void BeginPlay()

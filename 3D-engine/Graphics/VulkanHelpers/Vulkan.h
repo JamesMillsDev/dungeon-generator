@@ -178,7 +178,7 @@ private:
 
 	void CreateCommandBuffer();
 	void RecordCommandBuffer(VkCommandBuffer commandBuffer, const GraphicsPipeline* pipeline, const function<void()>& drawCommand) const;
-	void UpdateUniformBuffer(uint32 imageIndex) const;
+	void UpdateUniformBuffer(uint32 imageIndex, void* data) const;
 
 	void CreateSyncObjects();
 
