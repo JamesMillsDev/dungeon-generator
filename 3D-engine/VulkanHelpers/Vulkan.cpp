@@ -14,6 +14,8 @@
 #include "Rendering/Mesh.h"
 #include "Rendering/Uniforms.h"
 
+#include "Utility/Console.h"
+
 using std::exception;
 using std::invalid_argument;
 using std::multimap;
@@ -25,16 +27,41 @@ Vulkan* Vulkan::m_singleton = nullptr;
 
 namespace
 {
+	VkObjectType filteredObjects = VK_OBJECT_TYPE_SHADER_MODULE;
+	VkDebugUtilsMessageSeverityFlagBitsEXT messageLevel = VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT;
+
 	VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
 		const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 		VkDebugUtilsMessageTypeFlagsEXT messageType,
 		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
 		void* pUserData)
 	{
-		if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT &&
-			pCallbackData->pObjects->objectType != VK_OBJECT_TYPE_SHADER_MODULE)
+		if ((pCallbackData->pObjects->objectType & filteredObjects) != filteredObjects && messageSeverity >= messageLevel)
 		{
-			std::cerr << "validation layer: " << pCallbackData->pMessage << "\n";
+			switch (messageSeverity)  // NOLINT(clang-diagnostic-switch-enum)
+			{
+				case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+				{
+					Console::Debug(pCallbackData->pMessage);
+					break;
+				}
+				case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+				{
+					Console::Info(pCallbackData->pMessage);
+					break;
+				}
+				case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+				{
+					Console::Warning(pCallbackData->pMessage);
+					break;
+				}
+				case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+				{
+					Console::Error(pCallbackData->pMessage);
+					break;
+				}
+				default: break;
+			}
 		}
 
 		return VK_FALSE;
