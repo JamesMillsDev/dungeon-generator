@@ -50,21 +50,10 @@ Renderer::~Renderer()
 
 void Renderer::Render(const Mesh* mesh, const GraphicsPipeline* pipeline, const Matrix4& transform)
 {
-	m_uniformBufferObj =
-	{
-		.model = transform,
-		.view = Matrix4::MakeLookAt({ 2.f, 2.f, 2.f }, { 0.f, 0.f, 0.f }, { 0.f, 0.f, 1.f }),
-		.proj = Matrix4::MakePerspective(
-			Maths::Radians(45.f),
-			static_cast<float>(m_vulkan->m_swapChainExtent.width) / static_cast<float>(m_vulkan->m_swapChainExtent.height),
-			.1f, 10.f
-		)
-	};
-
+	m_uniformBufferObj.model = transform;
 	m_uniformBufferObj.proj[1][1] *= -1.f;
 
 	m_vulkan->UpdateUniformBuffer(m_vulkan->m_currentFrame, &m_uniformBufferObj);
-
 	m_vulkan->RecordCommandBuffer(m_frameCommandBuffer, pipeline, [this, mesh]
 		{
 			mesh->Render(m_frameCommandBuffer);
@@ -104,6 +93,17 @@ bool Renderer::IsValid() const
 void Renderer::BeginFrame()
 {
 	m_frameCommandBuffer = m_vulkan->BeginRender();
+
+	m_uniformBufferObj =
+	{
+		.model = Matrix4::Identity(),
+		.view = Matrix4::MakeLookAt({ 2.f, 2.f, 2.f }, { 0.f, 0.f, 0.f }, { 0.f, 0.f, 1.f }),
+		.proj = Matrix4::MakePerspective(
+			Maths::Radians(45.f),
+			static_cast<float>(m_vulkan->m_swapChainExtent.width) / static_cast<float>(m_vulkan->m_swapChainExtent.height),
+			.1f, 10.f
+		)
+	};
 }
 
 void Renderer::EndFrame() const
