@@ -17,14 +17,7 @@ DungeonGameInstance::DungeonGameInstance()
 
 void DungeonGameInstance::Init()
 {
-	m_pipeline = m_renderer->CreatePipeline(GraphicsPipelineConfig
-		{
-			ShaderConfig
-			{
-				.stages = { VK_SHADER_STAGE_VERTEX_BIT, VK_SHADER_STAGE_FRAGMENT_BIT },
-				.name = "Triangle"
-			}
-		});
+	m_pipeline = m_renderer->CreatePipeline("Triangle");
 
 	Mesh* mesh = Mesh::MakeQuad();
 

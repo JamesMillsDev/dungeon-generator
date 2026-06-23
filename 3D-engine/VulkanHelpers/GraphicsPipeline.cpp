@@ -52,6 +52,12 @@ GraphicsPipelineConfig::GraphicsPipelineConfig(ShaderConfig shader)
 	: shader{ std::move(shader) }
 {}
 
+GraphicsPipelineConfig::GraphicsPipelineConfig(const string& shaderName)
+	: shader{ .name = shaderName }
+{
+	
+}
+
 uint32 GraphicsPipelineConfig::Size() const
 {
 	return static_cast<uint32>(shader.stages.size());

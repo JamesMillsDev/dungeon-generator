@@ -17,7 +17,7 @@ struct ShaderConfig
 	};
 
 public:
-	set<VkShaderStageFlagBits, StageComp> stages;
+	set<VkShaderStageFlagBits, StageComp> stages = { VK_SHADER_STAGE_VERTEX_BIT, VK_SHADER_STAGE_FRAGMENT_BIT };
 	string name;
 	string entryPoint = "main";
 
@@ -75,6 +75,7 @@ public:
 
 public:
 	explicit GraphicsPipelineConfig(ShaderConfig shader);
+	explicit GraphicsPipelineConfig(const string& shaderName);
 
 public:
 	[[nodiscard]] uint32 Size() const;

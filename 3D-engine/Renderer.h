@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <vulkan/vulkan.h>
 
 struct GLFWwindow;
@@ -10,6 +11,8 @@ class GraphicsPipeline;
 class Mesh;
 class Texture;
 class Vulkan;
+
+using std::string;
 
 class Renderer
 {
@@ -39,6 +42,7 @@ private:
 public:
 	void Render(const Mesh* mesh, const GraphicsPipeline* pipeline) const;
 	GraphicsPipeline* CreatePipeline(const GraphicsPipelineConfig& config) const;
+	GraphicsPipeline* CreatePipeline(const string& shaderName) const;
 
 private:
 	void Create() const;

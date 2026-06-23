@@ -61,6 +61,11 @@ GraphicsPipeline* Renderer::CreatePipeline(const GraphicsPipelineConfig& config)
 	return m_vulkan->CreatePipeline(config);
 }
 
+GraphicsPipeline* Renderer::CreatePipeline(const string& shaderName) const
+{
+	return m_vulkan->CreatePipeline(GraphicsPipelineConfig{ shaderName });
+}
+
 void Renderer::Create() const
 {
 	m_vulkan->Create();
