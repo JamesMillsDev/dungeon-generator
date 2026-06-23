@@ -1,13 +1,11 @@
 #include "DungeonGameInstance.h"
 
-#include "Renderer.h"
+#include "Gameplay/Actors/World.h"
+#include "Gameplay/Actors/Components/Rendering/MeshComponent.h"
 
-#include "Actors/World.h"
-#include "Actors/Components/Rendering/MeshComponent.h"
-
-#include "Rendering/Mesh.h"
-
-#include "VulkanHelpers/GraphicsPipeline.h"
+#include "Graphics/Renderer.h"
+#include "Graphics/Rendering/GraphicsPipeline.h"
+#include "Graphics/Rendering/Mesh.h"
 
 DungeonGameInstance::DungeonGameInstance()
 	: m_actor{ nullptr }, m_pipeline{ nullptr }

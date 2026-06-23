@@ -5,8 +5,8 @@
 #include <string>
 
 #include "Common.h"
-#include "GraphicsPipeline.h"
 #include "Structs.h"
+#include "Graphics/Rendering/GraphicsPipeline.h"
 #include "Maths/Alias.h"
 
 using std::function;

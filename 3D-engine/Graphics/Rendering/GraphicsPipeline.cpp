@@ -3,8 +3,8 @@
 
 #include <stdexcept>
 
-#include "Rendering/Mesh.h"
-#include "Rendering/Shader.h"
+#include "Graphics/Rendering/Mesh.h"
+#include "Graphics/Rendering/Shader.h"
 
 using std::runtime_error;
 

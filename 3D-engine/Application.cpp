@@ -3,12 +3,14 @@
 
 #include <iostream>
 #include <stdexcept>
+
 #include <GLFW/glfw3.h>
 
 #include "GameTime.h"
-#include "Renderer.h"
 
-#include "Actors/World.h"
+#include "Gameplay/Actors/World.h"
+
+#include "Graphics/Renderer.h"
 
 #include "Utility/Config.h"
 

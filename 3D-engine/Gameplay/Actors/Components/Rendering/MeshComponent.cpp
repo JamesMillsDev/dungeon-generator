@@ -1,9 +1,9 @@
 #include "pch.h"
 #include "MeshComponent.h"
 
-#include "Renderer.h"
+#include "Graphics/Renderer.h"
 
-#include "Rendering/Mesh.h"
+#include "Graphics/Rendering/Mesh.h"
 
 MeshComponent::MeshComponent(Mesh* mesh, GraphicsPipeline* pipeline)
 	: m_mesh{ mesh }, m_pipeline{ pipeline }

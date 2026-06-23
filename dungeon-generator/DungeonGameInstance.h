@@ -1,6 +1,6 @@
 #pragma once
 
-#include <GameInstance.h>
+#include <Gameplay/GameInstance.h>
 
 class GraphicsPipeline;
 class Actor;

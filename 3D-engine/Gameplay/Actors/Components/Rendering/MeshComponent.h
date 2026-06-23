@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Actors/Components/IComponent.h"
+#include "Gameplay/Actors/Components/IComponent.h"
 
 class GraphicsPipeline;
 class Mesh;

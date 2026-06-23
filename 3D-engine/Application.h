@@ -4,8 +4,8 @@
 #include <string>
 #include <type_traits>
 
-#include "GameInstance.h"
 #include "Window.h"
+#include "Gameplay/GameInstance.h"
 
 #if _DEBUG
 #include <crtdbg.h>

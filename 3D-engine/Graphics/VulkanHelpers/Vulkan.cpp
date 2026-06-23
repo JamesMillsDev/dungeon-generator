@@ -11,8 +11,8 @@
 
 #include "Buffer.h"
 #include "UniformBuffer.h"
-#include "Rendering/Mesh.h"
-#include "Rendering/Uniforms.h"
+#include "Graphics/Rendering/Mesh.h"
+#include "Graphics/Rendering/Uniforms.h"
 
 #include "Utility/Console.h"
 
@@ -889,7 +889,7 @@ void Vulkan::CreateDescriptorSets()
 		};
 
 		vkUpdateDescriptorSets(
-			m_device, descriptorWrites.size(), descriptorWrites.data(), 0, nullptr
+			m_device, (uint32)descriptorWrites.size(), descriptorWrites.data(), 0, nullptr
 		);
 	}
 }

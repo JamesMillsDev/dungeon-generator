@@ -2,7 +2,7 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="Application.h" />
-    <ClInclude Include="GameInstance.h" />
+    <ClInclude Include="Gameplay\GameInstance.h" />
     <ClInclude Include="GameTime.h" />
     <ClInclude Include="Maths\Alias.h" />
     <ClInclude Include="Maths\Maths.h" />
@@ -13,25 +13,25 @@
     <ClInclude Include="Maths\Vector3.h" />
     <ClInclude Include="Maths\Vector4.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="Renderer.h" />
+    <ClInclude Include="Graphics\Renderer.h" />
     <ClInclude Include="Utility\Config.h" />
     <ClInclude Include="Utility\Version.h" />
-    <ClInclude Include="VulkanHelpers\Buffer.h" />
-    <ClInclude Include="VulkanHelpers\Common.h" />
-    <ClInclude Include="VulkanHelpers\Structs.h" />
-    <ClInclude Include="VulkanHelpers\Vulkan.h" />
+    <ClInclude Include="Graphics\VulkanHelpers\Buffer.h" />
+    <ClInclude Include="Graphics\VulkanHelpers\Common.h" />
+    <ClInclude Include="Graphics\VulkanHelpers\Structs.h" />
+    <ClInclude Include="Graphics\VulkanHelpers\Vulkan.h" />
     <ClInclude Include="Window.h" />
-    <ClInclude Include="Rendering\Shader.h" />
-    <ClInclude Include="Rendering\Mesh.h" />
-    <ClInclude Include="VulkanHelpers\UniformBuffer.h" />
-    <ClInclude Include="Rendering\Uniforms.h" />
-    <ClInclude Include="Rendering\Texture.h" />
-    <ClInclude Include="Actors\Actor.h" />
-    <ClInclude Include="Actors\Transform.h" />
-    <ClInclude Include="Actors\Components\IComponent.h" />
-    <ClInclude Include="Actors\Components\Rendering\MeshComponent.h" />
-    <ClInclude Include="Actors\World.h" />
-    <ClInclude Include="VulkanHelpers\GraphicsPipeline.h" />
+    <ClInclude Include="Graphics\Rendering\Shader.h" />
+    <ClInclude Include="Graphics\Rendering\Mesh.h" />
+    <ClInclude Include="Graphics\VulkanHelpers\UniformBuffer.h" />
+    <ClInclude Include="Graphics\Rendering\Uniforms.h" />
+    <ClInclude Include="Graphics\Rendering\Texture.h" />
+    <ClInclude Include="Gameplay\Actors\Actor.h" />
+    <ClInclude Include="Gameplay\Actors\Transform.h" />
+    <ClInclude Include="Gameplay\Actors\Components\IComponent.h" />
+    <ClInclude Include="Gameplay\Actors\Components\Rendering\MeshComponent.h" />
+    <ClInclude Include="Gameplay\Actors\World.h" />
+    <ClInclude Include="Graphics\Rendering\GraphicsPipeline.h" />
     <ClInclude Include="Utility\Console.h" />
     <ClInclude Include="Utility\EnumHelpers.h" />
   </ItemGroup>
@@ -46,22 +46,22 @@
     <ClCompile Include="Maths\Vector3.cpp" />
     <ClCompile Include="Maths\Vector4.cpp" />
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="Graphics\Renderer.cpp" />
     <ClCompile Include="Utility\Config.cpp" />
     <ClCompile Include="Utility\Version.cpp" />
-    <ClCompile Include="VulkanHelpers\Buffer.cpp" />
-    <ClCompile Include="VulkanHelpers\Vulkan.cpp" />
+    <ClCompile Include="Graphics\VulkanHelpers\Buffer.cpp" />
+    <ClCompile Include="Graphics\VulkanHelpers\Vulkan.cpp" />
     <ClCompile Include="Window.cpp" />
-    <ClCompile Include="Rendering\Shader.cpp" />
-    <ClCompile Include="Rendering\Mesh.cpp" />
-    <ClCompile Include="VulkanHelpers\UniformBuffer.cpp" />
-    <ClCompile Include="Rendering\Texture.cpp" />
-    <ClCompile Include="Actors\Actor.cpp" />
-    <ClCompile Include="Actors\Transform.cpp" />
-    <ClCompile Include="Actors\Components\Rendering\MeshComponent.cpp" />
-    <ClCompile Include="Actors\World.cpp" />
-    <ClCompile Include="GameInstance.cpp" />
-    <ClCompile Include="VulkanHelpers\GraphicsPipeline.cpp" />
+    <ClCompile Include="Graphics\Rendering\Shader.cpp" />
+    <ClCompile Include="Graphics\Rendering\Mesh.cpp" />
+    <ClCompile Include="Graphics\VulkanHelpers\UniformBuffer.cpp" />
+    <ClCompile Include="Graphics\Rendering\Texture.cpp" />
+    <ClCompile Include="Gameplay\Actors\Actor.cpp" />
+    <ClCompile Include="Gameplay\Actors\Transform.cpp" />
+    <ClCompile Include="Gameplay\Actors\Components\Rendering\MeshComponent.cpp" />
+    <ClCompile Include="Gameplay\Actors\World.cpp" />
+    <ClCompile Include="Gameplay\GameInstance.cpp" />
+    <ClCompile Include="Graphics\Rendering\GraphicsPipeline.cpp" />
     <ClCompile Include="Utility\Console.cpp" />
   </ItemGroup>
 </Project>
