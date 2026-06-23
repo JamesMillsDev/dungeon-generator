@@ -8,19 +8,17 @@
 #include "Graphics/Rendering/Mesh.h"
 
 DungeonGameInstance::DungeonGameInstance()
-	: m_actor{ nullptr }, m_pipeline{ nullptr }
+	: m_actor{ nullptr }
 {
 
 }
 
 void DungeonGameInstance::Init()
 {
-	m_pipeline = m_renderer->CreatePipeline("Triangle");
-
-	Mesh* mesh = Mesh::MakeQuad();
-
 	m_actor = GetWorld()->MakeActor<Actor>();
-	m_actor->MakeComponent<MeshComponent>(mesh, m_pipeline);
+	m_actor->MakeComponent<MeshComponent>(
+		Mesh::MakeQuad(), m_renderer->CreatePipeline("Triangle")
+	);
 }
 
 void DungeonGameInstance::Shutdown()
