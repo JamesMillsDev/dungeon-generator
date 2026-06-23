@@ -1,5 +1,6 @@
 #include "DungeonGameInstance.h"
 
+#include "Gameplay/Actors/Transform.h"
 #include "Gameplay/Actors/World.h"
 #include "Gameplay/Actors/Components/Rendering/MeshComponent.h"
 
