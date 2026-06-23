@@ -4,8 +4,8 @@
 
 #include <glm/ext/matrix_float4x4.hpp>
 
-#include "Maths.h"
-#include "Vector4.h"
+#include "Maths/Maths.h"
+#include "Maths/Vector4.h"
 
 using std::ostream;
 

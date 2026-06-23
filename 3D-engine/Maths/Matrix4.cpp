@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "Matrix4.h"
 
-#include "Matrix3.h"
-#include "Vector3.h"
+#include "Maths/Matrix3.h"
+#include "Maths/Vector3.h"
 
 Matrix4 Matrix4::MakeTranslate(const Vector3& trans)
 {

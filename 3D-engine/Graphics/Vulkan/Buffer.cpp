@@ -3,7 +3,7 @@
 
 #include <stdexcept>
 
-#include "Vulkan.h"
+#include "Graphics/Vulkan/Vulkan.h"
 
 using std::runtime_error;
 

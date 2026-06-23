@@ -9,9 +9,9 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-#include "Buffer.h"
-#include "DescriptorWriter.h"
-#include "UniformBuffer.h"
+#include "Graphics/Vulkan/Buffer.h"
+#include "Graphics/Vulkan/DescriptorWriter.h"
+#include "Graphics/Vulkan/UniformBuffer.h"
 #include "Graphics/Rendering/Mesh.h"
 #include "Graphics/Rendering/Uniforms.h"
 

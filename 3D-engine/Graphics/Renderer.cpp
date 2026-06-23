@@ -1,9 +1,9 @@
 #include "pch.h"
 #include "Renderer.h"
 
-#include "Rendering/Mesh.h"
-#include "Rendering/Texture.h"
-#include "VulkanHelpers/Vulkan.h"
+#include "Graphics/Rendering/Mesh.h"
+#include "Graphics/Rendering/Texture.h"
+#include "Graphics/Vulkan/Vulkan.h"
 
 Renderer* Renderer::m_instance = nullptr;
 

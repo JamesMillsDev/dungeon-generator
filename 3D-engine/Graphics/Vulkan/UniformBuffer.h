@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Buffer.h"
+#include "Graphics/Vulkan/Buffer.h"
 
 class UniformBuffer : public Buffer
 {

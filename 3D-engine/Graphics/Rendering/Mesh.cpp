@@ -7,8 +7,8 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
-#include "Graphics/VulkanHelpers/Buffer.h"
-#include "Graphics/VulkanHelpers/Vulkan.h"
+#include "Graphics/Vulkan/Buffer.h"
+#include "Graphics/Vulkan/Vulkan.h"
 
 using std::vector;
 using VertexAttribData = std::tuple<uint8, uint8, VkFormat, size_t>;

@@ -3,7 +3,7 @@
 #include <set>
 #include <string>
 
-#include "Graphics/VulkanHelpers/Common.h"
+#include "Graphics/Vulkan/Common.h"
 
 using std::pair;
 using std::set;

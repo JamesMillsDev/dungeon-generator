@@ -4,8 +4,8 @@
 #include <initializer_list>
 #include <string>
 
-#include "Common.h"
-#include "Structs.h"
+#include "Graphics/Vulkan/Common.h"
+#include "Graphics/Vulkan/Structs.h"
 #include "Graphics/Rendering/GraphicsPipeline.h"
 #include "Maths/Alias.h"
 

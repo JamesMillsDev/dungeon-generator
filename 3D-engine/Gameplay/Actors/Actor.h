@@ -4,7 +4,7 @@
 #include <utility>
 #include <vector>
 
-#include "Components/IComponent.h"
+#include "Gameplay/Actors/Components/IComponent.h"
 
 class Transform;
 

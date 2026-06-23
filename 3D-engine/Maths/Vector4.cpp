@@ -1,12 +1,11 @@
 #include "pch.h"
 #include "Vector4.h"
 
-#include "Maths.h"
-
 #include <cassert>
 
-#include "Vector2.h"
-#include "Vector3.h"
+#include "Maths/Maths.h"
+#include "Maths/Vector2.h"
+#include "Maths/Vector3.h"
 
 constexpr float EPSILON_NORMAL_SQRT = 1e-15f;
 

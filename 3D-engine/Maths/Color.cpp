@@ -4,7 +4,7 @@
 #include <cassert>
 #include <unordered_map>
 
-#include "Maths.h"
+#include "Maths/Maths.h"
 
 static std::unordered_map<char, uint8> asciiToHex =
 {

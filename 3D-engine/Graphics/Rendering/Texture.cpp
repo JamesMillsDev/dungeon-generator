@@ -6,8 +6,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
-#include "Graphics/VulkanHelpers/Buffer.h"
-#include "Graphics/VulkanHelpers/Vulkan.h"
+#include "Graphics/Vulkan/Buffer.h"
+#include "Graphics/Vulkan/Vulkan.h"
 
 using std::runtime_error;
 

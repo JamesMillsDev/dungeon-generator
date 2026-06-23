@@ -3,7 +3,7 @@
 
 #include <cassert>
 
-#include "Vector2.h"
+#include "Maths/Vector2.h"
 
 Matrix3 Matrix3::MakeTranslate(const Vector2& trans)
 {

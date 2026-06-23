@@ -16,14 +16,14 @@
     <ClInclude Include="Graphics\Renderer.h" />
     <ClInclude Include="Utility\Config.h" />
     <ClInclude Include="Utility\Version.h" />
-    <ClInclude Include="Graphics\VulkanHelpers\Buffer.h" />
-    <ClInclude Include="Graphics\VulkanHelpers\Common.h" />
-    <ClInclude Include="Graphics\VulkanHelpers\Structs.h" />
-    <ClInclude Include="Graphics\VulkanHelpers\Vulkan.h" />
+    <ClInclude Include="Graphics\Vulkan\Buffer.h" />
+    <ClInclude Include="Graphics\Vulkan\Common.h" />
+    <ClInclude Include="Graphics\Vulkan\Structs.h" />
+    <ClInclude Include="Graphics\Vulkan\Vulkan.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="Graphics\Rendering\Shader.h" />
     <ClInclude Include="Graphics\Rendering\Mesh.h" />
-    <ClInclude Include="Graphics\VulkanHelpers\UniformBuffer.h" />
+    <ClInclude Include="Graphics\Vulkan\UniformBuffer.h" />
     <ClInclude Include="Graphics\Rendering\Uniforms.h" />
     <ClInclude Include="Graphics\Rendering\Texture.h" />
     <ClInclude Include="Gameplay\Actors\Actor.h" />
@@ -34,8 +34,8 @@
     <ClInclude Include="Graphics\Rendering\GraphicsPipeline.h" />
     <ClInclude Include="Utility\Console.h" />
     <ClInclude Include="Utility\EnumHelpers.h" />
-    <ClInclude Include="Graphics\VulkanHelpers\DescriptorPool.h" />
-    <ClInclude Include="Graphics\VulkanHelpers\DescriptorWriter.h" />
+    <ClInclude Include="Graphics\Vulkan\DescriptorPool.h" />
+    <ClInclude Include="Graphics\Vulkan\DescriptorWriter.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
@@ -51,12 +51,12 @@
     <ClCompile Include="Graphics\Renderer.cpp" />
     <ClCompile Include="Utility\Config.cpp" />
     <ClCompile Include="Utility\Version.cpp" />
-    <ClCompile Include="Graphics\VulkanHelpers\Buffer.cpp" />
-    <ClCompile Include="Graphics\VulkanHelpers\Vulkan.cpp" />
+    <ClCompile Include="Graphics\Vulkan\Buffer.cpp" />
+    <ClCompile Include="Graphics\Vulkan\Vulkan.cpp" />
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="Graphics\Rendering\Shader.cpp" />
     <ClCompile Include="Graphics\Rendering\Mesh.cpp" />
-    <ClCompile Include="Graphics\VulkanHelpers\UniformBuffer.cpp" />
+    <ClCompile Include="Graphics\Vulkan\UniformBuffer.cpp" />
     <ClCompile Include="Graphics\Rendering\Texture.cpp" />
     <ClCompile Include="Gameplay\Actors\Actor.cpp" />
     <ClCompile Include="Gameplay\Actors\Transform.cpp" />
@@ -65,7 +65,7 @@
     <ClCompile Include="Gameplay\GameInstance.cpp" />
     <ClCompile Include="Graphics\Rendering\GraphicsPipeline.cpp" />
     <ClCompile Include="Utility\Console.cpp" />
-    <ClCompile Include="Graphics\VulkanHelpers\DescriptorPool.cpp" />
-    <ClCompile Include="Graphics\VulkanHelpers\DescriptorWriter.cpp" />
+    <ClCompile Include="Graphics\Vulkan\DescriptorPool.cpp" />
+    <ClCompile Include="Graphics\Vulkan\DescriptorWriter.cpp" />
   </ItemGroup>
 </Project>

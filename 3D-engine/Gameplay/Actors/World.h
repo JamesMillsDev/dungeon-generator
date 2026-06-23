@@ -4,8 +4,7 @@
 #include <utility>
 #include <vector>
 
-#include "Actor.h"
-#include "Transform.h"
+#include "Gameplay/Actors/Actor.h"
 
 using std::function;
 using std::pair;

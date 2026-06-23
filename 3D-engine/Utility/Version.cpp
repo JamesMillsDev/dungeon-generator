@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "Version.h"
 
-#include "Config.h"
+#include "Utility/Config.h"
 
 Version::Version(const string& name, Config* config)
 {
