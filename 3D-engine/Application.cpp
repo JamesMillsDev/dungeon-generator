@@ -29,8 +29,7 @@ void Application::Quit()
 }
 
 Application::Application()
-	: m_config{ new Config{ "Engine" } }, m_window{ new Window{ m_config } }, m_game{ nullptr },
-	m_renderer{ nullptr }
+	: m_config{ new Config{ "Engine" } }, m_window{ new Window{ m_config } }, m_game{ nullptr }
 {}
 
 Application::~Application()
@@ -45,7 +44,7 @@ Application::~Application()
 	m_config = nullptr;
 }
 
-EExitCode Application::Run()
+EExitCode Application::Run() const
 {
 	// Attempt to open the window, returning fail code if it does not succeed
 	try
@@ -58,10 +57,10 @@ EExitCode Application::Run()
 		return EExitCode::WindowFailedToOpen;
 	}
 
-	m_renderer = new Renderer{ m_config, m_window->m_window };
+	InitRenderer();
 
 	// Validate the renderer succeeded to initialise
-	if (!m_renderer->IsValid())
+	if (!Renderer::IsValid())
 	{
 		// It didn't, so shutdown the window and return the error code.
 		m_window->Close();
@@ -71,7 +70,6 @@ EExitCode Application::Run()
 	GameTime::Init();
 
 	// Initialise the game instance
-	m_game->m_renderer = m_renderer;
 	m_game->Init();
 
 	// Continue to loop until the window requests a close
@@ -84,15 +82,15 @@ EExitCode Application::Run()
 		m_game->Tick();
 		m_game->GetWorld()->Tick();
 
-		m_renderer->BeginFrame();
+		Renderer::Instance()->BeginFrame();
 
 		m_game->Render();
 		m_game->GetWorld()->Render();
 
-		m_renderer->EndFrame();
+		Renderer::Instance()->EndFrame();
 	}
 
-	m_renderer->WaitDeviceIdle();
+	Renderer::Instance()->WaitDeviceIdle();
 
 	// delete the current world to pre-cleanup
 	delete m_game->m_world;
@@ -100,11 +98,20 @@ EExitCode Application::Run()
 	// Shutdown the game instance and close the window
 	m_game->Shutdown();
 
-	delete m_renderer;
-	m_renderer = nullptr;
+	DestroyRenderer();
 
 	m_window->Close();
 
 	// Return success as the whole gameplay loop ran successfully.
 	return EExitCode::Success;
+}
+
+void Application::InitRenderer() const
+{
+	Renderer::Create(m_config, m_window->m_window);
+}
+
+void Application::DestroyRenderer() const
+{
+	Renderer::Destroy();
 }

@@ -17,9 +17,6 @@ class GameInstance
 	friend class Application;
 
 protected:
-	/** @brief The renderer that the system needs to use. */
-	Renderer* m_renderer;
-
 	/** @brief The world the Game is currently using */
 	World* m_world;
 

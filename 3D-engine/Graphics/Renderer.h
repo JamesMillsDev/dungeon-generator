@@ -2,11 +2,11 @@
 
 #include <string>
 
+#include "Application.h"
 #include "Rendering/Material.h"
 
-struct GLFWwindow;
-
 class Config;
+struct GLFWwindow;
 struct GraphicsPipelineConfig;
 class Material;
 class Mesh;
@@ -16,16 +16,20 @@ using std::string;
 
 class Renderer
 {
-	friend class Application;
+	friend void Application::InitRenderer() const;
+	friend void Application::DestroyRenderer() const;
+	friend EExitCode Application::Run() const;
 
 private:
 	static Renderer* m_instance;
 
 public:
-	static Renderer* GetInstance();
+	static Renderer* Instance();
+	[[nodiscard]] static bool IsValid();
 
 private:
-	Vulkan* m_vulkan;
+	static void Create(Config* config, GLFWwindow* window);
+	static void Destroy();
 
 private:
 	explicit Renderer(Config* config, GLFWwindow* window);
@@ -36,12 +40,15 @@ public:
 	[[nodiscard]] Material* CreateMaterial(const GraphicsPipelineConfig& config, EMaterialPass pass, uint32 textureCount = 0) const;
 	[[nodiscard]] Material* CreateMaterial(const string& shaderName, EMaterialPass pass, uint32 textureCount = 0) const;
 
+
 private:
-	[[nodiscard]] bool IsValid() const;
 	void BeginFrame();
 	void EndFrame() const;
 
 	void WaitDeviceIdle() const;
+
+	void InitVulkan(Config* config, GLFWwindow* window) const;
+	void DestroyVulkan() const;
 
 };
 

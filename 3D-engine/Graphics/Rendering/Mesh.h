@@ -60,6 +60,10 @@ public:
 	vector<Vertex> vertices;
 	vector<uint16> indices;
 
+private:
+	VkDeviceSize m_vertexBufferSize;
+	VkDeviceSize m_indexBufferSize;
+
 public:
 	Mesh(const vector<Vertex>& vertices, const vector<uint16>& indices);
 

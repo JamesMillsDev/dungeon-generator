@@ -8,6 +8,7 @@
 
 #include <vma/vk_mem_alloc.h>
 
+#include "Graphics/Renderer.h"
 #include "Utility/ResourceStack.h"
 
 struct GLFWwindow;
@@ -21,10 +22,23 @@ using std::vector;
 
 class Vulkan
 {
-	friend class Renderer;
+	friend void Renderer::InitVulkan(Config*, GLFWwindow*) const;
+	friend void Renderer::DestroyVulkan() const;
+
+private:
+	static Vulkan* m_instance;
+
+public:
+	static Vulkan* Instance();
+	static const VkDevice& Device();
+	static const VmaAllocator& Allocator();
+	static bool IsLoaded();
 
 private:
 	static runtime_error VulkanError(const string& message, VkResult result);
+
+	static void Create(Config* config, GLFWwindow* window);
+	static void Destroy();
 
 private:
 	Version* m_appVersion;
@@ -36,7 +50,7 @@ private:
 	bool m_loaded;
 
 	VmaAllocator m_vmaAllocator;
-	VkInstance m_instance;
+	VkInstance m_vkInstance;
 
 	VkPhysicalDevice m_physicalDevice;
 	VkDevice m_device;
@@ -59,8 +73,6 @@ private:
 private:
 	void Init(GLFWwindow* window);
 	void CleanupSwapChain();
-
-	[[nodiscard]] bool IsLoaded() const;
 
 	void InitAndPushResource(const InitFunction& init, const CleanupFunction& cleanup) const;
 

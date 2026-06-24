@@ -72,9 +72,6 @@ private:
 	/** @brief The active game instance managed by this application. */
 	GameInstance* m_game;
 
-	/** @brief The renderer that the game engine is using. */
-	Renderer* m_renderer;
-
 private:
 	Application();
 	~Application();
@@ -84,7 +81,10 @@ private:
 	 * @brief Executes the main game loop until the game signals an exit.
 	 * @return The exit code indicating why the loop terminated.
 	 */
-	[[nodiscard]] EExitCode Run();
+	[[nodiscard]] EExitCode Run() const;
+
+	void InitRenderer() const;
+	void DestroyRenderer() const;
 
 };
 

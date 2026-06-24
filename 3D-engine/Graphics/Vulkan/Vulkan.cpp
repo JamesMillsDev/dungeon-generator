@@ -13,9 +13,42 @@ using std::exception;
 
 constexpr int32 DEFAULT_RESOURCE_STACK_SIZE = 16;
 
+Vulkan* Vulkan::m_instance = nullptr;
+
+Vulkan* Vulkan::Instance()
+{
+	return m_instance;
+}
+
+const VkDevice& Vulkan::Device()
+{
+	return m_instance->m_device;
+}
+
+const VmaAllocator& Vulkan::Allocator()
+{
+	return m_instance->m_vmaAllocator;
+}
+
+bool Vulkan::IsLoaded()
+{
+	return m_instance != nullptr && m_instance->m_loaded;
+}
+
 runtime_error Vulkan::VulkanError(const string& message, const VkResult result)
 {
 	return runtime_error(std::format("{}. Error Code: {}", message, static_cast<int32>(result)));
+}
+
+void Vulkan::Create(Config* config, GLFWwindow* window)
+{
+	m_instance = new Vulkan{ config, window };
+}
+
+void Vulkan::Destroy()
+{
+	delete m_instance;
+	m_instance = nullptr;
 }
 
 Vulkan::Vulkan(Config* config, GLFWwindow* window)
@@ -69,7 +102,7 @@ void Vulkan::Init(GLFWwindow* window)
 					.ppEnabledExtensionNames = instanceExtensions
 				};
 
-				if (const VkResult result = vkCreateInstance(&instanceInfo, nullptr, &m_instance);
+				if (const VkResult result = vkCreateInstance(&instanceInfo, nullptr, &m_vkInstance);
 					result != VK_SUCCESS)
 				{
 					throw VulkanError("Failed to create Vulkan Instance!", result);
@@ -77,7 +110,7 @@ void Vulkan::Init(GLFWwindow* window)
 			},
 			[this]
 			{
-				vkDestroyInstance(m_instance, nullptr);
+				vkDestroyInstance(m_vkInstance, nullptr);
 			}
 		);
 
@@ -86,9 +119,9 @@ void Vulkan::Init(GLFWwindow* window)
 			{
 				// Get a list and number of all GPU's attached to the computer
 				uint32 deviceCount = 0;
-				vkEnumeratePhysicalDevices(m_instance, &deviceCount, nullptr);
+				vkEnumeratePhysicalDevices(m_vkInstance, &deviceCount, nullptr);
 				vector<VkPhysicalDevice> devices(deviceCount);
-				vkEnumeratePhysicalDevices(m_instance, &deviceCount, devices.data());
+				vkEnumeratePhysicalDevices(m_vkInstance, &deviceCount, devices.data());
 
 				// Get the properties of the device
 				m_physicalDevice = devices[0];
@@ -118,7 +151,7 @@ void Vulkan::Init(GLFWwindow* window)
 				}
 
 				// Validate the queue family support
-				if (glfwGetPhysicalDevicePresentationSupport(m_instance, m_physicalDevice, queueFamily) == GLFW_FALSE)
+				if (glfwGetPhysicalDevicePresentationSupport(m_vkInstance, m_physicalDevice, queueFamily) == GLFW_FALSE)
 				{
 					throw runtime_error("GLFW does not support presentation on this queue family!");
 				}
@@ -198,7 +231,7 @@ void Vulkan::Init(GLFWwindow* window)
 				allocatorCI.physicalDevice = m_physicalDevice;
 				allocatorCI.device = m_device;
 				allocatorCI.pVulkanFunctions = &vkFunctions;
-				allocatorCI.instance = m_instance;
+				allocatorCI.instance = m_vkInstance;
 
 				if (const VkResult result = vmaCreateAllocator(&allocatorCI, &m_vmaAllocator);
 					result != VK_SUCCESS)
@@ -215,7 +248,7 @@ void Vulkan::Init(GLFWwindow* window)
 		InitAndPushResource(
 			[this, window]
 			{
-				if (const VkResult result = glfwCreateWindowSurface(m_instance, window, nullptr, &m_surface);
+				if (const VkResult result = glfwCreateWindowSurface(m_vkInstance, window, nullptr, &m_surface);
 					result != VK_SUCCESS)
 				{
 					throw VulkanError("Failed to create window surface!", result);
@@ -223,7 +256,7 @@ void Vulkan::Init(GLFWwindow* window)
 			},
 			[this]
 			{
-				vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
+				vkDestroySurfaceKHR(m_vkInstance, m_surface, nullptr);
 			}
 		);
 
@@ -388,11 +421,6 @@ void Vulkan::Init(GLFWwindow* window)
 void Vulkan::CleanupSwapChain()
 {
 	vkDestroySwapchainKHR(m_device, m_swapChain, nullptr);
-}
-
-bool Vulkan::IsLoaded() const
-{
-	return m_loaded;
 }
 
 void Vulkan::InitAndPushResource(const InitFunction& init, const CleanupFunction& cleanup) const
