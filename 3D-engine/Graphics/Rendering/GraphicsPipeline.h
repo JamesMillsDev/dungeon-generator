@@ -2,9 +2,9 @@
 
 #include <set>
 #include <string>
+#include <vulkan/vulkan.h>
 
 #include "Maths/Alias.h"
-#include "Graphics/Vulkan/Common.h"
 
 using std::pair;
 using std::set;

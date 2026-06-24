@@ -7,9 +7,6 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
-#include "Graphics/Vulkan/Buffer.h"
-#include "Graphics/Vulkan/Vulkan.h"
-
 using std::vector;
 using VertexAttribData = std::tuple<uint8, uint8, VkFormat, size_t>;
 
@@ -175,50 +172,31 @@ Mesh* Mesh::Load(const string& file)
 }
 
 Mesh::Mesh(const vector<Vertex>& vertices, const vector<uint16>& indices)
-	: vertices{ vertices }, indices{ indices }, m_vertexBuffer{ nullptr }, m_indexBuffer{ nullptr }
+	: vertices{ vertices }, indices{ indices }
 {
 
 }
 
 void Mesh::CreateBuffers()
 {
-	Vulkan* vulkan = Vulkan::Instance();
-
-	Buffer* stagingBuffer = vulkan->MakeStagingBuffer(sizeof(Vertex), vertices.size());
-	stagingBuffer->Fill(vertices.data());
-
-	m_vertexBuffer = vulkan->MakeVertexBuffer(vertices.size());
-	m_vertexBuffer->Copy(stagingBuffer, stagingBuffer->Size());
-
-	Vulkan::DestroyBuffer(stagingBuffer);
-
-	stagingBuffer = vulkan->MakeStagingBuffer(sizeof(uint16), indices.size());
-	stagingBuffer->Fill(indices.data());
-
-	m_indexBuffer = vulkan->MakeIndexBuffer(indices.size());
-	m_indexBuffer->Copy(stagingBuffer, stagingBuffer->Size());
-
-	Vulkan::DestroyBuffer(stagingBuffer);
+	
 }
 
 void Mesh::DestroyBuffers()
 {
-	Vulkan::DestroyBuffer(m_vertexBuffer);
-	Vulkan::DestroyBuffer(m_indexBuffer);
+	
 }
 
 void Mesh::Render(const VkCommandBuffer buffer, const uint32 instances, const uint32 firstInstance) const
 {
-	VkBuffer vertexBuffers[] = { m_vertexBuffer->Get() };
+	VkBuffer vertexBuffers[] = { VK_NULL_HANDLE };
 	VkDeviceSize offsets[] = { 0 };
 	vkCmdBindVertexBuffers(buffer, 0, 1, vertexBuffers, offsets);
 
 	vkCmdBindVertexBuffers(buffer, 0, 1, vertexBuffers, offsets);
-	vkCmdBindIndexBuffer(buffer, m_indexBuffer->Get(), 0, VK_INDEX_TYPE_UINT16);
+	//vkCmdBindIndexBuffer(buffer, m_indexBuffer->Get(), 0, VK_INDEX_TYPE_UINT16);
 
 	vkCmdDrawIndexed(
 		buffer, static_cast<uint32>(indices.size()), instances, 0, 0, firstInstance
 	);
 }
-
-Mesh* screenTriangleMesh;

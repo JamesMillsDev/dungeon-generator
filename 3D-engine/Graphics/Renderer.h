@@ -4,17 +4,15 @@
 #include <vulkan/vulkan.h>
 
 #include "Graphics/Rendering/Uniforms.h"
+#include "Rendering/Material.h"
 
 struct GLFWwindow;
 
 class Config;
-class DescriptorPool;
 struct GraphicsPipelineConfig;
 class Material;
 class Mesh;
 class Texture;
-class UniformBuffer;
-class Vulkan;
 
 using std::string;
 
@@ -28,21 +26,10 @@ private:
 public:
 	static Renderer* GetInstance();
 
-public:
-	static void Load(Mesh* mesh);
-	static void Unload(Mesh*& mesh);
-
-	static void Load(Texture* texture);
-	static void Unload(Texture*& texture);
-
 private:
-	Vulkan* m_vulkan;
 	VkCommandBuffer m_frameCommandBuffer;
 	UniformBuffer* m_mvpBuffer;
-	UniformBufferObject m_uniformBufferObj;
-
-	Texture* m_texture;
-	DescriptorPool* m_descriptorPool;
+	ProjectionViewUniform m_uniformBufferObj;
 
 private:
 	explicit Renderer(GLFWwindow* window, Config* config);
@@ -50,8 +37,8 @@ private:
 
 public:
 	void Render(const Mesh* mesh, Material* material, const Matrix4& transform);
-	[[nodiscard]] Material* CreateMaterial(const GraphicsPipelineConfig& config) const;
-	[[nodiscard]] Material* CreateMaterial(const string& shaderName) const;
+	[[nodiscard]] Material* CreateMaterial(const GraphicsPipelineConfig& config, EMaterialPass pass, uint32 textureCount = 0) const;
+	[[nodiscard]] Material* CreateMaterial(const string& shaderName, EMaterialPass pass, uint32 textureCount = 0) const;
 
 private:
 	void Create();

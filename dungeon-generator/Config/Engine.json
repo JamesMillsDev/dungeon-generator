@@ -17,6 +17,6 @@
   "Engine": {
     "Title": "TinyVulkan",
     "Version": [ 0, 0, 1 ],
-    "Vulkan": [ 1, 0, 0 ]
+    "Vulkan": [ 1, 3, 0 ]
   }
 }

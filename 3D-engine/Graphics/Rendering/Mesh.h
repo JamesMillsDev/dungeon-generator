@@ -10,8 +10,6 @@
 #include "Maths/Vector3.h"
 #include "Maths/Vector4.h"
 
-class Buffer;
-
 using std::array;
 using std::vector;
 
@@ -62,10 +60,6 @@ public:
 	vector<Vertex> vertices;
 	vector<uint16> indices;
 
-private:
-	Buffer* m_vertexBuffer;
-	Buffer* m_indexBuffer;
-
 public:
 	Mesh(const vector<Vertex>& vertices, const vector<uint16>& indices);
 
@@ -76,5 +70,3 @@ private:
 	void Render(VkCommandBuffer buffer, uint32 instances = 1, uint32 firstInstance = 0) const;
 
 };
-
-extern Mesh* screenTriangleMesh;

@@ -22,7 +22,7 @@ MeshComponent::~MeshComponent()
 
 void MeshComponent::BeginPlay()
 {
-	Renderer::Load(m_mesh);
+
 }
 
 void MeshComponent::Render()
@@ -34,6 +34,4 @@ void MeshComponent::EndPlay()
 {
 	delete m_material;
 	m_material = nullptr;
-
-	Renderer::Unload(m_mesh);
 }

@@ -2,11 +2,13 @@
 
 #include "Maths/Matrix4.h"
 
-struct UniformBufferObject
+struct ProjectionViewUniform
 {
-public:
-	Matrix4 model;
 	Matrix4 view;
 	Matrix4 proj;
+};
 
+struct TransformUniform
+{
+	Matrix4 model;
 };
