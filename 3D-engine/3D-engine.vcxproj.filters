@@ -36,6 +36,8 @@
     <ClInclude Include="Utility\EnumHelpers.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorPool.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorWriter.h" />
+    <ClInclude Include="Graphics\Rendering\Material.h" />
+    <ClInclude Include="Graphics\Vulkan\DescriptorLayoutBuilder.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
@@ -67,5 +69,7 @@
     <ClCompile Include="Utility\Console.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorPool.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorWriter.cpp" />
+    <ClCompile Include="Graphics\Rendering\Material.cpp" />
+    <ClCompile Include="Graphics\Vulkan\DescriptorLayoutBuilder.cpp" />
   </ItemGroup>
 </Project>

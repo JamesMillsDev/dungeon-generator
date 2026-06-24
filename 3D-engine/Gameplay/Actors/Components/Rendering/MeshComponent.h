@@ -2,17 +2,17 @@
 
 #include "Gameplay/Actors/Components/IComponent.h"
 
-class GraphicsPipeline;
+class Material;
 class Mesh;
 
 class MeshComponent final : public IComponent
 {
 private:
 	Mesh* m_mesh;
-	GraphicsPipeline* m_pipeline;
+	Material* m_material;
 
 public:
-	MeshComponent(Mesh* mesh, GraphicsPipeline* pipeline);
+	MeshComponent(Mesh* mesh, Material* material);
 	~MeshComponent() override;
 
 public:

@@ -89,19 +89,22 @@ class GraphicsPipeline
 	friend class Vulkan;
 
 private:
+	VkDescriptorSetLayout m_descriptorSetLayout;
+	VkPipelineLayout m_pipelineLayout;
 	VkPipeline m_pipeline;
 	VkDevice m_device;
 	GraphicsPipelineConfig m_config;
 
-private:
-	GraphicsPipeline(GraphicsPipelineConfig config, VkDevice device, VkPipelineLayout layout, VkRenderPass renderPass);
+public:
+	GraphicsPipeline(GraphicsPipelineConfig config, VkDevice device, VkDescriptorSetLayout layout, VkRenderPass renderPass);
 	~GraphicsPipeline();
 
 public:
 	VkPipeline& Get();
+	VkPipelineLayout& GetLayout();
 	void Bind(VkCommandBuffer cmdBuffer) const;
 
 private:
-	void CreateHandle(VkPipelineLayout layout, VkRenderPass renderPass);
+	void CreateHandle(VkRenderPass renderPass);
 
 };

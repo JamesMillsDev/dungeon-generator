@@ -7,6 +7,7 @@
 #include <stb/stb_image.h>
 
 #include "Graphics/Vulkan/Buffer.h"
+#include "Graphics/Vulkan/DescriptorWriter.h"
 #include "Graphics/Vulkan/Vulkan.h"
 
 using std::runtime_error;
@@ -78,9 +79,12 @@ void Texture::DestroyBuffer()
 	vulkan->DestroyTextureSampler(m_textureSampler);
 }
 
-void Texture::Render(VkCommandBuffer buffer)
+void Texture::Write(const uint32 slot, DescriptorWriter& writer) const
 {
-
+	writer.WriteImage(
+		slot, m_textureView, m_textureSampler, 
+		VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
+	);
 }
 
 void Texture::CopyBufferToImage() const

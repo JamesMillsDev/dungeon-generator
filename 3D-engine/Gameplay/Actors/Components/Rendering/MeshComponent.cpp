@@ -5,11 +5,12 @@
 #include "Gameplay/Actors/Transform.h"
 
 #include "Graphics/Renderer.h"
+#include "Graphics/Rendering/Material.h"
 
 #include "Graphics/Rendering/Mesh.h"
 
-MeshComponent::MeshComponent(Mesh* mesh, GraphicsPipeline* pipeline)
-	: m_mesh{ mesh }, m_pipeline{ pipeline }
+MeshComponent::MeshComponent(Mesh* mesh, Material* material)
+	: m_mesh{ mesh }, m_material{ material }
 {
 	
 }
@@ -26,10 +27,13 @@ void MeshComponent::BeginPlay()
 
 void MeshComponent::Render()
 {
-	Renderer::GetInstance()->Render(m_mesh, m_pipeline, Owner()->GetTransform()->GlobalTransform());
+	Renderer::GetInstance()->Render(m_mesh, m_material, Owner()->GetTransform()->GlobalTransform());
 }
 
 void MeshComponent::EndPlay()
 {
+	delete m_material;
+	m_material = nullptr;
+
 	Renderer::Unload(m_mesh);
 }

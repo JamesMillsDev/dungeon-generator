@@ -6,10 +6,12 @@
 using std::string;
 
 class Buffer;
+struct DescriptorWriter;
 class Vulkan;
 
 class Texture
 {
+	friend class Material;
 	friend class Renderer;
 	friend class Vulkan;
 
@@ -32,7 +34,7 @@ private:
 	void CreateBuffer();
 	void DestroyBuffer();
 
-	void Render(VkCommandBuffer buffer);
+	void Write(uint32 slot, DescriptorWriter& writer) const;
 
 	void CopyBufferToImage() const;
 

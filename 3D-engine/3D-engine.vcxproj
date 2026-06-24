@@ -195,6 +195,8 @@
     <ClInclude Include="Application.h" />
     <ClInclude Include="Gameplay\GameInstance.h" />
     <ClInclude Include="GameTime.h" />
+    <ClInclude Include="Graphics\Rendering\Material.h" />
+    <ClInclude Include="Graphics\Vulkan\DescriptorLayoutBuilder.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorPool.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorWriter.h" />
     <ClInclude Include="Maths\Alias.h" />
@@ -231,6 +233,8 @@
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Gameplay\GameInstance.cpp" />
     <ClCompile Include="GameTime.cpp" />
+    <ClCompile Include="Graphics\Rendering\Material.cpp" />
+    <ClCompile Include="Graphics\Vulkan\DescriptorLayoutBuilder.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorPool.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorWriter.cpp" />
     <ClCompile Include="Maths\Maths.cpp" />

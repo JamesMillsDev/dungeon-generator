@@ -88,7 +88,7 @@ VkDescriptorSet DescriptorPool::Allocate(VkDescriptorSetLayout layout, void* pNe
 			result != VK_SUCCESS)
 		{
 			throw runtime_error(std::format(
-				"Failed to allocate Descriptor Set! Error Code: {}", static_cast<uint32>(result))
+				"Failed to allocate Descriptor Set! Error Code: {}", static_cast<int32>(result))
 			);
 		}
 	}
@@ -139,7 +139,7 @@ VkDescriptorPool DescriptorPool::CreatePool(const uint32 setCount, const span<Po
 	if (const VkResult result = vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &newPool))
 	{
 		throw runtime_error(std::format(
-			"Failed to create Descriptor Pool! Error Code: {}", static_cast<uint32>(result))
+			"Failed to create Descriptor Pool! Error Code: {}", static_cast<int32>(result))
 		);
 	}
 

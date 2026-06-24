@@ -4,6 +4,8 @@
 #include "Graphics/Rendering/Mesh.h"
 #include "Graphics/Rendering/Texture.h"
 #include "Graphics/Vulkan/Vulkan.h"
+#include "Rendering/Material.h"
+#include "Vulkan/UniformBuffer.h"
 
 Renderer* Renderer::m_instance = nullptr;
 
@@ -37,7 +39,8 @@ void Renderer::Unload(Texture*& texture)
 }
 
 Renderer::Renderer(GLFWwindow* window, Config* config) :
-	m_vulkan{ new Vulkan{window, config} }, m_frameCommandBuffer{ VK_NULL_HANDLE }
+	m_vulkan{ new Vulkan{window, config} }, m_frameCommandBuffer{ VK_NULL_HANDLE },
+	m_mvpBuffer{ nullptr }, m_descriptorPool{ nullptr }
 {
 	m_instance = this;
 }
@@ -48,39 +51,63 @@ Renderer::~Renderer()
 	m_vulkan = nullptr;
 }
 
-void Renderer::Render(const Mesh* mesh, const GraphicsPipeline* pipeline, const Matrix4& transform)
+void Renderer::Render(const Mesh* mesh, Material* material, const Matrix4& transform)
 {
 	m_uniformBufferObj.model = transform;
 	m_uniformBufferObj.proj[1][1] *= -1.f;
 
-	m_vulkan->UpdateUniformBuffer(m_vulkan->m_currentFrame, &m_uniformBufferObj);
-	m_vulkan->RecordCommandBuffer(m_frameCommandBuffer, pipeline, [this, mesh]
+	m_mvpBuffer->Fill(&m_uniformBufferObj);
+	
+	material->WriteMaterial(*m_descriptorPool, m_mvpBuffer);
+	m_vulkan->RecordCommandBuffer(m_frameCommandBuffer, material, [this, mesh]
 		{
 			mesh->Render(m_frameCommandBuffer);
 		});
 }
 
-GraphicsPipeline* Renderer::CreatePipeline(const GraphicsPipelineConfig& config) const
+Material* Renderer::CreateMaterial(const GraphicsPipelineConfig& config) const
 {
-	return m_vulkan->CreatePipeline(config);
+	return new Material{ m_vulkan->m_device, EMaterialPass::Opaque, config, 1 };
 }
 
-GraphicsPipeline* Renderer::CreatePipeline(const string& shaderName) const
+Material* Renderer::CreateMaterial(const string& shaderName) const
 {
-	return m_vulkan->CreatePipeline(GraphicsPipelineConfig{ shaderName });
+	return new Material{ m_vulkan->m_device, EMaterialPass::Opaque, GraphicsPipelineConfig{ shaderName }, 0 };
 }
 
-void Renderer::Create() const
+void Renderer::Create()
 {
 	m_vulkan->Create();
+
+	m_descriptorPool = new DescriptorPool{ m_vulkan->m_device };
+
+	vector<DescriptorPool::PoolSizeRatio> ratios =
+	{
+		{
+			.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+			.ratio = 1
+		},
+		{
+			.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+			.ratio = 1
+		}
+	};
+	m_descriptorPool->Init(1, ratios);
+	m_mvpBuffer = m_vulkan->MakeUniformBuffer(sizeof(UniformBufferObject), 1);
 }
 
-void Renderer::Destroy() const
+void Renderer::Destroy()
 {
 	if (!IsValid())
 	{
 		return;
 	}
+
+	Vulkan::DestroyBuffer(m_mvpBuffer);
+
+	m_descriptorPool->DestroyPools();
+	delete m_descriptorPool;
+	m_descriptorPool = nullptr;
 
 	m_vulkan->Destroy();
 }

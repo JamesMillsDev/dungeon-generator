@@ -55,7 +55,7 @@ GraphicsPipelineConfig::GraphicsPipelineConfig(ShaderConfig shader)
 GraphicsPipelineConfig::GraphicsPipelineConfig(const string& shaderName)
 	: shader{ .name = shaderName }
 {
-	
+
 }
 
 uint32 GraphicsPipelineConfig::Size() const
@@ -69,15 +69,17 @@ bool GraphicsPipelineConfig::ContainsStage(const VkShaderStageFlagBits stage) co
 }
 
 GraphicsPipeline::GraphicsPipeline(GraphicsPipelineConfig config, const VkDevice device,
-	const VkPipelineLayout layout, const VkRenderPass renderPass)
-	: m_pipeline{ VK_NULL_HANDLE }, m_device{ device }, m_config{ std::move(config) }
+	const VkDescriptorSetLayout layout, const VkRenderPass renderPass)
+	: m_descriptorSetLayout{ layout }, m_pipelineLayout{ VK_NULL_HANDLE }, m_pipeline{ VK_NULL_HANDLE },
+	m_device{ device }, m_config{ std::move(config) }
 {
-	CreateHandle(layout, renderPass);
+	CreateHandle(renderPass);
 }
 
 GraphicsPipeline::~GraphicsPipeline()
 {
 	vkDestroyPipeline(m_device, m_pipeline, nullptr);
+	vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
 }
 
 VkPipeline& GraphicsPipeline::Get()
@@ -85,13 +87,32 @@ VkPipeline& GraphicsPipeline::Get()
 	return m_pipeline;
 }
 
+VkPipelineLayout& GraphicsPipeline::GetLayout()
+{
+	return m_pipelineLayout;
+}
+
 void GraphicsPipeline::Bind(const VkCommandBuffer cmdBuffer) const
 {
 	vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 }
 
-void GraphicsPipeline::CreateHandle(VkPipelineLayout layout, VkRenderPass renderPass)
+void GraphicsPipeline::CreateHandle(VkRenderPass renderPass)
 {
+	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	pipelineLayoutInfo.setLayoutCount = 1;
+	pipelineLayoutInfo.pSetLayouts = &m_descriptorSetLayout;
+	pipelineLayoutInfo.pushConstantRangeCount = 0;
+
+	if (const VkResult result = vkCreatePipelineLayout(m_device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout);
+		result != VK_SUCCESS)
+	{
+		throw runtime_error(
+			std::format("Failed to create Pipeline Layout! Error Code: {}", static_cast<int32>(result))
+		);
+	}
+
 	auto& [shaderConfigs, rasterizer, colorAttachment, blendState, primitive, multisampler] = m_config;
 
 	const uint32 shaderCount = m_config.Size();
@@ -206,7 +227,7 @@ void GraphicsPipeline::CreateHandle(VkPipelineLayout layout, VkRenderPass render
 	pipelineInfo.pDepthStencilState = nullptr; // Optional
 	pipelineInfo.pColorBlendState = &colorBlending;
 	pipelineInfo.pDynamicState = &dynamicState;
-	pipelineInfo.layout = layout;
+	pipelineInfo.layout = m_pipelineLayout;
 	pipelineInfo.renderPass = renderPass;
 	pipelineInfo.subpass = 0;
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
@@ -216,7 +237,7 @@ void GraphicsPipeline::CreateHandle(VkPipelineLayout layout, VkRenderPass render
 		result != VK_SUCCESS)
 	{
 		throw runtime_error(
-			std::format("Failed to create Graphics Pipeline! Error Code: {}", static_cast<uint32>(result))
+			std::format("Failed to create Graphics Pipeline! Error Code: {}", static_cast<int32>(result))
 		);
 	}
 

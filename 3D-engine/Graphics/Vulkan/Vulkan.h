@@ -9,6 +9,7 @@
 #include "Graphics/Rendering/GraphicsPipeline.h"
 #include "Maths/Alias.h"
 
+class Material;
 class Buffer;
 class Config;
 struct DescriptorWriter;
@@ -40,6 +41,7 @@ public:
 	static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);
 
 	static void DestroyBuffer(Buffer*& buffer);
+	static void DestroyBuffer(UniformBuffer*& buffer);
 
 private:
 	static bool CheckValidationLayerSupport();
@@ -85,13 +87,6 @@ private:
 	vector<VkFramebuffer> m_swapChainFrameBuffers;
 
 	VkRenderPass m_renderPass;
-
-	VkDescriptorSetLayout m_descriptorSetLayout;
-	VkDescriptorPool m_descriptorPool;
-	vector<VkDescriptorSet> m_descriptorSets;
-
-	VkPipelineLayout m_pipelineLayout;
-	vector<GraphicsPipeline*> m_pipelines;
 
 	VkCommandPool m_commandPool;
 	vector<VkCommandBuffer> m_commandBuffers;
@@ -143,7 +138,7 @@ public:
 
 	void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) const;
 
-	GraphicsPipeline* CreatePipeline(const GraphicsPipelineConfig& config);
+	GraphicsPipeline* CreatePipeline(const GraphicsPipelineConfig& config, VkDescriptorSetLayout descriptorSetLayout) const;
 
 private:
 	[[nodiscard]] bool Loaded() const;
@@ -165,20 +160,12 @@ private:
 	void CreateImageViews();
 
 	void CreateRenderPass();
-
 	void CreateUniformBuffers();
-	void CreateDescriptorPool();
-	void CreateDescriptorSets();
-
-	void CreateDescriptorSetLayout();
-	void CreateGraphicsPipelineLayout();
-
 	void CreateFrameBuffers();
 
 	void CreateCommandPool();
-
 	void CreateCommandBuffer();
-	void RecordCommandBuffer(VkCommandBuffer commandBuffer, const GraphicsPipeline* pipeline, const function<void()>& drawCommand) const;
+	void RecordCommandBuffer(VkCommandBuffer commandBuffer, const Material* material, const function<void()>& drawCommand) const;
 	void UpdateUniformBuffer(uint32 imageIndex, void* data) const;
 
 	void CreateSyncObjects();

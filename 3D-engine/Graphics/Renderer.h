@@ -8,10 +8,12 @@
 struct GLFWwindow;
 
 class Config;
+class DescriptorPool;
 struct GraphicsPipelineConfig;
-class GraphicsPipeline;
+class Material;
 class Mesh;
 class Texture;
+class UniformBuffer;
 class Vulkan;
 
 using std::string;
@@ -36,22 +38,24 @@ public:
 private:
 	Vulkan* m_vulkan;
 	VkCommandBuffer m_frameCommandBuffer;
+	UniformBuffer* m_mvpBuffer;
 	UniformBufferObject m_uniformBufferObj;
 
 	Texture* m_texture;
+	DescriptorPool* m_descriptorPool;
 
 private:
 	explicit Renderer(GLFWwindow* window, Config* config);
 	~Renderer();
 
 public:
-	void Render(const Mesh* mesh, const GraphicsPipeline* pipeline, const Matrix4& transform);
-	GraphicsPipeline* CreatePipeline(const GraphicsPipelineConfig& config) const;
-	GraphicsPipeline* CreatePipeline(const string& shaderName) const;
+	void Render(const Mesh* mesh, Material* material, const Matrix4& transform);
+	[[nodiscard]] Material* CreateMaterial(const GraphicsPipelineConfig& config) const;
+	[[nodiscard]] Material* CreateMaterial(const string& shaderName) const;
 
 private:
-	void Create() const;
-	void Destroy() const;
+	void Create();
+	void Destroy();
 
 	[[nodiscard]] bool IsValid() const;
 

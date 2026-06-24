@@ -9,6 +9,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include "Graphics/Rendering/Material.h"
 #include "Graphics/Vulkan/Buffer.h"
 #include "Graphics/Vulkan/DescriptorWriter.h"
 #include "Graphics/Vulkan/UniformBuffer.h"
@@ -221,7 +222,7 @@ void Vulkan::CreateInstance()
 	if (const VkResult result = vkCreateInstance(&createInfo, nullptr, &m_instance); result != VK_SUCCESS)
 	{
 		throw runtime_error(
-			std::format("Failed to create Vulkan Instance! Error Code: {}", static_cast<uint32>(result))
+			std::format("Failed to create Vulkan Instance! Error Code: {}", static_cast<int32>(result))
 		);
 	}
 
@@ -244,7 +245,7 @@ void Vulkan::SetupDebugMessenger()
 		result != VK_SUCCESS)
 	{
 		throw runtime_error(std::format(
-			"Failed to set up Debug Messenger! Error Code: {}", static_cast<uint32>(result))
+			"Failed to set up Debug Messenger! Error Code: {}", static_cast<int32>(result))
 		);
 	}
 }
@@ -257,7 +258,7 @@ void Vulkan::CreateSurface()
 		result != VK_SUCCESS)
 	{
 		throw runtime_error(
-			std::format("Failed to create window surface! Error Code: {}", static_cast<uint32>(result))
+			std::format("Failed to create window surface! Error Code: {}", static_cast<int32>(result))
 		);
 	}
 }
@@ -565,7 +566,7 @@ void Vulkan::CreateLogicalDevice()
 		result != VK_SUCCESS)
 	{
 		throw runtime_error(
-			std::format("Failed to create Logical Device! Error Code: {}", static_cast<uint32>(result))
+			std::format("Failed to create Logical Device! Error Code: {}", static_cast<int32>(result))
 		);
 	}
 
@@ -667,7 +668,7 @@ void Vulkan::CreateSwapChain()
 		result != VK_SUCCESS)
 	{
 		throw runtime_error(
-			std::format("Failed to create Swap Chain! Error Code: {}", static_cast<uint32>(result))
+			std::format("Failed to create Swap Chain! Error Code: {}", static_cast<int32>(result))
 		);
 	}
 
@@ -719,7 +720,7 @@ void Vulkan::CreateFrameBuffers()
 			result != VK_SUCCESS)
 		{
 			throw runtime_error(
-				std::format("Failed to create Framebuffer for index '{}'! Error Code: {}", i, static_cast<uint32>(result))
+				std::format("Failed to create Framebuffer for index '{}'! Error Code: {}", i, static_cast<int32>(result))
 			);
 		}
 	}
@@ -777,7 +778,7 @@ void Vulkan::CreateRenderPass()
 		result != VK_SUCCESS)
 	{
 		throw runtime_error(
-			std::format("Failed to create Render Pass! Error Code: {}", static_cast<uint32>(result))
+			std::format("Failed to create Render Pass! Error Code: {}", static_cast<int32>(result))
 		);
 	}
 }
@@ -789,163 +790,6 @@ void Vulkan::CreateUniformBuffers()
 	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 	{
 		m_uniformBuffers.emplace_back(MakeUniformBuffer(sizeof(UniformBufferObject), 1));
-	}
-}
-
-void Vulkan::CreateDescriptorPool()
-{
-	array poolSizes =
-	{
-		VkDescriptorPoolSize
-		{
-			.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-			.descriptorCount = MAX_FRAMES_IN_FLIGHT
-		},
-		VkDescriptorPoolSize
-		{
-			.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-			.descriptorCount = MAX_FRAMES_IN_FLIGHT
-		}
-	};
-
-	VkDescriptorPoolCreateInfo poolInfo{};
-	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	poolInfo.poolSizeCount = static_cast<uint32>(poolSizes.size());
-	poolInfo.pPoolSizes = poolSizes.data();
-	poolInfo.maxSets = MAX_FRAMES_IN_FLIGHT;
-
-	if (const VkResult result = vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &m_descriptorPool);
-		result != VK_SUCCESS)
-	{
-		throw runtime_error(
-			std::format("Failed to create Descriptor Pool! Error Code: {}", static_cast<uint32>(result))
-		);
-	}
-}
-
-void Vulkan::CreateDescriptorSets()
-{
-	vector layouts(MAX_FRAMES_IN_FLIGHT, m_descriptorSetLayout);
-
-	const VkDescriptorSetAllocateInfo allocInfo
-	{
-		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-		.pNext = nullptr,
-		.descriptorPool = m_descriptorPool,
-		.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT),
-		.pSetLayouts = layouts.data()
-	};
-
-	m_descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-	if (const VkResult result = vkAllocateDescriptorSets(m_device, &allocInfo, m_descriptorSets.data());
-		result != VK_SUCCESS)
-	{
-		throw runtime_error(
-			std::format("Failed to create Descriptor Sets! Error Code: {}", static_cast<uint32>(result))
-		);
-	}
-
-	for (uint32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
-	{
-		VkDescriptorBufferInfo bufferInfo
-		{
-			.buffer = m_uniformBuffers[i]->Get(),
-			.offset = 0,
-			.range = sizeof(UniformBufferObject)
-		};
-
-		/*VkDescriptorImageInfo imageInfo
-		{
-			.sampler = texture->m_textureSampler,
-			.imageView = texture->m_textureView,
-			.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-		};*/
-
-		array descriptorWrites
-		{
-			VkWriteDescriptorSet
-			{
-				.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-				.pNext = nullptr,
-				.dstSet = m_descriptorSets[i],
-				.dstBinding = 0,
-				.dstArrayElement = 0,
-				.descriptorCount = 1,
-				.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-				.pImageInfo = nullptr, // Optional
-				.pBufferInfo = &bufferInfo,
-				.pTexelBufferView = nullptr, // Optional
-			},
-			//VkWriteDescriptorSet
-			//{
-			//	.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-			//	.pNext = nullptr,
-			//	.dstSet = m_descriptorSets[i],
-			//	.dstBinding = 1,
-			//	.dstArrayElement = 0,
-			//	.descriptorCount = 1,
-			//	.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-			//	.pImageInfo = &imageInfo,
-			//	.pBufferInfo = nullptr,
-			//	.pTexelBufferView = nullptr, // Optional
-			//}
-		};
-
-		vkUpdateDescriptorSets(
-			m_device, (uint32)descriptorWrites.size(), descriptorWrites.data(), 0, nullptr
-		);
-	}
-}
-
-void Vulkan::CreateDescriptorSetLayout()
-{
-	constexpr VkDescriptorSetLayoutBinding uboLayoutBinding
-	{
-		.binding = 0,
-		.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-		.descriptorCount = 1,
-		.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-		.pImmutableSamplers = nullptr // Optional
-	};
-
-	constexpr VkDescriptorSetLayoutBinding samplerLayoutBinding
-	{
-		.binding = 1,
-		.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-		.descriptorCount = 1,
-		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-		.pImmutableSamplers = nullptr
-	};
-
-	array bindings = { uboLayoutBinding, samplerLayoutBinding };
-	VkDescriptorSetLayoutCreateInfo layoutInfo{};
-	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	layoutInfo.bindingCount = static_cast<uint32>(bindings.size());
-	layoutInfo.pBindings = bindings.data();
-
-	if (const VkResult result = vkCreateDescriptorSetLayout(m_device, &layoutInfo, nullptr, &m_descriptorSetLayout);
-		result != VK_SUCCESS)
-	{
-		throw runtime_error(
-			std::format("Failed to create Descriptor Set Layout! Error Code: {}", static_cast<uint32>(result))
-		);
-	}
-}
-
-void Vulkan::CreateGraphicsPipelineLayout()
-{
-	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount = 1;
-	pipelineLayoutInfo.pSetLayouts = &m_descriptorSetLayout;
-	pipelineLayoutInfo.pushConstantRangeCount = 0;
-
-	if (const VkResult result = vkCreatePipelineLayout(m_device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout);
-		result != VK_SUCCESS)
-	{
-		throw runtime_error(
-			std::format("Failed to create Pipeline Layout! Error Code: {}", static_cast<uint32>(result))
-		);
 	}
 }
 #pragma endregion
@@ -964,7 +808,7 @@ void Vulkan::CreateCommandPool()
 		result != VK_SUCCESS)
 	{
 		throw runtime_error(
-			std::format("Failed to create Command Pool! Error Code: {}", static_cast<uint32>(result))
+			std::format("Failed to create Command Pool! Error Code: {}", static_cast<int32>(result))
 		);
 	}
 }
@@ -983,12 +827,12 @@ void Vulkan::CreateCommandBuffer()
 		result != VK_SUCCESS)
 	{
 		throw runtime_error(
-			std::format("Failed to allocate Command Buffers! Error Code: {}", static_cast<uint32>(result))
+			std::format("Failed to allocate Command Buffers! Error Code: {}", static_cast<int32>(result))
 		);
 	}
 }
 
-void Vulkan::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const GraphicsPipeline* pipeline, const function<void()>& drawCommand) const
+void Vulkan::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const Material* material, const function<void()>& drawCommand) const
 {
 	VkCommandBufferBeginInfo beginInfo{};
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -999,7 +843,7 @@ void Vulkan::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const Grap
 		result != VK_SUCCESS)
 	{
 		throw runtime_error(
-			std::format("Failed to begin recording Command Buffer! Error Code: {}", static_cast<uint32>(result))
+			std::format("Failed to begin recording Command Buffer! Error Code: {}", static_cast<int32>(result))
 		);
 	}
 
@@ -1015,7 +859,6 @@ void Vulkan::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const Grap
 	renderPassInfo.pClearValues = &clearColor;
 
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-	pipeline->Bind(commandBuffer);
 
 	VkViewport viewport;
 	viewport.x = 0.0f;
@@ -1031,10 +874,7 @@ void Vulkan::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const Grap
 	scissor.extent = m_swapChainExtent;
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-	vkCmdBindDescriptorSets(
-		commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout,
-		0, 1, &m_descriptorSets[m_currentFrame], 0, nullptr
-	);
+	material->Bind(commandBuffer);
 	drawCommand();
 
 	vkCmdEndRenderPass(commandBuffer);
@@ -1043,7 +883,7 @@ void Vulkan::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const Grap
 		result != VK_SUCCESS)
 	{
 		throw runtime_error(
-			std::format("Failed to end recording Command Buffer! Error Code: {}", static_cast<uint32>(result))
+			std::format("Failed to end recording Command Buffer! Error Code: {}", static_cast<int32>(result))
 		);
 	}
 }
@@ -1076,7 +916,7 @@ void Vulkan::CreateSyncObjects()
 			result != VK_SUCCESS)
 		{
 			throw runtime_error(
-				std::format("Failed to create Image Available Semaphore! Error Code: {}", static_cast<uint32>(result))
+				std::format("Failed to create Image Available Semaphore! Error Code: {}", static_cast<int32>(result))
 			);
 		}
 
@@ -1084,7 +924,7 @@ void Vulkan::CreateSyncObjects()
 			result != VK_SUCCESS)
 		{
 			throw runtime_error(
-				std::format("Failed to create Render Finished Semaphore! Error Code: {}", static_cast<uint32>(result))
+				std::format("Failed to create Render Finished Semaphore! Error Code: {}", static_cast<int32>(result))
 			);
 		}
 
@@ -1092,7 +932,7 @@ void Vulkan::CreateSyncObjects()
 			result != VK_SUCCESS)
 		{
 			throw runtime_error(
-				std::format("Failed to create In Flight Fence! Error Code: {}", static_cast<uint32>(result))
+				std::format("Failed to create In Flight Fence! Error Code: {}", static_cast<int32>(result))
 			);
 		}
 	}
@@ -1107,14 +947,20 @@ void Vulkan::DestroyBuffer(Buffer*& buffer)
 	buffer = nullptr;
 }
 
+void Vulkan::DestroyBuffer(UniformBuffer*& buffer)
+{
+	buffer->Destroy();
+	delete buffer;
+	buffer = nullptr;
+}
+
 Vulkan::Vulkan(GLFWwindow* window, Config* config) :
 	m_window{ window }, m_loaded{ false }, m_instance{ VK_NULL_HANDLE }, m_debugMessenger{ VK_NULL_HANDLE },
 	m_surface{ VK_NULL_HANDLE }, m_physicalDevice{ VK_NULL_HANDLE }, m_device{ VK_NULL_HANDLE },
 	m_graphicsQueue{ VK_NULL_HANDLE }, m_presentQueue{ VK_NULL_HANDLE }, m_swapChain{ VK_NULL_HANDLE },
 	m_swapChainFormat{}, m_swapChainExtent{}, m_renderPass{ VK_NULL_HANDLE },
-	m_pipelineLayout{ VK_NULL_HANDLE }, m_commandPool{ VK_NULL_HANDLE }, m_commandBuffers{ VK_NULL_HANDLE },
-	m_imageAvailableSemaphores{ VK_NULL_HANDLE }, m_renderFinishedSemaphores{ VK_NULL_HANDLE },
-	m_inFlightFences{ VK_NULL_HANDLE }, m_frameBufferResized{ false },
+	m_commandPool{ VK_NULL_HANDLE }, m_commandBuffers{ VK_NULL_HANDLE }, m_imageAvailableSemaphores{ VK_NULL_HANDLE },
+	m_renderFinishedSemaphores{ VK_NULL_HANDLE }, m_inFlightFences{ VK_NULL_HANDLE }, m_frameBufferResized{ false },
 	m_currentFrame{ 0 }, m_currentImageIndex{ 0 }, m_writer{ nullptr }
 {
 	m_engineTitle = config->Get<string>("Engine.Title");
@@ -1232,7 +1078,7 @@ VkImage Vulkan::MakeTexture(const uint32 w, const uint32 h, const VkFormat forma
 		result != VK_SUCCESS)
 	{
 		throw runtime_error(
-			std::format("Failed to create Texture Image! Error Code: {}", static_cast<uint32>(result))
+			std::format("Failed to create Texture Image! Error Code: {}", static_cast<int32>(result))
 		);
 	}
 
@@ -1248,7 +1094,7 @@ VkImage Vulkan::MakeTexture(const uint32 w, const uint32 h, const VkFormat forma
 		result != VK_SUCCESS)
 	{
 		throw runtime_error(
-			std::format("Failed to allocate Image Memory! Error Code: {}", static_cast<uint32>(result))
+			std::format("Failed to allocate Image Memory! Error Code: {}", static_cast<int32>(result))
 		);
 	}
 
@@ -1281,7 +1127,7 @@ VkImageView Vulkan::MakeImageViewFor(const VkImage image, const VkFormat format)
 		result != VK_SUCCESS)
 	{
 		throw runtime_error(
-			std::format("Failed to create Texture Image View! Error Code: {}", static_cast<uint32>(result))
+			std::format("Failed to create Texture Image View! Error Code: {}", static_cast<int32>(result))
 		);
 	}
 
@@ -1339,7 +1185,7 @@ VkSampler Vulkan::MakeTextureSampler(
 		result != VK_SUCCESS)
 	{
 		throw runtime_error(
-			std::format("Failed to create Texture Sampler! Error Code: {}", static_cast<uint32>(result))
+			std::format("Failed to create Texture Sampler! Error Code: {}", static_cast<int32>(result))
 		);
 	}
 
@@ -1439,10 +1285,9 @@ void Vulkan::TransitionImageLayout(const VkImage image, VkFormat format, const V
 	EndSingleTimeCommands(commandBuffer);
 }
 
-GraphicsPipeline* Vulkan::CreatePipeline(const GraphicsPipelineConfig& config)
+GraphicsPipeline* Vulkan::CreatePipeline(const GraphicsPipelineConfig& config, const VkDescriptorSetLayout descriptorSetLayout) const
 {
-	m_pipelines.emplace_back(new GraphicsPipeline{ config, m_device, m_pipelineLayout, m_renderPass });
-	return m_pipelines.back();
+	return new GraphicsPipeline{ config, m_device, descriptorSetLayout, m_renderPass };
 }
 
 bool Vulkan::Loaded() const
@@ -1462,13 +1307,9 @@ void Vulkan::Create()
 		CreateSwapChain();
 		CreateImageViews();
 		CreateRenderPass();
-		CreateDescriptorSetLayout();
-		CreateGraphicsPipelineLayout();
 		CreateFrameBuffers();
 		CreateCommandPool();
 		CreateUniformBuffers();
-		CreateDescriptorPool();
-		CreateDescriptorSets();
 		CreateCommandBuffer();
 		CreateSyncObjects();
 
@@ -1499,16 +1340,6 @@ void Vulkan::Destroy()
 	}
 	m_uniformBuffers.clear();
 
-	vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
-	vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout, nullptr);
-
-	for (const GraphicsPipeline* pipeline : m_pipelines)
-	{
-		delete pipeline;
-	}
-	m_pipelines.clear();
-
-	vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
 	vkDestroyRenderPass(m_device, m_renderPass, nullptr);
 
 	for (uint32 i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
@@ -1586,7 +1417,7 @@ void Vulkan::EndRender()
 		result != VK_SUCCESS)
 	{
 		throw runtime_error(
-			std::format("Failed to submit draw Command Buffer! Error Code: {}", static_cast<uint32>(result))
+			std::format("Failed to submit draw Command Buffer! Error Code: {}", static_cast<int32>(result))
 		);
 	}
 
