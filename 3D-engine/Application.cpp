@@ -35,9 +35,6 @@ Application::Application()
 
 Application::~Application()
 {
-	delete m_renderer;
-	m_renderer = nullptr;
-
 	delete m_game;
 	m_game = nullptr;
 
@@ -62,7 +59,7 @@ EExitCode Application::Run()
 	}
 
 	m_renderer = new Renderer{ m_window->m_window, m_config };
-	m_renderer->Create();
+
 	// Validate the renderer succeeded to initialise
 	if (!m_renderer->IsValid())
 	{
@@ -102,7 +99,10 @@ EExitCode Application::Run()
 
 	// Shutdown the game instance and close the window
 	m_game->Shutdown();
-	m_renderer->Destroy();
+
+	delete m_renderer;
+	m_renderer = nullptr;
+
 	m_window->Close();
 
 	// Return success as the whole gameplay loop ran successfully.

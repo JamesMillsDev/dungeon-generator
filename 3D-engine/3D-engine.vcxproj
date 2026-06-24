@@ -196,6 +196,7 @@
     <ClInclude Include="Gameplay\GameInstance.h" />
     <ClInclude Include="GameTime.h" />
     <ClInclude Include="Graphics\Rendering\Material.h" />
+    <ClInclude Include="Graphics\Vulkan\Vulkan.h" />
     <ClInclude Include="Maths\Alias.h" />
     <ClInclude Include="Maths\Maths.h" />
     <ClInclude Include="Maths\Color.h" />
@@ -213,6 +214,7 @@
     <ClInclude Include="Utility\Config.h" />
     <ClInclude Include="Utility\Console.h" />
     <ClInclude Include="Utility\EnumHelpers.h" />
+    <ClInclude Include="Utility\ResourceStack.h" />
     <ClInclude Include="Utility\Version.h" />
     <ClInclude Include="Graphics\Rendering\GraphicsPipeline.h" />
     <ClInclude Include="Window.h" />
@@ -226,6 +228,7 @@
     <ClCompile Include="Gameplay\GameInstance.cpp" />
     <ClCompile Include="GameTime.cpp" />
     <ClCompile Include="Graphics\Rendering\Material.cpp" />
+    <ClCompile Include="Graphics\Vulkan\Vulkan.cpp" />
     <ClCompile Include="Maths\Maths.cpp" />
     <ClCompile Include="Maths\Color.cpp" />
     <ClCompile Include="Maths\Matrix3.cpp" />
@@ -245,6 +248,7 @@
     <ClCompile Include="Graphics\Rendering\Texture.cpp" />
     <ClCompile Include="Utility\Config.cpp" />
     <ClCompile Include="Utility\Console.cpp" />
+    <ClCompile Include="Utility\ResourceStack.cpp" />
     <ClCompile Include="Utility\Version.cpp" />
     <ClCompile Include="Graphics\Rendering\GraphicsPipeline.cpp" />
     <ClCompile Include="Window.cpp" />
