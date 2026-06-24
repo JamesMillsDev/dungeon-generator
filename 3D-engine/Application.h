@@ -83,9 +83,6 @@ private:
 	 */
 	[[nodiscard]] EExitCode Run() const;
 
-	void InitRenderer() const;
-	void DestroyRenderer() const;
-
 };
 
 template <typename GAME>

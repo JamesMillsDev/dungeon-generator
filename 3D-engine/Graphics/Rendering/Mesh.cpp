@@ -1,3 +1,4 @@
+// ReSharper disable CppClangTidyBugproneUndefinedMemoryManipulation
 #include "pch.h"
 #include "Mesh.h"
 
@@ -6,6 +7,8 @@
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+
+#include "Graphics/Vulkan/Vulkan.h"
 
 using std::vector;
 using VertexAttribData = std::tuple<uint8, uint8, VkFormat, size_t>;
@@ -91,13 +94,13 @@ Mesh* Mesh::MakeQuad()
 	};
 }
 
-Mesh* Mesh::Load(const string& file)
+Mesh* Mesh::MakeFromAssimp(const string& file)
 {
 	string path = "./Content/" + file;
 
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(
-		path.c_str(), 
+		path.c_str(),
 		aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_GlobalScale
 	);
 
@@ -171,20 +174,46 @@ Mesh* Mesh::Load(const string& file)
 	return new Mesh{ vertices, indices };
 }
 
-Mesh::Mesh(const vector<Vertex>& vertices, const vector<uint16>& indices)
-	: vertices{ vertices }, indices{ indices }
+Mesh::Mesh(const vector<Vertex>& vertices, const vector<uint16>& indices) :
+	vertices{ vertices }, indices{ indices },
+	m_vertexBufferSize{ sizeof(Vertex) * vertices.size() },
+	m_indexBufferSize{ sizeof(uint16) * indices.size() }
 {
+	CreateBuffers();
+}
 
+Mesh::~Mesh()
+{
+	DestroyBuffers();
 }
 
 void Mesh::CreateBuffers()
 {
-	
+	VkBufferCreateInfo bufferCI{};
+	bufferCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	bufferCI.size = m_vertexBufferSize + m_indexBufferSize;
+	bufferCI.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+
+	VmaAllocationInfo vBufferAllocInfo{};
+	VmaAllocationCreateInfo vBufferAllocCI{};
+	vBufferAllocCI.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
+	vBufferAllocCI.usage = VMA_MEMORY_USAGE_AUTO;
+
+	// Attempt to allocate the memory
+	if (const VkResult result = vmaCreateBuffer(Vulkan::Allocator(), &bufferCI, &vBufferAllocCI, &m_buffer, &m_allocation, &vBufferAllocInfo);
+		result != VK_SUCCESS)
+	{
+		throw Vulkan::VulkanError("Failed to allocate Mesh Buffer!", result);
+	}
+
+	// Copy the vertex and index information into the buffer
+	memcpy(vBufferAllocInfo.pMappedData, vertices.data(), m_vertexBufferSize);
+	memcpy(static_cast<char*>(vBufferAllocInfo.pMappedData) + m_vertexBufferSize, indices.data(), m_indexBufferSize);
 }
 
-void Mesh::DestroyBuffers()
+void Mesh::DestroyBuffers() const
 {
-	
+	vmaDestroyBuffer(Vulkan::Allocator(), m_buffer, m_allocation);
 }
 
 void Mesh::Render(const VkCommandBuffer buffer, const uint32 instances, const uint32 firstInstance) const

@@ -27,7 +27,7 @@ void MeshComponent::BeginPlay()
 
 void MeshComponent::Render()
 {
-	Renderer::GetInstance()->Render(m_mesh, m_material, Owner()->GetTransform()->GlobalTransform());
+	Renderer::Instance()->Render(m_mesh, m_material, Owner()->GetTransform()->GlobalTransform());
 }
 
 void MeshComponent::EndPlay()

@@ -3,8 +3,18 @@
 
 #include "Texture.h"
 
+Material* Material::Create(const GraphicsPipelineConfig& config, EMaterialPass pass, uint32 textureCount)
+{
+	return nullptr;
+}
+
+Material* Material::Create(const string& shaderName, EMaterialPass pass, uint32 textureCount)
+{
+	return nullptr;
+}
+
 Material::Material(const VkDevice device, const EMaterialPass pass, GraphicsPipelineConfig pipelineConfig,
-	const uint32 textureSlots)
+                   const uint32 textureSlots)
 	: m_pipeline{ nullptr }, m_layout{ VK_NULL_HANDLE }, m_materialSet{ VK_NULL_HANDLE },
 	m_pass{ pass }, m_device{ device }, m_pipelineConfig{ std::move(pipelineConfig) },
 	m_textureSlots{ textureSlots }

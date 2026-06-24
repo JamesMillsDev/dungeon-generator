@@ -2,6 +2,7 @@
 
 #include <array>
 #include <vector>
+#include <vma/vk_mem_alloc.h>
 
 #include <vulkan/vulkan.h>
 
@@ -54,7 +55,7 @@ class Mesh
 
 public:
 	static Mesh* MakeQuad();
-	static Mesh* Load(const string& file);
+	static Mesh* MakeFromAssimp(const string& file);
 
 public:
 	vector<Vertex> vertices;
@@ -64,12 +65,16 @@ private:
 	VkDeviceSize m_vertexBufferSize;
 	VkDeviceSize m_indexBufferSize;
 
+	VkBuffer m_buffer;
+	VmaAllocation m_allocation;
+
 public:
 	Mesh(const vector<Vertex>& vertices, const vector<uint16>& indices);
+	~Mesh();
 
 private:
 	void CreateBuffers();
-	void DestroyBuffers();
+	void DestroyBuffers() const;
 
 	void Render(VkCommandBuffer buffer, uint32 instances = 1, uint32 firstInstance = 0) const;
 

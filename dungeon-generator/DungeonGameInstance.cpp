@@ -5,7 +5,6 @@
 #include "Gameplay/Actors/Components/Rendering/MeshComponent.h"
 
 #include "Graphics/Renderer.h"
-#include "Graphics/Rendering/GraphicsPipeline.h"
 #include "Graphics/Rendering/Mesh.h"
 
 DungeonGameInstance::DungeonGameInstance()
@@ -19,7 +18,7 @@ void DungeonGameInstance::Init()
 	m_actor = GetWorld()->MakeActor<Actor>();
 	m_actor->GetTransform()->AddRelativeScale({ 10.f, 10.f, 10.f });
 	m_actor->MakeComponent<MeshComponent>(
-		Mesh::Load("Meshes/SM_Windmill.fbx"), m_renderer->CreateMaterial("Triangle", EMaterialPass::Opaque, 1)
+		Mesh::MakeFromAssimp("Meshes/SM_Windmill.fbx"), Material::Create("Triangle", EMaterialPass::Opaque, 1)
 	);
 }
 

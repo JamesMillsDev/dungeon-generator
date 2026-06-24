@@ -5,7 +5,7 @@
 
 GameInstance::GameInstance()
 // TODO: Support levels instead of worlds
-	: m_renderer{ nullptr }, m_world{ new World }
+	: m_world{ new World }
 {
 	
 }

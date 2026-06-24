@@ -4,15 +4,14 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <vma/vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
 
-#include <vma/vk_mem_alloc.h>
-
-#include "Graphics/Renderer.h"
 #include "Utility/ResourceStack.h"
 
 struct GLFWwindow;
 class Config;
+class Renderer;
 class Version;
 
 using InitFunction = std::function<void()>;
@@ -22,8 +21,7 @@ using std::vector;
 
 class Vulkan
 {
-	friend void Renderer::InitVulkan(Config*, GLFWwindow*) const;
-	friend void Renderer::DestroyVulkan() const;
+	friend Renderer;
 
 private:
 	static Vulkan* m_instance;
@@ -33,10 +31,9 @@ public:
 	static const VkDevice& Device();
 	static const VmaAllocator& Allocator();
 	static bool IsLoaded();
-
-private:
 	static runtime_error VulkanError(const string& message, VkResult result);
 
+private:
 	static void Create(Config* config, GLFWwindow* window);
 	static void Destroy();
 

@@ -44,16 +44,6 @@ void Renderer::Render(const Mesh* mesh, Material* material, const Matrix4& trans
 
 }
 
-Material* Renderer::CreateMaterial(const GraphicsPipelineConfig& config, const EMaterialPass pass, const uint32 textureCount) const
-{
-	return nullptr;
-}
-
-Material* Renderer::CreateMaterial(const string& shaderName, const EMaterialPass pass, const uint32 textureCount) const
-{
-	return nullptr;
-}
-
 void Renderer::BeginFrame()
 {
 

@@ -57,7 +57,7 @@ EExitCode Application::Run() const
 		return EExitCode::WindowFailedToOpen;
 	}
 
-	InitRenderer();
+	Renderer::Create(m_config, m_window->m_window);
 
 	// Validate the renderer succeeded to initialise
 	if (!Renderer::IsValid())
@@ -98,20 +98,10 @@ EExitCode Application::Run() const
 	// Shutdown the game instance and close the window
 	m_game->Shutdown();
 
-	DestroyRenderer();
+	Renderer::Destroy();
 
 	m_window->Close();
 
 	// Return success as the whole gameplay loop ran successfully.
 	return EExitCode::Success;
-}
-
-void Application::InitRenderer() const
-{
-	Renderer::Create(m_config, m_window->m_window);
-}
-
-void Application::DestroyRenderer() const
-{
-	Renderer::Destroy();
 }

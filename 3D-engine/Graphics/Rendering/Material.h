@@ -19,6 +19,10 @@ class Material
 {
 	friend class Renderer;
 
+public:
+	[[nodiscard]] static Material* Create(const GraphicsPipelineConfig& config, EMaterialPass pass, uint32 textureCount = 0);
+	[[nodiscard]] static Material* Create(const string& shaderName, EMaterialPass pass, uint32 textureCount = 0);
+
 private:
 	GraphicsPipeline* m_pipeline;
 	VkDescriptorSetLayout m_layout;
