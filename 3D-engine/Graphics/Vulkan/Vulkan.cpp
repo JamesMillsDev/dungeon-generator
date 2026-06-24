@@ -1,27 +1,32 @@
 #include "pch.h"
 #include "Vulkan.h"
 
-#include <stdexcept>
 #include <GLFW/glfw3.h>
+
+#define VMA_IMPLEMENTATION
+#include <vma/vk_mem_alloc.h>
 
 #include "Utility/Console.h"
 #include "Utility/ResourceStack.h"
 
 using std::exception;
-using std::runtime_error;
 
 constexpr int32 DEFAULT_RESOURCE_STACK_SIZE = 16;
 
-Vulkan::Vulkan(Config* config)
-	: m_callbacks{ VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE },
-	m_resourceStack{ new ResourceStack{ DEFAULT_RESOURCE_STACK_SIZE } }, m_loaded{ false }
+runtime_error Vulkan::VulkanError(const string& message, const VkResult result)
+{
+	return runtime_error(std::format("{}. Error Code: {}", message, static_cast<int32>(result)));
+}
+
+Vulkan::Vulkan(Config* config, GLFWwindow* window)
+	: m_resourceStack{ new ResourceStack{ DEFAULT_RESOURCE_STACK_SIZE } }, m_loaded{ false }
 {
 	m_appName = config->Get<string>("Application.Title");
 	m_appVersion = new Version{ "Application.Version", config };
 	m_engineName = config->Get<string>("Engine.Title");
 	m_engineVersion = new Version{ "Engine.Version", config };
 
-	Init();
+	Init(window);
 }
 
 Vulkan::~Vulkan()
@@ -31,7 +36,7 @@ Vulkan::~Vulkan()
 	delete m_engineVersion;
 }
 
-void Vulkan::Init()
+void Vulkan::Init(GLFWwindow* window)
 {
 	try
 	{
@@ -64,14 +69,15 @@ void Vulkan::Init()
 					.ppEnabledExtensionNames = instanceExtensions
 				};
 
-				if (vkCreateInstance(&instanceInfo, &m_callbacks, &m_instance) != VK_SUCCESS)
+				if (const VkResult result = vkCreateInstance(&instanceInfo, nullptr, &m_instance);
+					result != VK_SUCCESS)
 				{
-					throw runtime_error("Failed to create Vulkan Instance!");
+					throw VulkanError("Failed to create Vulkan Instance!", result);
 				}
 			},
 			[this]
 			{
-				vkDestroyInstance(m_instance, &m_callbacks);
+				vkDestroyInstance(m_instance, nullptr);
 			}
 		);
 
@@ -162,11 +168,12 @@ void Vulkan::Init()
 					.ppEnabledExtensionNames = deviceExtensions.data(),
 					.pEnabledFeatures = &enabledVk10Features
 				};
-				
+
 				// Attempt to create the device
-				if (vkCreateDevice(m_physicalDevice, &deviceCI, &m_callbacks, &m_device) != VK_SUCCESS)
+				if (const VkResult result = vkCreateDevice(m_physicalDevice, &deviceCI, nullptr, &m_device);
+					result != VK_SUCCESS)
 				{
-					throw runtime_error("Failed to create Logical Device!");
+					throw VulkanError("Failed to create Logical Device!", result);
 				}
 
 				// Get the graphics queue
@@ -174,16 +181,213 @@ void Vulkan::Init()
 			},
 			[this]
 			{
-				vkDestroyDevice(m_device, &m_callbacks);
+				vkDestroyDevice(m_device, nullptr);
 			}
 		);
 
+		InitAndPushResource(
+			[this]
+			{
+				VmaVulkanFunctions vkFunctions{};
+				vkFunctions.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
+				vkFunctions.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
+				vkFunctions.vkCreateImage = vkCreateImage;
+
+				VmaAllocatorCreateInfo allocatorCI{};
+				allocatorCI.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
+				allocatorCI.physicalDevice = m_physicalDevice;
+				allocatorCI.device = m_device;
+				allocatorCI.pVulkanFunctions = &vkFunctions;
+				allocatorCI.instance = m_instance;
+
+				if (const VkResult result = vmaCreateAllocator(&allocatorCI, &m_vmaAllocator);
+					result != VK_SUCCESS)
+				{
+					throw VulkanError("Failed to create VMA Allocator", result);
+				}
+			},
+			[this]
+			{
+				vmaDestroyAllocator(m_vmaAllocator);
+			}
+		);
+
+		InitAndPushResource(
+			[this, window]
+			{
+				if (const VkResult result = glfwCreateWindowSurface(m_instance, window, nullptr, &m_surface);
+					result != VK_SUCCESS)
+				{
+					throw VulkanError("Failed to create window surface!", result);
+				}
+			},
+			[this]
+			{
+				vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
+			}
+		);
+
+		InitAndPushResource(
+			[this, window]
+			{
+				VkResult result;
+
+				VkSurfaceCapabilitiesKHR surfaceCaps{};
+				if (result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice, m_surface, &surfaceCaps);
+					result != VK_SUCCESS)
+				{
+					throw VulkanError("Failed to retrieve surface capabilities", result);
+				}
+
+				// Verify the window size
+				VkExtent2D swapChainExtent = surfaceCaps.currentExtent;
+				if (surfaceCaps.currentExtent.width == 0xffffffff)
+				{
+					// Get the GLFW window size
+					int windowW, windowH;
+					glfwGetWindowSize(window, &windowW, &windowH);
+
+					// Use the glfw window size as the swap chain size
+					swapChainExtent =
+					{
+						.width = static_cast<uint32>(windowW),
+						.height = static_cast<uint32>(windowH)
+					};
+				}
+
+				// Generate the Swap Chain Create Information
+				constexpr VkFormat imageFormat = VK_FORMAT_B8G8R8A8_SRGB;
+				VkSwapchainCreateInfoKHR swapChainCI{};
+				swapChainCI.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+				swapChainCI.surface = m_surface;
+				swapChainCI.minImageCount = surfaceCaps.minImageCount;
+				swapChainCI.imageFormat = imageFormat;
+				swapChainCI.imageColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+				swapChainCI.imageExtent = { .width = swapChainExtent.width, .height = swapChainExtent.height };
+				swapChainCI.imageArrayLayers = 1;
+				swapChainCI.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+				swapChainCI.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+				swapChainCI.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+				swapChainCI.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+
+				// Attempt to create the swap chain
+				if (result = vkCreateSwapchainKHR(m_device, &swapChainCI, nullptr, &m_swapChain);
+					result != VK_SUCCESS)
+				{
+					throw VulkanError("Failed to create Swap Chain!", result);
+				}
+
+				// Attempt to acquire the swap chain images from the swap chain
+				uint32 scImageCount = 0;
+				if (result = vkGetSwapchainImagesKHR(m_device, m_swapChain, &scImageCount, nullptr);
+					result != VK_SUCCESS)
+				{
+					throw VulkanError("Failed to count Swap Chain Images!", result);
+				}
+
+				m_swapChainImages.resize(scImageCount);
+				if (result = vkGetSwapchainImagesKHR(m_device, m_swapChain, &scImageCount, m_swapChainImages.data());
+					result != VK_SUCCESS)
+				{
+					throw VulkanError("Failed to retrieve Swap Chain Images!", result);
+				}
+
+				// Resize the image view vector to match the image one
+				m_swapChainImageViews.resize(scImageCount);
+			},
+			[this]
+			{
+				CleanupSwapChain();
+			}
+		);
+
+		InitAndPushResource(
+			[this, window]
+			{
+				// Attempt to get the correct format for the swap chain images
+				const vector depthFormatList = { VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT };
+				VkFormat depthFormat = VK_FORMAT_UNDEFINED;
+				for (const VkFormat& format : depthFormatList)
+				{
+					// Get the device format properties
+					VkFormatProperties2 formatProperties{};
+					formatProperties.sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
+					vkGetPhysicalDeviceFormatProperties2(m_physicalDevice, format, &formatProperties);
+
+					// If this format properties contains the tiling features we want, store and break
+					if (formatProperties.formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
+					{
+						depthFormat = format;
+						break;
+					}
+				}
+
+				// Get the GLFW window size
+				int windowW, windowH;
+				glfwGetWindowSize(window, &windowW, &windowH);
+
+				// Set up the image create info for the depth image
+				VkImageCreateInfo depthImageCI{};
+				depthImageCI.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+				depthImageCI.imageType = VK_IMAGE_TYPE_2D;
+				depthImageCI.format = depthFormat;
+				depthImageCI.extent = { .width = static_cast<uint32_t>(windowW), .height = static_cast<uint32_t>(windowH), .depth = 1 };
+				depthImageCI.mipLevels = 1;
+				depthImageCI.arrayLayers = 1;
+				depthImageCI.samples = VK_SAMPLE_COUNT_1_BIT;
+				depthImageCI.tiling = VK_IMAGE_TILING_OPTIMAL;
+				depthImageCI.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+				depthImageCI.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+				VmaAllocationCreateInfo allocCI{};
+				allocCI.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+				allocCI.usage = VMA_MEMORY_USAGE_AUTO;
+
+				// Attempt to create the depth image
+				if (const VkResult result = vmaCreateImage(m_vmaAllocator, &depthImageCI, &allocCI, &m_depthImage, &m_depthImageAllocation, nullptr);
+					result != VK_SUCCESS)
+				{
+					throw VulkanError("Failed to create Depth Image!", result);
+				}
+
+				VkImageViewCreateInfo depthViewCI
+				{
+					.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+					.pNext = nullptr,
+					.flags = 0,
+					.image = m_depthImage,
+					.viewType = VK_IMAGE_VIEW_TYPE_2D,
+					.format = depthFormat,
+					.components = { VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY },
+					.subresourceRange{ .aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT, .baseMipLevel = 0, .levelCount = 1, .baseArrayLayer = 0, .layerCount = 1 }
+				};
+
+				// Attempt to create the depth image view
+				if (const VkResult result = vkCreateImageView(m_device, &depthViewCI, nullptr, &m_depthImageView);
+					result != VK_SUCCESS)
+				{
+					throw VulkanError("Failed to create Depth Image View!", result);
+				} 
+			},
+			[this]
+			{
+				vkDestroyImageView(m_device, m_depthImageView, nullptr);
+				vmaDestroyImage(m_vmaAllocator, m_depthImage, m_depthImageAllocation);
+			}
+		);
+
+		// All functions ran safely, so we loaded correctly. 
 		m_loaded = true;
 	}
 	catch (exception& e)
 	{
 		Console::Exception(e);
 	}
+}
+
+void Vulkan::CleanupSwapChain()
+{
+	vkDestroySwapchainKHR(m_device, m_swapChain, nullptr);
 }
 
 bool Vulkan::IsLoaded() const

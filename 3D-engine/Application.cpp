@@ -58,7 +58,7 @@ EExitCode Application::Run()
 		return EExitCode::WindowFailedToOpen;
 	}
 
-	m_renderer = new Renderer{ m_window->m_window, m_config };
+	m_renderer = new Renderer{ m_config, m_window->m_window };
 
 	// Validate the renderer succeeded to initialise
 	if (!m_renderer->IsValid())

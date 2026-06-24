@@ -28,7 +28,7 @@ private:
 	Vulkan* m_vulkan;
 
 private:
-	explicit Renderer(GLFWwindow* window, Config* config);
+	explicit Renderer(Config* config, GLFWwindow* window);
 	~Renderer();
 
 public:

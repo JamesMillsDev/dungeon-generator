@@ -12,8 +12,8 @@ Renderer* Renderer::GetInstance()
 	return m_instance;
 }
 
-Renderer::Renderer(GLFWwindow* window, Config* config)
-	: m_vulkan{ new Vulkan{ config } }
+Renderer::Renderer(Config* config, GLFWwindow* window)
+	: m_vulkan{ new Vulkan{ config, window } }
 {
 	m_instance = this;
 }
