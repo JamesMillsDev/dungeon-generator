@@ -21,7 +21,7 @@ struct VSOutput
 [[vk::push_constant]] float4x4 transform;
 
 [shader("vertex")]
-VSOutput main(VSInput input, uniform MaterialUniform *material, uint instanceIndex: SV_VulkanInstanceID)
+VSOutput main(VSInput input, uint instanceIndex: SV_VulkanInstanceID)
 {
     VSOutput output;
 
@@ -32,7 +32,7 @@ VSOutput main(VSInput input, uniform MaterialUniform *material, uint instanceInd
 }
 
 [shader("fragment")]
-float4 main(VSOutput input)
+float4 main(VSOutput input, uniform MaterialUniform *material)
 {
     return float4(1.0);
 }

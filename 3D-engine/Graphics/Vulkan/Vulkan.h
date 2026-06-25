@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <slang/slang-com-ptr.h>
+#include <slang/slang.h>
 #include <vma/vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
 
@@ -24,6 +26,9 @@ using std::runtime_error;
 using std::string;
 using std::vector;
 
+using slang::IGlobalSession;
+using Slang::ComPtr;
+
 constexpr int32 MAX_FRAMES_IN_FLIGHT = 2;
 
 class Vulkan  // NOLINT(cppcoreguidelines-special-member-functions)
@@ -37,6 +42,8 @@ public:
 	[[nodiscard]] static Vulkan* Instance();
 	[[nodiscard]] static const VkDevice& Device();
 	[[nodiscard]] static const VmaAllocator& Allocator();
+	[[nodiscard]] static const ComPtr<IGlobalSession>& SlangSession();
+
 	[[nodiscard]] static bool IsLoaded();
 	[[nodiscard]] static runtime_error VulkanError(const string& message, VkResult result);
 
@@ -52,6 +59,8 @@ private:
 
 	ResourceStack* m_resourceStack;
 	bool m_loaded;
+
+	ComPtr<IGlobalSession> m_slangSession;
 
 	VmaAllocator m_vmaAllocator;
 	VkInstance m_vkInstance;

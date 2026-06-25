@@ -34,6 +34,11 @@ const VmaAllocator& Vulkan::Allocator()
 	return m_instance->GetAllocator();
 }
 
+const ComPtr<IGlobalSession>& Vulkan::SlangSession()
+{
+	return m_instance->m_slangSession;
+}
+
 bool Vulkan::IsLoaded()
 {
 	return m_instance != nullptr && m_instance->m_loaded;
@@ -178,7 +183,7 @@ void Vulkan::WriteTextureDescriptorSets() const
 		textureDescriptors[i] = m_textures[i]->GetDescriptors();
 	}
 
-	constexpr VkWriteDescriptorSet writeDescSet
+	const VkWriteDescriptorSet writeDescSet
 	{
 		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.pNext = nullptr,
@@ -674,7 +679,7 @@ void Vulkan::Init(GLFWwindow* window)
 				VkResult result;
 
 				constexpr VkDescriptorBindingFlags descVariableFlag = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
-				constexpr VkDescriptorSetLayoutBindingFlagsCreateInfo dslFlagsCreateInfo
+				const VkDescriptorSetLayoutBindingFlagsCreateInfo dslFlagsCreateInfo
 				{
 					.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,
 					.pNext = nullptr,
@@ -690,7 +695,7 @@ void Vulkan::Init(GLFWwindow* window)
 					.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
 					.pImmutableSamplers = nullptr
 				};
-				constexpr VkDescriptorSetLayoutCreateInfo dslCreateInfo
+				const VkDescriptorSetLayoutCreateInfo dslCreateInfo
 				{
 					.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
 					.pNext = &dslFlagsCreateInfo,
@@ -711,7 +716,7 @@ void Vulkan::Init(GLFWwindow* window)
 					.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 					.descriptorCount = MAX_TEXTURE_DESCRIPTORS
 				};
-				constexpr VkDescriptorPoolCreateInfo dpCreateInfo
+				const VkDescriptorPoolCreateInfo dpCreateInfo
 				{
 					.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
 					.pNext = nullptr,
@@ -736,7 +741,7 @@ void Vulkan::Init(GLFWwindow* window)
 					.descriptorSetCount = 1,
 					.pDescriptorCounts = &MAX_TEXTURE_DESCRIPTORS
 				};
-				constexpr VkDescriptorSetAllocateInfo dsAllocateInfo
+				const VkDescriptorSetAllocateInfo dsAllocateInfo
 				{
 					.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
 					.pNext = &vdcAllocateInfo,
@@ -760,6 +765,8 @@ void Vulkan::Init(GLFWwindow* window)
 				vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
 			}
 		);
+
+		slang::createGlobalSession(m_slangSession.writeRef());
 
 		// All functions ran safely, so we loaded correctly. 
 		m_loaded = true;

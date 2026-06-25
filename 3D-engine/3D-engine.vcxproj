@@ -107,7 +107,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;assimp-vc145-mt.lib;ktx.lib;</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;assimp-vc145-mt.lib;ktx.lib;slang.lib;slang-compiler.lib;</AdditionalDependencies>
     </Lib>
     <Lib>
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\lib\;$(VULKAN_SDK)\Lib\;$(KTX_SDK)\lib\</AdditionalLibraryDirectories>
@@ -132,7 +132,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;assimp-vc145-mt.lib;ktx.lib;</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;assimp-vc145-mt.lib;ktx.lib;slang.lib;slang-compiler.lib;</AdditionalDependencies>
     </Lib>
     <Lib>
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\lib\;$(VULKAN_SDK)\Lib\;$(KTX_SDK)\lib\</AdditionalLibraryDirectories>
@@ -155,7 +155,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;assimp-vc145-mt.lib;ktx.lib;</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;assimp-vc145-mt.lib;ktx.lib;slang.lib;slang-compiler.lib;</AdditionalDependencies>
     </Lib>
     <Lib>
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\lib\;$(VULKAN_SDK)\Lib\;$(KTX_SDK)\lib\</AdditionalLibraryDirectories>
@@ -180,7 +180,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;assimp-vc145-mt.lib;ktx.lib;</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;assimp-vc145-mt.lib;ktx.lib;slang.lib;slang-compiler.lib;</AdditionalDependencies>
     </Lib>
     <Lib>
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\lib\;$(VULKAN_SDK)\Lib\;$(KTX_SDK)\lib\</AdditionalLibraryDirectories>
@@ -196,6 +196,7 @@
     <ClInclude Include="Gameplay\GameInstance.h" />
     <ClInclude Include="GameTime.h" />
     <ClInclude Include="Graphics\Rendering\Material.h" />
+    <ClInclude Include="Graphics\Rendering\Shader.h" />
     <ClInclude Include="Graphics\Vulkan\Vulkan.h" />
     <ClInclude Include="Graphics\Vulkan\VulkanBuffer.h" />
     <ClInclude Include="Maths\Alias.h" />
@@ -227,6 +228,7 @@
     <ClCompile Include="Gameplay\GameInstance.cpp" />
     <ClCompile Include="GameTime.cpp" />
     <ClCompile Include="Graphics\Rendering\Material.cpp" />
+    <ClCompile Include="Graphics\Rendering\Shader.cpp" />
     <ClCompile Include="Graphics\Vulkan\Vulkan.cpp" />
     <ClCompile Include="Graphics\Vulkan\VulkanBuffer.cpp" />
     <ClCompile Include="Maths\Maths.cpp" />
