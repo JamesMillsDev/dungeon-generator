@@ -3,6 +3,8 @@
 #include <vma/vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
 
+class Vulkan;
+
 class VulkanBuffer
 {
 private:
@@ -14,14 +16,15 @@ private:
 	VkDeviceAddress m_deviceAddress;
 
 public:
-	explicit VulkanBuffer(VkDeviceSize size, VkBufferUsageFlags usage);
+	explicit VulkanBuffer(VkDeviceSize size, VkBufferUsageFlags usage, Vulkan* vulkan);
 	~VulkanBuffer();
 
 public:
 	void Fill(const void* data, VkDeviceSize size = 0, size_t offset = 0) const;
+	VkBuffer Get() const;
 
 private:
-	void Create();
+	void Create(const Vulkan* vulkan);
 	void Destroy();
 
 };

@@ -2,7 +2,6 @@
 #include "Renderer.h"
 
 #include "Graphics/Rendering/Mesh.h"
-#include "Rendering/Material.h"
 #include "Vulkan/Vulkan.h"
 
 Renderer* Renderer::m_instance = nullptr;

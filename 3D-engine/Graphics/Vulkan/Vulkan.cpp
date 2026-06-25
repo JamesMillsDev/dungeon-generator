@@ -6,6 +6,8 @@
 #define VMA_IMPLEMENTATION
 #include <vma/vk_mem_alloc.h>
 
+#include "Uniforms.h"
+#include "VulkanBuffer.h"
 #include "Utility/Console.h"
 #include "Utility/ResourceStack.h"
 
@@ -22,12 +24,12 @@ Vulkan* Vulkan::Instance()
 
 const VkDevice& Vulkan::Device()
 {
-	return m_instance->m_device;
+	return m_instance->GetDevice();
 }
 
 const VmaAllocator& Vulkan::Allocator()
 {
-	return m_instance->m_vmaAllocator;
+	return m_instance->GetAllocator();
 }
 
 bool Vulkan::IsLoaded()
@@ -69,10 +71,85 @@ Vulkan::~Vulkan()
 	delete m_engineVersion;
 }
 
+const VkDevice& Vulkan::GetDevice() const
+{
+	return m_device;
+}
+
+const VmaAllocator& Vulkan::GetAllocator() const
+{
+	return m_vmaAllocator;
+}
+
+void Vulkan::BeginOneTimeCommand(VkCommandBuffer& buffer, VkFence& fence) const
+{
+	VkResult result;
+
+	// Attempt to create the one-time fence
+	VkFenceCreateInfo fenceCreateInfo{};
+	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	if (result = vkCreateFence(m_device, &fenceCreateInfo, nullptr, &fence);
+		result != VK_SUCCESS)
+	{
+		throw VulkanError("Failed to create One-Time Fence!", result);
+	}
+
+	// Attempt to allocate one-time command buffer
+	VkCommandBufferAllocateInfo cbAllocateInfo{};
+	cbAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	cbAllocateInfo.commandPool = m_commandPool;
+	cbAllocateInfo.commandBufferCount = 1;
+
+	if (result = vkAllocateCommandBuffers(m_device, &cbAllocateInfo, &buffer);
+		result != VK_SUCCESS)
+	{
+		throw VulkanError("Failed to create One-Time Command Buffer!", result);
+	}
+
+	// Attempt to begin the command buffer
+	VkCommandBufferBeginInfo cbBeginInfo{};
+	cbBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	cbBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	if (result = vkBeginCommandBuffer(buffer, &cbBeginInfo);
+		result != VK_SUCCESS)
+	{
+		throw VulkanError("Failed to begin One-Time Command Buffer!", result);
+	}
+}
+
+void Vulkan::EndOneTimeCommand(const VkCommandBuffer& buffer, const VkFence& fence) const
+{
+	VkResult result;
+
+	// Attempt to end the command buffer
+	if (result = vkEndCommandBuffer(buffer); result != VK_SUCCESS)
+	{
+		throw VulkanError("Failed to end One-Time Command Buffer!", result);
+	}
+
+	// Attempt to submit the queue
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &buffer;
+
+	if (result = vkQueueSubmit(m_queue, 1, &submitInfo, fence); result != VK_SUCCESS)
+	{
+		throw VulkanError("Failed to submit One-Time Command!", result);
+	}
+
+	// Wait for the fences to finish
+	if (result = vkWaitForFences(m_device, 1, &fence, VK_TRUE, UINT64_MAX); result != VK_SUCCESS)
+	{
+		throw VulkanError("Fence timed out!", result);
+	}
+}
+
 void Vulkan::Init(GLFWwindow* window)
 {
 	try
 	{
+		// VK Instance
 		InitAndPushResource(
 			[this]
 			{
@@ -114,6 +191,7 @@ void Vulkan::Init(GLFWwindow* window)
 			}
 		);
 
+		// Logical / Physical Device
 		InitAndPushResource(
 			[this]
 			{
@@ -140,18 +218,18 @@ void Vulkan::Init(GLFWwindow* window)
 				vkGetPhysicalDeviceQueueFamilyProperties(m_physicalDevice, &queueFamilyCount, queueFamilies.data());
 
 				// Get the graphics queue family index
-				uint32 queueFamily = 0;
+				m_queueFamily = 0;
 				for (uint32 i = 0; i < queueFamilyCount; ++i)
 				{
 					if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
 					{
-						queueFamily = i;
+						m_queueFamily = i;
 						break;
 					}
 				}
 
 				// Validate the queue family support
-				if (glfwGetPhysicalDevicePresentationSupport(m_vkInstance, m_physicalDevice, queueFamily) == GLFW_FALSE)
+				if (glfwGetPhysicalDevicePresentationSupport(m_vkInstance, m_physicalDevice, m_queueFamily) == GLFW_FALSE)
 				{
 					throw runtime_error("GLFW does not support presentation on this queue family!");
 				}
@@ -163,7 +241,7 @@ void Vulkan::Init(GLFWwindow* window)
 					.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
 					.pNext = nullptr,
 					.flags = 0,
-					.queueFamilyIndex = queueFamily,
+					.queueFamilyIndex = m_queueFamily,
 					.queueCount = 1,
 					.pQueuePriorities = &qfPriorities,
 				};
@@ -210,7 +288,7 @@ void Vulkan::Init(GLFWwindow* window)
 				}
 
 				// Get the graphics queue
-				vkGetDeviceQueue(m_device, queueFamily, 0, &m_queue);
+				vkGetDeviceQueue(m_device, m_queueFamily, 0, &m_queue);
 			},
 			[this]
 			{
@@ -218,6 +296,7 @@ void Vulkan::Init(GLFWwindow* window)
 			}
 		);
 
+		// VMA allocator
 		InitAndPushResource(
 			[this]
 			{
@@ -245,6 +324,7 @@ void Vulkan::Init(GLFWwindow* window)
 			}
 		);
 
+		// Surface
 		InitAndPushResource(
 			[this, window]
 			{
@@ -260,6 +340,7 @@ void Vulkan::Init(GLFWwindow* window)
 			}
 		);
 
+		// Swap chain / swap chain images
 		InitAndPushResource(
 			[this, window]
 			{
@@ -330,10 +411,11 @@ void Vulkan::Init(GLFWwindow* window)
 			},
 			[this]
 			{
-				CleanupSwapChain();
+				vkDestroySwapchainKHR(m_device, m_swapChain, nullptr);
 			}
 		);
 
+		// Depth image
 		InitAndPushResource(
 			[this, window]
 			{
@@ -409,6 +491,130 @@ void Vulkan::Init(GLFWwindow* window)
 			}
 		);
 
+		// Shader uniform buffers
+		InitAndPushResource(
+			[this]
+			{
+				// We need a set of buffers for every frame in flight
+				for (uint32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+				{
+					vector<VulkanBuffer*> buffers;
+
+					buffers.emplace_back(new VulkanBuffer{ sizeof(ProjectionViewUniform), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this });
+					buffers.emplace_back(new VulkanBuffer{ sizeof(LightUniform), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this });
+
+					m_shaderDataBuffers[i] = buffers;
+				}
+			},
+			[this]
+			{
+				for (uint32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+				{
+					// Delete each buffer for this frame in flight
+					for (const VulkanBuffer* buffer : m_shaderDataBuffers[i])
+					{
+						delete buffer;
+					}
+
+					m_shaderDataBuffers[i].clear();
+				}
+			}
+		);
+
+		// Fences and semaphores
+		InitAndPushResource(
+			[this]
+			{
+				VkSemaphoreCreateInfo semaphoreCreateInfo{};
+				semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+				// Make sure the fence will be signaled for the first frame
+				VkFenceCreateInfo fenceCreateInfo{};
+				fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+				fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+				VkResult result;
+
+				// Create a fence and an image semaphore for each frame in flight
+				for (uint32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+				{
+					if (result = vkCreateFence(m_device, &fenceCreateInfo, nullptr, &m_fences[i]);
+						result != VK_SUCCESS)
+					{
+						throw VulkanError(std::format("Failed to create Fence for frame: {}!", i), result);
+					}
+
+					if (result = vkCreateSemaphore(m_device, &semaphoreCreateInfo, nullptr, &m_imageAcquiredSemaphores[i]);
+						result != VK_SUCCESS)
+					{
+						throw VulkanError(std::format("Failed to create Image Acquired Semaphore for frame: {}!", i), result);
+					}
+				}
+
+				// Match the size of the render complete semaphores to the swap chain images
+				m_renderCompleteSemaphores.resize(m_swapChainImages.size());
+				for (VkSemaphore& semaphore : m_renderCompleteSemaphores)
+				{
+					if (result = vkCreateSemaphore(m_device, &semaphoreCreateInfo, nullptr, &semaphore);
+						result != VK_SUCCESS)
+					{
+						throw VulkanError("Failed to create Render Complete Semaphore!", result);
+					}
+				}
+			},
+			[this]
+			{
+				for (const VkSemaphore& semaphore : m_renderCompleteSemaphores)
+				{
+					vkDestroySemaphore(m_device, semaphore, nullptr);
+				}
+
+				m_renderCompleteSemaphores.clear();
+
+				for (uint32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+				{
+					vkDestroySemaphore(m_device, m_imageAcquiredSemaphores[i], nullptr);
+					vkDestroyFence(m_device, m_fences[i], nullptr);
+				}
+			}
+		);
+
+		// Command buffers
+		InitAndPushResource(
+			[this]
+			{
+				VkResult result;
+
+				// Attempt to create the command pool
+				VkCommandPoolCreateInfo cpCreateInfo{};
+				cpCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+				cpCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+				cpCreateInfo.queueFamilyIndex = m_queueFamily;
+
+				if (result = vkCreateCommandPool(m_device, &cpCreateInfo, nullptr, &m_commandPool);
+					result != VK_SUCCESS)
+				{
+					throw VulkanError("Failed to create Command Pool!", result);
+				}
+
+				// Attempt to create command buffers for each frame in flight
+				VkCommandBufferAllocateInfo cbAllocateInfo{};
+				cbAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+				cbAllocateInfo.commandBufferCount = MAX_FRAMES_IN_FLIGHT;
+				cbAllocateInfo.commandPool = m_commandPool;
+
+				if (result = vkAllocateCommandBuffers(m_device, &cbAllocateInfo, m_commandBuffers.data());
+					result != VK_SUCCESS)
+				{
+					throw VulkanError("Failed to create Command Buffers!", result);
+				}
+			},
+			[this]
+			{
+				vkDestroyCommandPool(m_device, m_commandPool, nullptr);
+			}
+		);
+
 		// All functions ran safely, so we loaded correctly. 
 		m_loaded = true;
 	}
@@ -418,9 +624,9 @@ void Vulkan::Init(GLFWwindow* window)
 	}
 }
 
-void Vulkan::CleanupSwapChain()
+void Vulkan::RecreateSwapChain()
 {
-	vkDestroySwapchainKHR(m_device, m_swapChain, nullptr);
+
 }
 
 void Vulkan::InitAndPushResource(const InitFunction& init, const CleanupFunction& cleanup) const

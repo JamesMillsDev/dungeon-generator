@@ -10,6 +10,7 @@
 
 #include "Utility/ResourceStack.h"
 
+class VulkanBuffer;
 struct GLFWwindow;
 class Config;
 class Renderer;
@@ -24,7 +25,7 @@ using std::vector;
 
 constexpr int32 MAX_FRAMES_IN_FLIGHT = 2;
 
-class Vulkan
+class Vulkan  // NOLINT(cppcoreguidelines-special-member-functions)
 {
 	friend Renderer;
 
@@ -32,11 +33,11 @@ private:
 	static Vulkan* m_instance;
 
 public:
-	static Vulkan* Instance();
-	static const VkDevice& Device();
-	static const VmaAllocator& Allocator();
-	static bool IsLoaded();
-	static runtime_error VulkanError(const string& message, VkResult result);
+	[[nodiscard]] static Vulkan* Instance();
+	[[nodiscard]] static const VkDevice& Device();
+	[[nodiscard]] static const VmaAllocator& Allocator();
+	[[nodiscard]] static bool IsLoaded();
+	[[nodiscard]] static runtime_error VulkanError(const string& message, VkResult result);
 
 private:
 	static void Create(Config* config, GLFWwindow* window);
@@ -57,6 +58,7 @@ private:
 	VkPhysicalDevice m_physicalDevice;
 	VkDevice m_device;
 	VkQueue m_queue;
+	uint32 m_queueFamily;
 
 	VkSurfaceKHR m_surface;
 
@@ -68,16 +70,29 @@ private:
 	VmaAllocation m_depthImageAllocation;
 	VkImageView m_depthImageView;
 
-	array<VkBuffer**, MAX_FRAMES_IN_FLIGHT> m_commonShaderDataBuffer;
-	array<VkCommandBuffer*, MAX_FRAMES_IN_FLIGHT> m_commandBuffers;
+	array<vector<VulkanBuffer*>, MAX_FRAMES_IN_FLIGHT> m_shaderDataBuffers;
+
+	array<VkFence, MAX_FRAMES_IN_FLIGHT> m_fences;
+	array<VkSemaphore, MAX_FRAMES_IN_FLIGHT> m_imageAcquiredSemaphores;
+	vector<VkSemaphore> m_renderCompleteSemaphores;
+
+	VkCommandPool m_commandPool;
+	array<VkCommandBuffer, MAX_FRAMES_IN_FLIGHT> m_commandBuffers;
 
 private:
 	explicit Vulkan(Config* config, GLFWwindow* window);
 	~Vulkan();
 
+public:
+	[[nodiscard]] const VkDevice& GetDevice() const;
+	[[nodiscard]] const VmaAllocator& GetAllocator() const;
+
+	void BeginOneTimeCommand(VkCommandBuffer& buffer, VkFence& fence) const;
+	void EndOneTimeCommand(const VkCommandBuffer& buffer, const VkFence& fence) const;
+
 private:
 	void Init(GLFWwindow* window);
-	void CleanupSwapChain();
+	void RecreateSwapChain();
 
 	void InitAndPushResource(const InitFunction& init, const CleanupFunction& cleanup) const;
 

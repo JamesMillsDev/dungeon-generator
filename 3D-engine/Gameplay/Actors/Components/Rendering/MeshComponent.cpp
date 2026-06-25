@@ -5,7 +5,6 @@
 #include "Gameplay/Actors/Transform.h"
 
 #include "Graphics/Renderer.h"
-#include "Graphics/Rendering/Material.h"
 
 #include "Graphics/Rendering/Mesh.h"
 
@@ -32,6 +31,5 @@ void MeshComponent::Render()
 
 void MeshComponent::EndPlay()
 {
-	delete m_material;
-	m_material = nullptr;
+	
 }

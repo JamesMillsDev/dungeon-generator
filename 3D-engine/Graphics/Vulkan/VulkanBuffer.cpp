@@ -3,11 +3,11 @@
 
 #include "Vulkan.h"
 
-VulkanBuffer::VulkanBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage)
+VulkanBuffer::VulkanBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage, Vulkan* vulkan)
 	: m_size{ size }, m_buffer{ VK_NULL_HANDLE }, m_allocation{ VK_NULL_HANDLE },
 	m_usage{ usage }, m_deviceAddress{ 0 }
 {
-	Create();
+	Create(vulkan);
 }
 
 VulkanBuffer::~VulkanBuffer()
@@ -21,7 +21,12 @@ void VulkanBuffer::Fill(const void* data, VkDeviceSize size, const size_t offset
 	memcpy(static_cast<char*>(m_allocationInfo.pMappedData) + offset, data, size);
 }
 
-void VulkanBuffer::Create()
+VkBuffer VulkanBuffer::Get() const
+{
+	return m_buffer;
+}
+
+void VulkanBuffer::Create(const Vulkan* vulkan)
 {
 	VkBufferCreateInfo bufferCreateInfo{};
 	bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -35,7 +40,7 @@ void VulkanBuffer::Create()
 	bufferAllocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
 
 	// Attempt to allocate the memory
-	if (const VkResult result = vmaCreateBuffer(Vulkan::Allocator(), &bufferCreateInfo, &bufferAllocCreateInfo, &m_buffer, &m_allocation, &m_allocationInfo);
+	if (const VkResult result = vmaCreateBuffer(vulkan->GetAllocator(), &bufferCreateInfo, &bufferAllocCreateInfo, &m_buffer, &m_allocation, &m_allocationInfo);
 		result != VK_SUCCESS)
 	{
 		throw Vulkan::VulkanError("Failed to allocate Mesh Buffer!", result);
@@ -48,7 +53,7 @@ void VulkanBuffer::Create()
 		.pNext = nullptr,
 		.buffer = m_buffer
 	};
-	m_deviceAddress = vkGetBufferDeviceAddress(Vulkan::Device(), &deviceAddressInfo);
+	m_deviceAddress = vkGetBufferDeviceAddress(vulkan->GetDevice(), &deviceAddressInfo);
 }
 
 void VulkanBuffer::Destroy()

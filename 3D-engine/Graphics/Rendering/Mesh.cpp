@@ -8,6 +8,7 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
+#include "Graphics/Vulkan/Vulkan.h"
 #include "Graphics/Vulkan/VulkanBuffer.h"
 
 using std::vector;
@@ -191,7 +192,8 @@ void Mesh::CreateBuffers()
 	m_vertexBuffer = new VulkanBuffer
 	{ 
 		m_indexBufferSize + m_indexBufferSize, 
-		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT 
+		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+		Vulkan::Instance()
 	};
 
 	// Copy the vertex and index information into the buffer

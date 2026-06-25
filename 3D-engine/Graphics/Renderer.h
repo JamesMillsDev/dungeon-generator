@@ -2,8 +2,6 @@
 
 #include <string>
 
-#include "Rendering/Material.h"
-
 class Application;
 class Config;
 struct GLFWwindow;
