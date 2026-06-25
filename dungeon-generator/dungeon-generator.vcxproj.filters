@@ -32,10 +32,10 @@
     <None Include="Config\Engine.json">
       <Filter>Config Files</Filter>
     </None>
-    <None Include="Content\Shaders\triangle.frag">
+    <None Include="Content\Shaders\pbr.slang">
       <Filter>Content Files\Shaders</Filter>
     </None>
-    <None Include="Content\Shaders\triangle.vert">
+    <None Include="Content\Shaders\global.slang">
       <Filter>Content Files\Shaders</Filter>
     </None>
   </ItemGroup>

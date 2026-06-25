@@ -7,13 +7,22 @@
 
 struct ProjectionViewUniform
 {
-	Matrix4 view;
 	Matrix4 proj;
+	Matrix4 view;
+	Vector3 cameraLocation;
 };
 
-struct TransformUniform
+struct MaterialUniform
 {
-	Matrix4 model;
+	Color color;
+	Color emissiveTint;
+	float roughness;
+	float metallic;
+
+	int32 baseColorMap;
+	int32 normalMap;
+	int32 ormMap;
+	int32 emissiveMap;
 };
 
 struct LightUniform

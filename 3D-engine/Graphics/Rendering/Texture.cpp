@@ -9,21 +9,46 @@
 
 using std::runtime_error;
 
+uint32 Texture::m_nextId = 0;
+queue<uint32> Texture::m_freeIds;
+
 Texture::Texture(string file)
 	: m_file{ std::move(file) }, m_image{ VK_NULL_HANDLE }, m_imageAllocation{ VK_NULL_HANDLE },
 	m_imageView{ VK_NULL_HANDLE }, m_imageExtent{}, m_imageFormat{}, m_texture{ nullptr }
 {
+	// Get the next available ID (reusing old ones)
+	if (m_freeIds.empty())
+	{
+		m_id = m_nextId++;
+	}
+	else
+	{
+		m_id = m_freeIds.front();
+		m_freeIds.pop();
+	}
+
 	CreateBuffer();
+
+	Vulkan::Instance()->AddTexture(this);
 }
 
 Texture::~Texture()
 {
+	Vulkan::Instance()->RemoveTexture(this);
+
+	m_freeIds.push(m_id);
+
 	DestroyBuffer();
 }
 
 const VkDescriptorImageInfo& Texture::GetDescriptors() const
 {
 	return m_textureDescriptors;
+}
+
+uint32 Texture::GetId() const
+{
+	return m_id;
 }
 
 void Texture::CreateBuffer()

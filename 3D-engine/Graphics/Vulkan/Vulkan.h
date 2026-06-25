@@ -10,6 +10,7 @@
 
 #include "Utility/ResourceStack.h"
 
+class Texture;
 class VulkanBuffer;
 struct GLFWwindow;
 class Config;
@@ -79,6 +80,12 @@ private:
 	VkCommandPool m_commandPool;
 	array<VkCommandBuffer, MAX_FRAMES_IN_FLIGHT> m_commandBuffers;
 
+	array<VulkanBuffer*, MAX_FRAMES_IN_FLIGHT> m_materialBuffer;
+	VkDescriptorPool m_descriptorPool;
+	VkDescriptorSetLayout m_descriptorSetLayout;
+	VkDescriptorSet m_descriptorSet;
+	vector<Texture*> m_textures;
+
 private:
 	explicit Vulkan(Config* config, GLFWwindow* window);
 	~Vulkan();
@@ -89,6 +96,13 @@ public:
 
 	void BeginOneTimeCommand(VkCommandBuffer& buffer, VkFence& fence) const;
 	void EndOneTimeCommand(const VkCommandBuffer& buffer, const VkFence& fence) const;
+
+	[[nodiscard]] VulkanBuffer* GetMaterialBuffer() const;
+
+	void AddTexture(Texture* texture);
+	void RemoveTexture(Texture* texture);
+
+	void WriteTextureDescriptorSets() const;
 
 private:
 	void Init(GLFWwindow* window);

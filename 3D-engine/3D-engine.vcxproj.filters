@@ -30,6 +30,7 @@
     <ClInclude Include="Utility\ResourceStack.h" />
     <ClInclude Include="Graphics\Vulkan\Vulkan.h" />
     <ClInclude Include="Graphics\Vulkan\VulkanBuffer.h" />
+    <ClInclude Include="Graphics\Rendering\Material.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
@@ -57,5 +58,6 @@
     <ClCompile Include="Utility\ResourceStack.cpp" />
     <ClCompile Include="Graphics\Vulkan\Vulkan.cpp" />
     <ClCompile Include="Graphics\Vulkan\VulkanBuffer.cpp" />
+    <ClCompile Include="Graphics\Rendering\Material.cpp" />
   </ItemGroup>
 </Project>
