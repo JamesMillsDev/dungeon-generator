@@ -11,6 +11,7 @@
 #include "Maths/Vector3.h"
 #include "Maths/Vector4.h"
 
+class VulkanBuffer;
 using std::array;
 using std::vector;
 
@@ -65,8 +66,7 @@ private:
 	VkDeviceSize m_vertexBufferSize;
 	VkDeviceSize m_indexBufferSize;
 
-	VkBuffer m_buffer;
-	VmaAllocation m_allocation;
+	VulkanBuffer* m_vertexBuffer;
 
 public:
 	Mesh(const vector<Vertex>& vertices, const vector<uint16>& indices);
@@ -74,7 +74,7 @@ public:
 
 private:
 	void CreateBuffers();
-	void DestroyBuffers() const;
+	void DestroyBuffers();
 
 	void Render(VkCommandBuffer buffer, uint32 instances = 1, uint32 firstInstance = 0) const;
 

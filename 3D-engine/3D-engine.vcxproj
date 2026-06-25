@@ -197,6 +197,7 @@
     <ClInclude Include="GameTime.h" />
     <ClInclude Include="Graphics\Rendering\Material.h" />
     <ClInclude Include="Graphics\Vulkan\Vulkan.h" />
+    <ClInclude Include="Graphics\Vulkan\VulkanBuffer.h" />
     <ClInclude Include="Maths\Alias.h" />
     <ClInclude Include="Maths\Maths.h" />
     <ClInclude Include="Maths\Color.h" />
@@ -229,6 +230,7 @@
     <ClCompile Include="GameTime.cpp" />
     <ClCompile Include="Graphics\Rendering\Material.cpp" />
     <ClCompile Include="Graphics\Vulkan\Vulkan.cpp" />
+    <ClCompile Include="Graphics\Vulkan\VulkanBuffer.cpp" />
     <ClCompile Include="Maths\Maths.cpp" />
     <ClCompile Include="Maths\Color.cpp" />
     <ClCompile Include="Maths\Matrix3.cpp" />
