@@ -11,6 +11,7 @@ private:
 	VmaAllocation m_allocation;
 	VmaAllocationInfo m_allocationInfo;
 	VkBufferUsageFlags m_usage;
+	VkDeviceAddress m_deviceAddress;
 
 public:
 	explicit VulkanBuffer(VkDeviceSize size, VkBufferUsageFlags usage);

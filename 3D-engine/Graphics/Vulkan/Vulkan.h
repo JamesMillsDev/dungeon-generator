@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <functional>
 #include <stdexcept>
 #include <string>
@@ -15,9 +16,13 @@ class Renderer;
 class Version;
 
 using InitFunction = std::function<void()>;
+
+using std::array;
 using std::runtime_error;
 using std::string;
 using std::vector;
+
+constexpr int32 MAX_FRAMES_IN_FLIGHT = 2;
 
 class Vulkan
 {
@@ -62,6 +67,9 @@ private:
 	VkImage m_depthImage;
 	VmaAllocation m_depthImageAllocation;
 	VkImageView m_depthImageView;
+
+	array<VkBuffer**, MAX_FRAMES_IN_FLIGHT> m_commonShaderDataBuffer;
+	array<VkCommandBuffer*, MAX_FRAMES_IN_FLIGHT> m_commandBuffers;
 
 private:
 	explicit Vulkan(Config* config, GLFWwindow* window);
