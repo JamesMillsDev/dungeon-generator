@@ -6,5 +6,3 @@ struct ProjectionViewUniform
 };
 
 ConstantBuffer<ProjectionViewUniform> ubo;
-
-[[vk::push_constant]] float4x4 transform;

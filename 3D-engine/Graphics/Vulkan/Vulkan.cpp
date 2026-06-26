@@ -18,6 +18,73 @@ using std::exception;
 
 constexpr uint32 MAX_TEXTURE_DESCRIPTORS = UINT16_MAX;
 constexpr int32 DEFAULT_RESOURCE_STACK_SIZE = 16;
+constexpr int32 UNIFORM_BUFFER_COUNT = 3;
+
+namespace
+{
+	VkDebugUtilsMessageSeverityFlagBitsEXT messageLevel = VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT;
+
+	VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
+		const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+		VkDebugUtilsMessageTypeFlagsEXT messageType,
+		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+		void* pUserData)
+	{
+		if (messageSeverity >= messageLevel)
+		{
+			switch (messageSeverity)  // NOLINT(clang-diagnostic-switch-enum)
+			{
+				case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+				{
+					Console::Debug(pCallbackData->pMessage);
+					break;
+				}
+				case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+				{
+					Console::Info(pCallbackData->pMessage);
+					break;
+				}
+				case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+				{
+					Console::Warning(pCallbackData->pMessage);
+					break;
+				}
+				case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+				{
+					Console::Error(pCallbackData->pMessage);
+					break;
+				}
+				default: break;
+			}
+		}
+
+		return VK_FALSE;
+	}
+
+	VkResult CreateDebugUtilsMessengerEXT(const VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger)
+	{
+		PFN_vkCreateDebugUtilsMessengerEXT func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(  // NOLINT(clang-diagnostic-cast-function-type-strict)
+			vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT")
+			);
+		if (func != nullptr)
+		{
+			return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+		}
+
+		return VK_ERROR_EXTENSION_NOT_PRESENT;
+	}
+
+	void DestroyDebugUtilsMessengerEXT(const VkInstance instance, const VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator)
+	{
+		PFN_vkDestroyDebugUtilsMessengerEXT func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(  // NOLINT(clang-diagnostic-cast-function-type-strict)
+			vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT")
+			);
+		if (func != nullptr)
+		{
+			func(instance, debugMessenger, pAllocator);
+		}
+	}
+}
 
 static void Try(const VkResult result, const string& errorMsg)  // NOLINT(misc-use-anonymous-namespace)
 {
@@ -107,6 +174,57 @@ void Vulkan::Destroy()
 {
 	delete m_instance;
 	m_instance = nullptr;
+}
+
+bool Vulkan::CheckValidationLayerSupport()
+{
+	// Count the number of available layers
+	uint32 layerCount;
+	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+
+	// Get the layers from the driver, storing them in a vector
+	vector<VkLayerProperties> availableLayers(layerCount);
+	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+
+	// Iterate over the layers we want to use
+	for (const char* layerName : VALIDATION_LAYERS)
+	{
+		bool layerFound = false;
+
+		// Iterate over the layers that the driver supports
+		for (const VkLayerProperties& layerProperties : availableLayers)
+		{
+			// Validate the names match for this property, if they do, mark it as found and break
+			if (strcmp(layerName, layerProperties.layerName) == 0)
+			{
+				layerFound = true;
+				break;
+			}
+		}
+
+		// If the layer still hasn't been found, we are trying to enable a layer that is
+		// unsupported
+		if (!layerFound)
+		{
+			return false;
+		}
+	}
+
+	// All requested layers are supported
+	return true;
+}
+
+void Vulkan::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
+{
+	createInfo = {};
+	createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+	createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+		VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+		VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+	createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+		VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+		VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+	createInfo.pfnUserCallback = DebugCallback;
 }
 
 Vulkan::Vulkan(Config* config, GLFWwindow* window)
@@ -225,6 +343,7 @@ void Vulkan::RemoveTexture(Texture* texture)
 	WriteTextureDescriptorSets();
 }
 
+// TODO: Do this only at the end of each frame if necessary
 void Vulkan::WriteTextureDescriptorSets() const
 {
 	vector<VkDescriptorImageInfo> textureDescriptors(m_textures.size());
@@ -238,7 +357,7 @@ void Vulkan::WriteTextureDescriptorSets() const
 		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.pNext = nullptr,
 		.dstSet = m_descriptorSet,
-		.dstBinding = 0,
+		.dstBinding = 1,
 		.dstArrayElement = 0,
 		.descriptorCount = static_cast<uint32>(textureDescriptors.size()),
 		.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
@@ -254,6 +373,29 @@ void Vulkan::BindTextureDescriptorSets(const VkCommandBuffer cmdBuf, const VkPip
 	vkCmdBindDescriptorSets(
 		cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &m_descriptorSet, 0, nullptr
 	);
+}
+
+VkFormat Vulkan::GetDepthFormat() const
+{
+	// Attempt to get the correct format for the swap chain images
+	const vector depthFormatList = { VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT };
+	VkFormat depthFormat = VK_FORMAT_UNDEFINED;
+	for (const VkFormat& format : depthFormatList)
+	{
+		// Get the device format properties
+		VkFormatProperties2 formatProperties{};
+		formatProperties.sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
+		vkGetPhysicalDeviceFormatProperties2(m_physicalDevice, format, &formatProperties);
+
+		// If this format properties contains the tiling features we want, store and break
+		if (formatProperties.formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
+		{
+			depthFormat = format;
+			break;
+		}
+	}
+
+	return depthFormat;
 }
 
 void Vulkan::Init(GLFWwindow* window)
@@ -278,17 +420,35 @@ void Vulkan::Init(GLFWwindow* window)
 				uint32 instanceExtensionsCount = 0;
 				const char** instanceExtensions = glfwGetRequiredInstanceExtensions(&instanceExtensionsCount);
 
-				const VkInstanceCreateInfo instanceInfo
+				vector<const char*> extensions;
+				for (uint32 i = 0; i < instanceExtensionsCount; ++i)
 				{
-					.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-					.pNext = nullptr,
-					.flags = 0,
-					.pApplicationInfo = &appInfo,
-					.enabledLayerCount = 0,
-					.ppEnabledLayerNames = nullptr,
-					.enabledExtensionCount = instanceExtensionsCount,
-					.ppEnabledExtensionNames = instanceExtensions
-				};
+					extensions.emplace_back(instanceExtensions[i]);
+				}
+
+				if constexpr (ENABLE_VALIDATION_LAYERS)
+				{
+					// Add in the extra required extensions
+					extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+				}
+
+				VkInstanceCreateInfo instanceInfo{};
+				instanceInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+				instanceInfo.pApplicationInfo = &appInfo;
+				instanceInfo.enabledExtensionCount = static_cast<uint32>(extensions.size());
+				instanceInfo.ppEnabledExtensionNames = extensions.data();
+
+				if constexpr (ENABLE_VALIDATION_LAYERS)
+				{
+					// Add the layers into the create info if we requested it (Debug only)
+					instanceInfo.enabledLayerCount = static_cast<uint32>(VALIDATION_LAYERS.size());
+					instanceInfo.ppEnabledLayerNames = VALIDATION_LAYERS.data();
+
+					// Set the next create info to be the debug messenger
+					VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
+					PopulateDebugMessengerCreateInfo(debugCreateInfo);
+					instanceInfo.pNext = &debugCreateInfo;
+				}
 
 				Try(
 					vkCreateInstance(&instanceInfo, nullptr, &m_vkInstance),
@@ -300,6 +460,27 @@ void Vulkan::Init(GLFWwindow* window)
 				vkDestroyInstance(m_vkInstance, nullptr);
 			}
 		);
+
+		// Debug Messenger
+		if constexpr (ENABLE_VALIDATION_LAYERS)
+		{
+			InitAndPushResource(
+				[this]
+				{
+					VkDebugUtilsMessengerCreateInfoEXT createInfo;
+					PopulateDebugMessengerCreateInfo(createInfo);
+
+					Try(
+						CreateDebugUtilsMessengerEXT(m_vkInstance, &createInfo, nullptr, &m_debugMessenger),
+						"Failed to create Debug Messenger!"
+					);
+				},
+				[this]
+				{
+					DestroyDebugUtilsMessengerEXT(m_vkInstance, m_debugMessenger, nullptr);
+				}
+			);
+		}
 
 		// Logical / Physical Device
 		InitAndPushResource(
@@ -507,9 +688,31 @@ void Vulkan::Init(GLFWwindow* window)
 
 				// Resize the image view vector to match the image one
 				m_swapChainImageViews.resize(scImageCount);
+
+				// Create the new Swap Chain image views
+				for (uint32 i = 0; i < scImageCount; ++i)
+				{
+					VkImageViewCreateInfo viewCreateInfo{};
+					viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+					viewCreateInfo.image = m_swapChainImages[i];
+					viewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+					viewCreateInfo.format = imageFormat;
+					viewCreateInfo.subresourceRange = { .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .levelCount = 1, .layerCount = 1 };  // NOLINT(clang-diagnostic-missing-designated-field-initializers)
+
+					Try(
+						vkCreateImageView(m_device, &viewCreateInfo, nullptr, &m_swapChainImageViews[i]),
+						std::format("Failed to create Swap Chain Image View for index: {}", i)
+					);
+				}
 			},
 			[this]
 			{
+				for (VkImageView& scImageView : m_swapChainImageViews)
+				{
+					vkDestroyImageView(m_device, scImageView, nullptr);
+				}
+				m_swapChainImageViews.clear();
+
 				vkDestroySwapchainKHR(m_device, m_swapChain, nullptr);
 			}
 		);
@@ -524,7 +727,7 @@ void Vulkan::Init(GLFWwindow* window)
 
 				// Set up the image create info for the depth image
 				CreateDepthImage(
-					{ .width = static_cast<uint32_t>(windowW), .height = static_cast<uint32_t>(windowH), .depth = 1 }, 
+					{ .width = static_cast<uint32_t>(windowW), .height = static_cast<uint32_t>(windowH), .depth = 1 },
 					GetDepthFormat()
 				);
 			},
@@ -660,31 +863,33 @@ void Vulkan::Init(GLFWwindow* window)
 		InitAndPushResource(
 			[this]
 			{
-				constexpr VkDescriptorBindingFlags descVariableFlag = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
+				array dslBindings =
+				{
+					VkDescriptorSetLayoutBinding
+					{
+						.binding = 0,
+						.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+						.descriptorCount = MAX_TEXTURE_DESCRIPTORS,
+						.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+						.pImmutableSamplers = nullptr,
+					}
+				};
+
+				VkDescriptorBindingFlags flags = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
+
 				const VkDescriptorSetLayoutBindingFlagsCreateInfo dslFlagsCreateInfo
 				{
 					.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,
 					.pNext = nullptr,
-					.bindingCount = 1,
-					.pBindingFlags = &descVariableFlag
+					.bindingCount = static_cast<uint32>(dslBindings.size()),
+					.pBindingFlags = &flags
 				};
 
-				constexpr VkDescriptorSetLayoutBinding dslBinding
-				{
-					.binding = 0,
-					.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-					.descriptorCount = MAX_TEXTURE_DESCRIPTORS,
-					.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-					.pImmutableSamplers = nullptr
-				};
-				const VkDescriptorSetLayoutCreateInfo dslCreateInfo
-				{
-					.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-					.pNext = &dslFlagsCreateInfo,
-					.flags = 0,
-					.bindingCount = 1,
-					.pBindings = &dslBinding
-				};
+				VkDescriptorSetLayoutCreateInfo dslCreateInfo{};
+				dslCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+				dslCreateInfo.pNext = &dslFlagsCreateInfo;
+				dslCreateInfo.bindingCount = static_cast<uint32>(dslBindings.size());
+				dslCreateInfo.pBindings = dslBindings.data();
 
 				// Create the descriptor set layout
 				Try(
@@ -734,9 +939,6 @@ void Vulkan::Init(GLFWwindow* window)
 					vkAllocateDescriptorSets(m_device, &dsAllocateInfo, &m_descriptorSet),
 					"Failed to allocate Descriptor Sets!"
 				);
-
-				// Write to the descriptor sets
-				WriteTextureDescriptorSets();
 			},
 			[this]
 			{
@@ -1134,29 +1336,6 @@ void Vulkan::CreateDepthImage(const VkExtent3D& extent, const VkFormat& format)
 		vkCreateImageView(m_device, &depthViewCI, nullptr, &m_depthImageView),
 		"Failed to create Depth Image View!"
 	);
-}
-
-VkFormat Vulkan::GetDepthFormat() const
-{
-	// Attempt to get the correct format for the swap chain images
-	const vector depthFormatList = { VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT };
-	VkFormat depthFormat = VK_FORMAT_UNDEFINED;
-	for (const VkFormat& format : depthFormatList)
-	{
-		// Get the device format properties
-		VkFormatProperties2 formatProperties{};
-		formatProperties.sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
-		vkGetPhysicalDeviceFormatProperties2(m_physicalDevice, format, &formatProperties);
-
-		// If this format properties contains the tiling features we want, store and break
-		if (formatProperties.formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
-		{
-			depthFormat = format;
-			break;
-		}
-	}
-
-	return depthFormat;
 }
 
 void Vulkan::InitAndPushResource(const InitFunction& init, const CleanupFunction& cleanup) const

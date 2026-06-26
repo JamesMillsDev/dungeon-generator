@@ -212,7 +212,7 @@ void Mesh::Render(const VkCommandBuffer buffer, const uint32 instances, const ui
 	VkDeviceSize offsets[] = { 0 };
 
 	vkCmdBindVertexBuffers(buffer, 0, 1, &m_vertexBuffer->Get(), offsets);
-	vkCmdBindIndexBuffer(buffer, m_vertexBuffer->Get(), m_vertexBuffer->Size(), VK_INDEX_TYPE_UINT16);
+	vkCmdBindIndexBuffer(buffer, m_vertexBuffer->Get(), m_vertexBufferSize, VK_INDEX_TYPE_UINT16);
 
 	vkCmdDrawIndexed(
 		buffer, static_cast<uint32>(indices.size()), instances, 0, 0, firstInstance

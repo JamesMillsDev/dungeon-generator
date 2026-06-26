@@ -20,7 +20,7 @@ struct VSOutput
 };
 
 [shader("vertex")]
-VSOutput main(VSInput input)
+VSOutput main(VSInput input, uniform float4x4 transform)
 {
     VSOutput output;
 

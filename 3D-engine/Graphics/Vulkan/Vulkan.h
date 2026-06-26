@@ -28,6 +28,17 @@ using std::vector;
 
 constexpr int32 MAX_FRAMES_IN_FLIGHT = 2;
 
+#ifdef _DEBUG
+constexpr bool ENABLE_VALIDATION_LAYERS = true;
+#else
+constexpr bool ENABLE_VALIDATION_LAYERS = false;
+#endif
+
+const vector VALIDATION_LAYERS =
+{
+	"VK_LAYER_KHRONOS_validation"
+};
+
 #define DEFINE_ACCESSOR(TYPE, NAME) \
 	[[nodiscard]] static const TYPE& ##NAME(); \
 	[[nodiscard]] const TYPE& Get##NAME() const; \
@@ -54,6 +65,9 @@ private:
 	static void Create(Config* config, GLFWwindow* window);
 	static void Destroy();
 
+	static bool CheckValidationLayerSupport();
+	static void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
+
 private:
 	Version* m_appVersion;
 	string m_appName;
@@ -66,6 +80,7 @@ private:
 
 	VmaAllocator m_vmaAllocator;
 	VkInstance m_vkInstance;
+	VkDebugUtilsMessengerEXT m_debugMessenger;
 
 	VkPhysicalDevice m_physicalDevice;
 	VkDevice m_device;
@@ -121,6 +136,7 @@ public:
 
 	void WriteTextureDescriptorSets() const;
 	void BindTextureDescriptorSets(VkCommandBuffer cmdBuf, VkPipelineLayout layout) const;
+	VkFormat GetDepthFormat() const;
 
 private:
 	void Init(GLFWwindow* window);
@@ -131,7 +147,6 @@ private:
 
 	void TransitionFrameImages(VkCommandBuffer cmdBuffer) const;
 	void CreateDepthImage(const VkExtent3D& extent, const VkFormat& format);
-	VkFormat GetDepthFormat() const;
 
 	void InitAndPushResource(const InitFunction& init, const CleanupFunction& cleanup) const;
 

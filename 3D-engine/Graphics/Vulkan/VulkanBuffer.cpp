@@ -56,14 +56,17 @@ void VulkanBuffer::Create(const Vulkan* vulkan)
 		throw Vulkan::VulkanError("Failed to allocate Mesh Buffer!", result);
 	}
 
-	// Attempt to get the device address
-	const VkBufferDeviceAddressInfo deviceAddressInfo
+	if (m_usage == VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT)
 	{
-		.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
-		.pNext = nullptr,
-		.buffer = m_buffer
-	};
-	m_deviceAddress = vkGetBufferDeviceAddress(vulkan->GetDevice(), &deviceAddressInfo);
+		// Attempt to get the device address
+		const VkBufferDeviceAddressInfo deviceAddressInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+			.pNext = nullptr,
+			.buffer = m_buffer
+		};
+		m_deviceAddress = vkGetBufferDeviceAddress(vulkan->GetDevice(), &deviceAddressInfo);
+	}
 }
 
 void VulkanBuffer::Destroy()

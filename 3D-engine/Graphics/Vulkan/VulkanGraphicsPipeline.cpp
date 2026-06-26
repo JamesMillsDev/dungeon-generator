@@ -14,7 +14,7 @@ GraphicsPipelineConfig::GraphicsPipelineConfig(ShaderConfig shader) :
 	shader{ std::move(shader) }, descriptorSetLayout{ Vulkan::DescriptorSetLayout() }
 {}
 
-GraphicsPipelineConfig::GraphicsPipelineConfig(const string & shaderName) :
+GraphicsPipelineConfig::GraphicsPipelineConfig(const string& shaderName) :
 	shader{ .name = shaderName }, descriptorSetLayout{ Vulkan::DescriptorSetLayout() }
 {}
 
@@ -58,7 +58,7 @@ void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 	// Attempt to create the pipeline layout
 	const VkPipelineLayoutCreateInfo plCreateInfo
 	{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_CREATE_INFO_KHR,
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
 		.pNext = nullptr,
 		.flags = 0,
 		.setLayoutCount = 1,
@@ -152,8 +152,22 @@ void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 	dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
 	dynamicState.pDynamicStates = dynamicStates.data();
 
+	VkPipelineDepthStencilStateCreateInfo depthStencilState{};
+	depthStencilState.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+	depthStencilState.depthTestEnable = VK_TRUE;
+	depthStencilState.depthWriteEnable = VK_TRUE;
+	depthStencilState.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+
+	constexpr VkFormat imageFormat = VK_FORMAT_B8G8R8A8_SRGB;
+	VkPipelineRenderingCreateInfo renderingCreateInfo{};
+	renderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+	renderingCreateInfo.colorAttachmentCount = 1;
+	renderingCreateInfo.pColorAttachmentFormats = &imageFormat;
+	renderingCreateInfo.depthAttachmentFormat = Vulkan::Instance()->GetDepthFormat();
+
 	VkGraphicsPipelineCreateInfo pCreateInfo{};
 	pCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+	pCreateInfo.pNext = &renderingCreateInfo;
 	pCreateInfo.stageCount = static_cast<uint32_t>(ssCreateInfos.size());
 	pCreateInfo.pStages = ssCreateInfos.data();
 	pCreateInfo.pVertexInputState = &vertexInputInfo;
@@ -162,6 +176,7 @@ void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 	pCreateInfo.pRasterizationState = &rasterizerInfo;
 	pCreateInfo.pMultisampleState = &multisampling;
 	pCreateInfo.pColorBlendState = &colorBlending;
+	pCreateInfo.pDepthStencilState = &depthStencilState;
 	pCreateInfo.pDynamicState = &dynamicState;
 	pCreateInfo.layout = m_pipelineLayout;
 
@@ -171,6 +186,8 @@ void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 	{
 		throw Vulkan::VulkanError("Failed to create Graphics Pipeline!", result);
 	}
+
+	delete shader;
 }
 
 void VulkanGraphicsPipeline::Destroy()
