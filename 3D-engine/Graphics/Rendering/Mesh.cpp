@@ -191,7 +191,7 @@ void Mesh::CreateBuffers()
 {
 	m_vertexBuffer = new VulkanBuffer
 	{ 
-		m_indexBufferSize + m_indexBufferSize, 
+		m_vertexBufferSize + m_indexBufferSize, 
 		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
 		Vulkan::Instance()
 	};
