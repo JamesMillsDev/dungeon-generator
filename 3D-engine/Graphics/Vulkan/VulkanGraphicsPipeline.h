@@ -90,8 +90,6 @@ public:
 public:
 	explicit GraphicsPipelineConfig(ShaderConfig shader);
 	explicit GraphicsPipelineConfig(const string& shaderName);
-	GraphicsPipelineConfig(ShaderConfig shader, const Vulkan* vulkan);
-	GraphicsPipelineConfig(const string& shaderName, const Vulkan* vulkan);
 
 public:
 	[[nodiscard]] uint32 Size() const;
@@ -108,8 +106,10 @@ private:
 
 public:
 	explicit VulkanGraphicsPipeline(GraphicsPipelineConfig config);
-	VulkanGraphicsPipeline(GraphicsPipelineConfig config, Vulkan* vulkan);
 	~VulkanGraphicsPipeline();
+
+public:
+	const VkPipeline& Get() const;
 
 private:
 	void Init(Vulkan* vulkan);

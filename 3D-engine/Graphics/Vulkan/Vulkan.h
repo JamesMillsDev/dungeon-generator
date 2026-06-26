@@ -98,6 +98,8 @@ private:
 
 	// TODO: Handle multiple pipelines
 	VulkanGraphicsPipeline* m_pipeline;
+	uint32 m_frameIndex;
+	uint32 m_imageIndex;
 
 private:
 	explicit Vulkan(Config* config, GLFWwindow* window);

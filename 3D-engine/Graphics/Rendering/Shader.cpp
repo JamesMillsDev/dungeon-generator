@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "Shader.h"
 
-#include <format>
 #include <fstream>
 #include <stdexcept>
 
@@ -35,12 +34,6 @@ Shader::Shader(string path)
 	: m_path{ std::move(path) }, m_shaderModule{ VK_NULL_HANDLE }
 {
 	Init(Vulkan::Instance());
-}
-
-Shader::Shader(string path, const Vulkan* vulkan)
-	: m_path{ std::move(path) }, m_shaderModule{ VK_NULL_HANDLE }
-{
-	Init(vulkan);
 }
 
 Shader::~Shader()

@@ -10,14 +10,6 @@ bool ShaderConfig::StageComp::operator()(const VkShaderStageFlagBits& lhs, const
 	return lhs < rhs;
 }
 
-GraphicsPipelineConfig::GraphicsPipelineConfig(ShaderConfig shader, const Vulkan* vulkan) :
-	shader{ std::move(shader) }, descriptorSetLayout{ vulkan->GetDescriptorSetLayout() }
-{}
-
-GraphicsPipelineConfig::GraphicsPipelineConfig(const string& shaderName, const Vulkan* vulkan) :
-	shader{ .name = shaderName }, descriptorSetLayout{ vulkan->GetDescriptorSetLayout() }
-{}
-
 GraphicsPipelineConfig::GraphicsPipelineConfig(ShaderConfig shader) :
 	shader{ std::move(shader) }, descriptorSetLayout{ Vulkan::DescriptorSetLayout() }
 {}
@@ -42,15 +34,14 @@ VulkanGraphicsPipeline::VulkanGraphicsPipeline(GraphicsPipelineConfig config) :
 	Init(Vulkan::Instance());
 }
 
-VulkanGraphicsPipeline::VulkanGraphicsPipeline(GraphicsPipelineConfig config, Vulkan* vulkan) :
-	m_config{ std::move(config) }
-{
-	Init(vulkan);
-}
-
 VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
 {
 	Destroy();
+}
+
+const VkPipeline& VulkanGraphicsPipeline::Get() const
+{
+	return m_pipeline;
 }
 
 void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
@@ -77,7 +68,7 @@ void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 		throw Vulkan::VulkanError("Failed to create Pipeline Layout!", result);
 	}
 
-	Shader* shader = new Shader{ shaderConfigs.name, vulkan };
+	Shader* shader = new Shader{ shaderConfigs.name };
 	vector<VkPipelineShaderStageCreateInfo> ssCreateInfos;
 	for (uint32 i = VK_SHADER_STAGE_VERTEX_BIT; i < VK_SHADER_STAGE_ALL_GRAPHICS; i <<= 1)
 	{

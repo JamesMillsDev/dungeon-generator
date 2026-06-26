@@ -16,7 +16,6 @@ private:
 
 public:
 	explicit Shader(string path);
-	Shader(string path, const Vulkan* vulkan);
 	~Shader();
 
 public:

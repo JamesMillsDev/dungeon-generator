@@ -5,18 +5,21 @@
 #include "Graphics/Vulkan/Uniforms.h"
 #include "Graphics/Vulkan/Vulkan.h"
 #include "Graphics/Vulkan/VulkanBuffer.h"
+#include "Graphics/Vulkan/VulkanGraphicsPipeline.h"
 
-Material* Material::Make()
-{
-	return new Material;
-}
-
-Material::Material() :
-	color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ 0 }, metallic{ 0 }, baseColorMap{ nullptr },
-	normalMap{ nullptr }, ormMap{ nullptr }, emissiveMap{ nullptr }
+Material::Material(const string& shaderPath)
+	: color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ 0 }, metallic{ 0 }, baseColorMap{ nullptr },
+	normalMap{ nullptr }, ormMap{ nullptr }, emissiveMap{ nullptr },
+	m_pipeline{ new VulkanGraphicsPipeline{ GraphicsPipelineConfig{ shaderPath } } }
 {}
 
-void Material::Render() const
+Material::~Material()
+{
+	delete m_pipeline;
+	m_pipeline = nullptr;
+}
+
+void Material::Render(const VkCommandBuffer cmdBuffer) const
 {
 	const VulkanBuffer* materialBuffer = Vulkan::Instance()->GetMaterialBuffer();
 	const MaterialUniform materialUniform
@@ -31,4 +34,6 @@ void Material::Render() const
 		.emissiveMap = emissiveMap != nullptr ? static_cast<int32>(emissiveMap->GetId()) : -1
 	};
 	materialBuffer->Fill(&materialUniform);
+
+	vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->Get());
 }

@@ -13,11 +13,8 @@ private:
 
 public:
 	MeshComponent(Mesh* mesh, Material* material);
-	~MeshComponent() override;
 
 public:
-	void BeginPlay() override;
 	void Render() override;
-	void EndPlay() override;
 
 };

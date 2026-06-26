@@ -2,7 +2,11 @@
 
 #include <string>
 #include <vector>
+#include <vulkan/vulkan.h>
 
+#include "Maths/Color.h"
+
+class VulkanGraphicsPipeline;
 class Texture;
 
 using std::string;
@@ -10,8 +14,7 @@ using std::vector;
 
 class Material
 {
-public:
-	static Material* Make();
+	friend class Renderer;
 		
 public:
 	Color color;
@@ -25,9 +28,13 @@ public:
 	Texture* emissiveMap;
 
 private:
-	explicit Material();
+	VulkanGraphicsPipeline* m_pipeline;
 
 public:
-	void Render() const;
+	explicit Material(const string& shaderPath);
+	~Material();
+
+private:
+	void Render(VkCommandBuffer cmdBuffer) const;
 
 };

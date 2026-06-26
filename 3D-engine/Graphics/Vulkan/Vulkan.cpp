@@ -62,7 +62,8 @@ void Vulkan::Destroy()
 }
 
 Vulkan::Vulkan(Config* config, GLFWwindow* window)
-	: m_resourceStack{ new ResourceStack{ DEFAULT_RESOURCE_STACK_SIZE } }, m_loaded{ false }
+	: m_resourceStack{ new ResourceStack{ DEFAULT_RESOURCE_STACK_SIZE } }, m_loaded{ false }, m_frameIndex{ 0 },
+	m_imageIndex{ 0 }
 {
 	m_appName = config->Get<string>("Application.Title");
 	m_appVersion = new Version{ "Application.Version", config };
@@ -160,20 +161,17 @@ void Vulkan::EndOneTimeCommand(const VkCommandBuffer& buffer, const VkFence& fen
 
 VulkanBuffer* Vulkan::GetProjectionViewBuffer() const
 {
-	// TODO: This needs to be the current frame
-	return m_projViewBuffers[0];
+	return m_projViewBuffers[m_frameIndex];
 }
 
 VulkanBuffer* Vulkan::GetLightBuffer() const
 {
-	// TODO: This needs to be the current frame
-	return m_lightBuffers[0];
+	return m_lightBuffers[m_frameIndex];
 }
 
 VulkanBuffer* Vulkan::GetMaterialBuffer() const
 {
-	// TODO: This needs to be the current frame
-	return m_materialBuffers[0];
+	return m_materialBuffers[m_frameIndex];
 }
 
 void Vulkan::AddTexture(Texture* texture)
@@ -784,20 +782,6 @@ void Vulkan::Init(GLFWwindow* window)
 			{
 				vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout, nullptr);
 				vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
-			}
-		);
-
-		// Graphics Pipeline
-		InitAndPushResource(
-			[this]
-			{
-				GraphicsPipelineConfig config = GraphicsPipelineConfig{ "Shaders/pbr", this };
-
-				m_pipeline = new VulkanGraphicsPipeline{ config, this };
-			},
-			[this]
-			{
-				delete m_pipeline;
 			}
 		);
 
