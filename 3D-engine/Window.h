@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <GLFW/glfw3.h>
 
 using std::string;
 
@@ -27,15 +28,19 @@ private:
 	~Window();
 
 public:
-	[[nodiscard]] int Width() const;
+	[[nodiscard]] float Width() const;
 
 	void SetWidth(int w);
 
-	[[nodiscard]] int Height() const;
+	[[nodiscard]] float Height() const;
 
 	void SetHeight(int h);
 
 	[[nodiscard]] bool ShouldClose() const;
+
+	[[nodiscard]] float Aspect() const;
+
+	[[nodiscard]] GLFWwindow* GlfwHandle() const;
 
 private:
 	void Open();

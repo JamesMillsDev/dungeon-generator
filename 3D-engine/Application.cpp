@@ -18,14 +18,19 @@ using std::runtime_error;
 
 Application* Application::m_instance = nullptr;
 
-Application* Application::Instance()
+Application* Application::GetInstance()
 {
 	return m_instance;
 }
 
 void Application::Quit()
 {
-	m_instance->m_window->m_isOpen = false;
+	GetWindow()->m_isOpen = false;
+}
+
+Window* Application::GetWindow()
+{
+	return m_instance->m_window;
 }
 
 Application::Application()
@@ -90,7 +95,7 @@ EExitCode Application::Run() const
 		Renderer::Instance()->EndFrame();
 	}
 
-	Renderer::Instance()->WaitDeviceIdle();
+	Renderer::WaitIdle();
 
 	// delete the current world to pre-cleanup
 	delete m_game->m_world;

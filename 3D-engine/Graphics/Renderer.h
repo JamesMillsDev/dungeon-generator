@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vulkan/vulkan.h>
 
 class Application;
 class Config;
@@ -16,6 +17,7 @@ class Renderer
 {
 	friend Application;
 
+
 private:
 	static Renderer* m_instance;
 
@@ -27,21 +29,25 @@ private:
 	static void Create(Config* config, GLFWwindow* window);
 	static void Destroy();
 
+	static void InitVulkan(Config* config, GLFWwindow* window);
+	static void DestroyVulkan();
+
+	static void WaitIdle();
+
+private:
+	VkCommandBuffer m_frameCmdBuf;
+	Vulkan* m_vulkan;
+
 private:
 	explicit Renderer(Config* config, GLFWwindow* window);
 	~Renderer();
 
 public:
-	void Render(const Mesh* mesh, Material* material, const Matrix4& transform);
+	void Render(const Mesh* mesh, const Material* material, const Matrix4& transform) const;
 	
 private:
 	void BeginFrame();
-	void EndFrame() const;
-
-	void WaitDeviceIdle() const;
-
-	void InitVulkan(Config* config, GLFWwindow* window) const;
-	void DestroyVulkan() const;
+	void EndFrame();
 
 };
 

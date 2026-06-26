@@ -5,6 +5,7 @@
 #include <vulkan/vulkan.h>
 
 #include "Maths/Color.h"
+#include "Maths/Matrix4.h"
 
 class VulkanGraphicsPipeline;
 class Texture;
@@ -35,6 +36,6 @@ public:
 	~Material();
 
 private:
-	void Render(VkCommandBuffer cmdBuffer) const;
+	void Bind(VkCommandBuffer cmdBuffer, const Matrix4& transform) const;
 
 };

@@ -21,7 +21,9 @@ public:
 
 public:
 	void Fill(const void* data, VkDeviceSize size = 0, size_t offset = 0) const;
-	VkBuffer Get() const;
+	[[nodiscard]]const VkBuffer& Get() const;
+	[[nodiscard]]const VkDeviceAddress& GetAddress() const;
+	[[nodiscard]]const VkDeviceSize& Size() const;
 
 private:
 	void Create(const Vulkan* vulkan);

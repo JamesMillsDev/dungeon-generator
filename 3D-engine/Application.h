@@ -57,10 +57,13 @@ public:
 	 *
 	 * @return A pointer to the current Application, or nullptr if none exists.
 	 */
-	static Application* Instance();
+	static Application* GetInstance();
 
 	/** @brief Tells the application to close down safely this frame. */
 	static void Quit();
+
+	/** @brief Returns the pointer to the window instance. */
+	static Window* GetWindow();
 
 private:
 	/** @brief The global engine config for this application. */

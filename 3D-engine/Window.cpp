@@ -19,9 +19,9 @@ Window::Window(Config* config)
 
 Window::~Window() = default;
 
-int Window::Width() const
+float Window::Width() const
 {
-	return m_width;
+	return static_cast<float>(m_width);
 }
 
 void Window::SetWidth(const int w)
@@ -29,9 +29,9 @@ void Window::SetWidth(const int w)
 	m_width = w;
 }
 
-int Window::Height() const
+float Window::Height() const
 {
-	return m_height;
+	return static_cast<float>(m_height);
 }
 
 void Window::SetHeight(const int h)
@@ -42,6 +42,16 @@ void Window::SetHeight(const int h)
 bool Window::ShouldClose() const
 {
 	return glfwWindowShouldClose(m_window) || !m_isOpen;
+}
+
+float Window::Aspect() const
+{
+	return Width() / Height();
+}
+
+GLFWwindow* Window::GlfwHandle() const
+{
+	return m_window;
 }
 
 void Window::Open()

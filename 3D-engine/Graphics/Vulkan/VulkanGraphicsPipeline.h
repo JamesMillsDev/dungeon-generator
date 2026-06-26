@@ -78,11 +78,11 @@ public:
 		{
 			.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
 			.offset = 0,
-			.size = sizeof(VkDeviceAddress)
+			.size = sizeof(Matrix4)
 		},
 		{
 			.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-			.offset = 0,
+			.offset = sizeof(Matrix4),
 			.size = sizeof(VkDeviceAddress)
 		}
 	};
@@ -110,6 +110,7 @@ public:
 
 public:
 	const VkPipeline& Get() const;
+	const VkPipelineLayout& GetLayout() const;
 
 private:
 	void Init(Vulkan* vulkan);

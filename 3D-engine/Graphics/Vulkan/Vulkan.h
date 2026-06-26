@@ -8,6 +8,7 @@
 #include <vma/vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
 
+#include "Maths/Color.h"
 #include "Utility/ResourceStack.h"
 
 class VulkanGraphicsPipeline;
@@ -34,6 +35,7 @@ constexpr int32 MAX_FRAMES_IN_FLIGHT = 2;
 class Vulkan  // NOLINT(cppcoreguidelines-special-member-functions)
 {
 	friend Renderer;
+	friend void CheckSwapChain(VkResult result, const string& errorMsg);
 
 private:
 	static Vulkan* m_instance;
@@ -43,6 +45,7 @@ public:
 	DEFINE_ACCESSOR(VkDevice, Device)
 	DEFINE_ACCESSOR(VmaAllocator, Allocator)
 	DEFINE_ACCESSOR(VkDescriptorSetLayout, DescriptorSetLayout)
+	DEFINE_ACCESSOR(VkDescriptorSet, TextureDescriptorSets)
 
 	[[nodiscard]] static bool IsLoaded();
 	[[nodiscard]] static runtime_error VulkanError(const string& message, VkResult result);
@@ -56,6 +59,7 @@ private:
 	string m_appName;
 	Version* m_engineVersion;
 	string m_engineName;
+	Color m_clearColor;
 
 	ResourceStack* m_resourceStack;
 	bool m_loaded;
@@ -96,10 +100,9 @@ private:
 	VkDescriptorSet m_descriptorSet;
 	vector<Texture*> m_textures;
 
-	// TODO: Handle multiple pipelines
-	VulkanGraphicsPipeline* m_pipeline;
 	uint32 m_frameIndex;
 	uint32 m_imageIndex;
+	bool m_recreateSwapChain;
 
 private:
 	explicit Vulkan(Config* config, GLFWwindow* window);
@@ -117,10 +120,18 @@ public:
 	void RemoveTexture(Texture* texture);
 
 	void WriteTextureDescriptorSets() const;
+	void BindTextureDescriptorSets(VkCommandBuffer cmdBuf, VkPipelineLayout layout) const;
 
 private:
 	void Init(GLFWwindow* window);
 	void RecreateSwapChain();
+
+	VkCommandBuffer BeginFrame();
+	void EndFrame(VkCommandBuffer cmdBuffer);
+
+	void TransitionFrameImages(VkCommandBuffer cmdBuffer) const;
+	void CreateDepthImage(const VkExtent3D& extent, const VkFormat& format);
+	VkFormat GetDepthFormat() const;
 
 	void InitAndPushResource(const InitFunction& init, const CleanupFunction& cleanup) const;
 

@@ -209,12 +209,10 @@ void Mesh::DestroyBuffers()
 
 void Mesh::Render(const VkCommandBuffer buffer, const uint32 instances, const uint32 firstInstance) const
 {
-	VkBuffer vertexBuffers[] = { VK_NULL_HANDLE };
 	VkDeviceSize offsets[] = { 0 };
-	vkCmdBindVertexBuffers(buffer, 0, 1, vertexBuffers, offsets);
 
-	vkCmdBindVertexBuffers(buffer, 0, 1, vertexBuffers, offsets);
-	//vkCmdBindIndexBuffer(buffer, m_indexBuffer->Get(), 0, VK_INDEX_TYPE_UINT16);
+	vkCmdBindVertexBuffers(buffer, 0, 1, &m_vertexBuffer->Get(), offsets);
+	vkCmdBindIndexBuffer(buffer, m_vertexBuffer->Get(), m_vertexBuffer->Size(), VK_INDEX_TYPE_UINT16);
 
 	vkCmdDrawIndexed(
 		buffer, static_cast<uint32>(indices.size()), instances, 0, 0, firstInstance

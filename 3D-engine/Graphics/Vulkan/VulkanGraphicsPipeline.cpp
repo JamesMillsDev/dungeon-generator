@@ -44,6 +44,11 @@ const VkPipeline& VulkanGraphicsPipeline::Get() const
 	return m_pipeline;
 }
 
+const VkPipelineLayout& VulkanGraphicsPipeline::GetLayout() const
+{
+	return m_pipelineLayout;
+}
+
 void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 {
 	VkResult result;

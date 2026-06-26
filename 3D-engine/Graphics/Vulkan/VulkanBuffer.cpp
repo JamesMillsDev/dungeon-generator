@@ -21,9 +21,19 @@ void VulkanBuffer::Fill(const void* data, VkDeviceSize size, const size_t offset
 	memcpy(static_cast<char*>(m_allocationInfo.pMappedData) + offset, data, size);
 }
 
-VkBuffer VulkanBuffer::Get() const
+const VkBuffer& VulkanBuffer::Get() const
 {
 	return m_buffer;
+}
+
+const VkDeviceAddress& VulkanBuffer::GetAddress() const
+{
+	return m_deviceAddress;
+}
+
+const VkDeviceSize& VulkanBuffer::Size() const
+{
+	return m_size;
 }
 
 void VulkanBuffer::Create(const Vulkan* vulkan)

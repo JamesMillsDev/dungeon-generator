@@ -6,9 +6,10 @@
 #define VMA_IMPLEMENTATION
 #include <vma/vk_mem_alloc.h>
 
+#include "Application.h"
 #include "Uniforms.h"
 #include "VulkanBuffer.h"
-#include "VulkanGraphicsPipeline.h"
+#include "Window.h"
 #include "Graphics/Rendering/Texture.h"
 #include "Utility/Console.h"
 #include "Utility/ResourceStack.h"
@@ -17,6 +18,28 @@ using std::exception;
 
 constexpr uint32 MAX_TEXTURE_DESCRIPTORS = UINT16_MAX;
 constexpr int32 DEFAULT_RESOURCE_STACK_SIZE = 16;
+
+static void Try(const VkResult result, const string& errorMsg)  // NOLINT(misc-use-anonymous-namespace)
+{
+	if (result != VK_SUCCESS)
+	{
+		throw Vulkan::VulkanError(errorMsg, result);
+	}
+}
+
+static void CheckSwapChain(const VkResult result, const string& errorMsg) // NOLINT(misc-use-anonymous-namespace, clang-diagnostic-microsoft-redeclare-static)
+{
+	if (result != VK_SUCCESS)
+	{
+		if (result == VK_ERROR_OUT_OF_DATE_KHR)
+		{
+			Vulkan::Instance()->m_recreateSwapChain = true;
+			return;
+		}
+
+		throw Vulkan::VulkanError(errorMsg, result);
+	}
+}
 
 Vulkan* Vulkan::m_instance = nullptr;
 
@@ -30,14 +53,39 @@ const VkDevice& Vulkan::Device()
 	return m_instance->GetDevice();
 }
 
+const VkDevice& Vulkan::GetDevice() const
+{
+	return m_device;
+}
+
 const VmaAllocator& Vulkan::Allocator()
 {
 	return m_instance->GetAllocator();
 }
 
+const VmaAllocator& Vulkan::GetAllocator() const
+{
+	return m_vmaAllocator;
+}
+
 const VkDescriptorSetLayout& Vulkan::DescriptorSetLayout()
 {
 	return m_instance->GetDescriptorSetLayout();
+}
+
+const VkDescriptorSetLayout& Vulkan::GetDescriptorSetLayout() const
+{
+	return m_descriptorSetLayout;
+}
+
+const VkDescriptorSet& Vulkan::TextureDescriptorSets()
+{
+	return m_instance->GetTextureDescriptorSets();
+}
+
+const VkDescriptorSet& Vulkan::GetTextureDescriptorSets() const
+{
+	return m_descriptorSet;
 }
 
 bool Vulkan::IsLoaded()
@@ -63,12 +111,13 @@ void Vulkan::Destroy()
 
 Vulkan::Vulkan(Config* config, GLFWwindow* window)
 	: m_resourceStack{ new ResourceStack{ DEFAULT_RESOURCE_STACK_SIZE } }, m_loaded{ false }, m_frameIndex{ 0 },
-	m_imageIndex{ 0 }
+	m_imageIndex{ 0 }, m_recreateSwapChain{ false }
 {
 	m_appName = config->Get<string>("Application.Title");
 	m_appVersion = new Version{ "Application.Version", config };
 	m_engineName = config->Get<string>("Engine.Title");
 	m_engineVersion = new Version{ "Engine.Version", config };
+	m_clearColor = config->Get<Color>("Window.ClrColor");
 
 	Init(window);
 }
@@ -78,21 +127,6 @@ Vulkan::~Vulkan()
 	delete m_resourceStack;
 	delete m_appVersion;
 	delete m_engineVersion;
-}
-
-const VkDevice& Vulkan::GetDevice() const
-{
-	return m_device;
-}
-
-const VmaAllocator& Vulkan::GetAllocator() const
-{
-	return m_vmaAllocator;
-}
-
-const VkDescriptorSetLayout& Vulkan::GetDescriptorSetLayout() const
-{
-	return m_descriptorSetLayout;
 }
 
 void Vulkan::BeginOneTimeCommand(VkCommandBuffer& buffer, VkFence& fence) const
@@ -215,6 +249,13 @@ void Vulkan::WriteTextureDescriptorSets() const
 	vkUpdateDescriptorSets(m_device, 1, &writeDescSet, 0, nullptr);
 }
 
+void Vulkan::BindTextureDescriptorSets(const VkCommandBuffer cmdBuf, const VkPipelineLayout layout) const
+{
+	vkCmdBindDescriptorSets(
+		cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &m_descriptorSet, 0, nullptr
+	);
+}
+
 void Vulkan::Init(GLFWwindow* window)
 {
 	try
@@ -249,11 +290,10 @@ void Vulkan::Init(GLFWwindow* window)
 					.ppEnabledExtensionNames = instanceExtensions
 				};
 
-				if (const VkResult result = vkCreateInstance(&instanceInfo, nullptr, &m_vkInstance);
-					result != VK_SUCCESS)
-				{
-					throw VulkanError("Failed to create Vulkan Instance!", result);
-				}
+				Try(
+					vkCreateInstance(&instanceInfo, nullptr, &m_vkInstance),
+					"Failed to create Vulkan Instance!"
+				);
 			},
 			[this]
 			{
@@ -350,14 +390,11 @@ void Vulkan::Init(GLFWwindow* window)
 					.pEnabledFeatures = &enabledVk10Features
 				};
 
-				// Attempt to create the device
-				if (const VkResult result = vkCreateDevice(m_physicalDevice, &deviceCI, nullptr, &m_device);
-					result != VK_SUCCESS)
-				{
-					throw VulkanError("Failed to create Logical Device!", result);
-				}
-
-				// Get the graphics queue
+				// Attempt to create the device and get the graphics queue
+				Try(
+					vkCreateDevice(m_physicalDevice, &deviceCI, nullptr, &m_device),
+					"Failed to create Logical Device!"
+				);
 				vkGetDeviceQueue(m_device, m_queueFamily, 0, &m_queue);
 			},
 			[this]
@@ -382,11 +419,10 @@ void Vulkan::Init(GLFWwindow* window)
 				allocatorCI.pVulkanFunctions = &vkFunctions;
 				allocatorCI.instance = m_vkInstance;
 
-				if (const VkResult result = vmaCreateAllocator(&allocatorCI, &m_vmaAllocator);
-					result != VK_SUCCESS)
-				{
-					throw VulkanError("Failed to create VMA Allocator", result);
-				}
+				Try(
+					vmaCreateAllocator(&allocatorCI, &m_vmaAllocator),
+					"Failed to create VMA Allocator"
+				);
 			},
 			[this]
 			{
@@ -398,11 +434,10 @@ void Vulkan::Init(GLFWwindow* window)
 		InitAndPushResource(
 			[this, window]
 			{
-				if (const VkResult result = glfwCreateWindowSurface(m_vkInstance, window, nullptr, &m_surface);
-					result != VK_SUCCESS)
-				{
-					throw VulkanError("Failed to create window surface!", result);
-				}
+				Try(
+					glfwCreateWindowSurface(m_vkInstance, window, nullptr, &m_surface),
+					"Failed to create window surface!"
+				);
 			},
 			[this]
 			{
@@ -414,14 +449,11 @@ void Vulkan::Init(GLFWwindow* window)
 		InitAndPushResource(
 			[this, window]
 			{
-				VkResult result;
-
 				VkSurfaceCapabilitiesKHR surfaceCaps{};
-				if (result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice, m_surface, &surfaceCaps);
-					result != VK_SUCCESS)
-				{
-					throw VulkanError("Failed to retrieve surface capabilities", result);
-				}
+				Try(
+					vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice, m_surface, &surfaceCaps),
+					"Failed to retrieve surface capabilities"
+				);
 
 				// Verify the window size
 				VkExtent2D swapChainExtent = surfaceCaps.currentExtent;
@@ -455,26 +487,23 @@ void Vulkan::Init(GLFWwindow* window)
 				swapChainCI.presentMode = VK_PRESENT_MODE_FIFO_KHR;
 
 				// Attempt to create the swap chain
-				if (result = vkCreateSwapchainKHR(m_device, &swapChainCI, nullptr, &m_swapChain);
-					result != VK_SUCCESS)
-				{
-					throw VulkanError("Failed to create Swap Chain!", result);
-				}
+				Try(
+					vkCreateSwapchainKHR(m_device, &swapChainCI, nullptr, &m_swapChain),
+					"Failed to create Swap Chain!"
+				);
 
 				// Attempt to acquire the swap chain images from the swap chain
 				uint32 scImageCount = 0;
-				if (result = vkGetSwapchainImagesKHR(m_device, m_swapChain, &scImageCount, nullptr);
-					result != VK_SUCCESS)
-				{
-					throw VulkanError("Failed to count Swap Chain Images!", result);
-				}
+				Try(
+					vkGetSwapchainImagesKHR(m_device, m_swapChain, &scImageCount, nullptr),
+					"Failed to count Swap Chain Images!"
+				);
 
 				m_swapChainImages.resize(scImageCount);
-				if (result = vkGetSwapchainImagesKHR(m_device, m_swapChain, &scImageCount, m_swapChainImages.data());
-					result != VK_SUCCESS)
-				{
-					throw VulkanError("Failed to retrieve Swap Chain Images!", result);
-				}
+				Try(
+					vkGetSwapchainImagesKHR(m_device, m_swapChain, &scImageCount, m_swapChainImages.data()),
+					"Failed to retrieve Swap Chain Images!"
+				);
 
 				// Resize the image view vector to match the image one
 				m_swapChainImageViews.resize(scImageCount);
@@ -489,70 +518,15 @@ void Vulkan::Init(GLFWwindow* window)
 		InitAndPushResource(
 			[this, window]
 			{
-				// Attempt to get the correct format for the swap chain images
-				const vector depthFormatList = { VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT };
-				VkFormat depthFormat = VK_FORMAT_UNDEFINED;
-				for (const VkFormat& format : depthFormatList)
-				{
-					// Get the device format properties
-					VkFormatProperties2 formatProperties{};
-					formatProperties.sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
-					vkGetPhysicalDeviceFormatProperties2(m_physicalDevice, format, &formatProperties);
-
-					// If this format properties contains the tiling features we want, store and break
-					if (formatProperties.formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
-					{
-						depthFormat = format;
-						break;
-					}
-				}
-
 				// Get the GLFW window size
 				int windowW, windowH;
 				glfwGetWindowSize(window, &windowW, &windowH);
 
 				// Set up the image create info for the depth image
-				VkImageCreateInfo depthImageCI{};
-				depthImageCI.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-				depthImageCI.imageType = VK_IMAGE_TYPE_2D;
-				depthImageCI.format = depthFormat;
-				depthImageCI.extent = { .width = static_cast<uint32_t>(windowW), .height = static_cast<uint32_t>(windowH), .depth = 1 };
-				depthImageCI.mipLevels = 1;
-				depthImageCI.arrayLayers = 1;
-				depthImageCI.samples = VK_SAMPLE_COUNT_1_BIT;
-				depthImageCI.tiling = VK_IMAGE_TILING_OPTIMAL;
-				depthImageCI.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-				depthImageCI.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-
-				VmaAllocationCreateInfo allocCI{};
-				allocCI.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
-				allocCI.usage = VMA_MEMORY_USAGE_AUTO;
-
-				// Attempt to create the depth image
-				if (const VkResult result = vmaCreateImage(m_vmaAllocator, &depthImageCI, &allocCI, &m_depthImage, &m_depthImageAllocation, nullptr);
-					result != VK_SUCCESS)
-				{
-					throw VulkanError("Failed to create Depth Image!", result);
-				}
-
-				VkImageViewCreateInfo depthViewCI
-				{
-					.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-					.pNext = nullptr,
-					.flags = 0,
-					.image = m_depthImage,
-					.viewType = VK_IMAGE_VIEW_TYPE_2D,
-					.format = depthFormat,
-					.components = { VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY },
-					.subresourceRange{.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT, .baseMipLevel = 0, .levelCount = 1, .baseArrayLayer = 0, .layerCount = 1 }
-				};
-
-				// Attempt to create the depth image view
-				if (const VkResult result = vkCreateImageView(m_device, &depthViewCI, nullptr, &m_depthImageView);
-					result != VK_SUCCESS)
-				{
-					throw VulkanError("Failed to create Depth Image View!", result);
-				}
+				CreateDepthImage(
+					{ .width = static_cast<uint32_t>(windowW), .height = static_cast<uint32_t>(windowH), .depth = 1 }, 
+					GetDepthFormat()
+				);
 			},
 			[this]
 			{
@@ -609,33 +583,28 @@ void Vulkan::Init(GLFWwindow* window)
 				fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 				fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-				VkResult result;
-
 				// Create a fence and an image semaphore for each frame in flight
 				for (uint32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 				{
-					if (result = vkCreateFence(m_device, &fenceCreateInfo, nullptr, &m_fences[i]);
-						result != VK_SUCCESS)
-					{
-						throw VulkanError(std::format("Failed to create Fence for frame: {}!", i), result);
-					}
+					Try(
+						vkCreateFence(m_device, &fenceCreateInfo, nullptr, &m_fences[i]),
+						std::format("Failed to create Fence for frame: {}!", i)
+					);
 
-					if (result = vkCreateSemaphore(m_device, &semaphoreCreateInfo, nullptr, &m_imageAcquiredSemaphores[i]);
-						result != VK_SUCCESS)
-					{
-						throw VulkanError(std::format("Failed to create Image Acquired Semaphore for frame: {}!", i), result);
-					}
+					Try(
+						vkCreateSemaphore(m_device, &semaphoreCreateInfo, nullptr, &m_imageAcquiredSemaphores[i]),
+						std::format("Failed to create Image Acquired Semaphore for frame: {}!", i)
+					);
 				}
 
 				// Match the size of the render complete semaphores to the swap chain images
 				m_renderCompleteSemaphores.resize(m_swapChainImages.size());
 				for (VkSemaphore& semaphore : m_renderCompleteSemaphores)
 				{
-					if (result = vkCreateSemaphore(m_device, &semaphoreCreateInfo, nullptr, &semaphore);
-						result != VK_SUCCESS)
-					{
-						throw VulkanError("Failed to create Render Complete Semaphore!", result);
-					}
+					Try(
+						vkCreateSemaphore(m_device, &semaphoreCreateInfo, nullptr, &semaphore),
+						"Failed to create Render Complete Semaphore!"
+					);
 				}
 			},
 			[this]
@@ -659,19 +628,16 @@ void Vulkan::Init(GLFWwindow* window)
 		InitAndPushResource(
 			[this]
 			{
-				VkResult result;
-
 				// Attempt to create the command pool
 				VkCommandPoolCreateInfo cpCreateInfo{};
 				cpCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 				cpCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 				cpCreateInfo.queueFamilyIndex = m_queueFamily;
 
-				if (result = vkCreateCommandPool(m_device, &cpCreateInfo, nullptr, &m_commandPool);
-					result != VK_SUCCESS)
-				{
-					throw VulkanError("Failed to create Command Pool!", result);
-				}
+				Try(
+					vkCreateCommandPool(m_device, &cpCreateInfo, nullptr, &m_commandPool),
+					"Failed to create Command Pool!"
+				);
 
 				// Attempt to create command buffers for each frame in flight
 				VkCommandBufferAllocateInfo cbAllocateInfo{};
@@ -679,11 +645,10 @@ void Vulkan::Init(GLFWwindow* window)
 				cbAllocateInfo.commandBufferCount = MAX_FRAMES_IN_FLIGHT;
 				cbAllocateInfo.commandPool = m_commandPool;
 
-				if (result = vkAllocateCommandBuffers(m_device, &cbAllocateInfo, m_commandBuffers.data());
-					result != VK_SUCCESS)
-				{
-					throw VulkanError("Failed to create Command Buffers!", result);
-				}
+				Try(
+					vkAllocateCommandBuffers(m_device, &cbAllocateInfo, m_commandBuffers.data()),
+					"Failed to create Command Buffers!"
+				);
 			},
 			[this]
 			{
@@ -695,8 +660,6 @@ void Vulkan::Init(GLFWwindow* window)
 		InitAndPushResource(
 			[this]
 			{
-				VkResult result;
-
 				constexpr VkDescriptorBindingFlags descVariableFlag = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
 				const VkDescriptorSetLayoutBindingFlagsCreateInfo dslFlagsCreateInfo
 				{
@@ -724,11 +687,10 @@ void Vulkan::Init(GLFWwindow* window)
 				};
 
 				// Create the descriptor set layout
-				if (result = vkCreateDescriptorSetLayout(m_device, &dslCreateInfo, nullptr, &m_descriptorSetLayout);
-					result != VK_SUCCESS)
-				{
-					throw VulkanError("Failed to create Descriptor Set Layout!", result);
-				}
+				Try(
+					vkCreateDescriptorSetLayout(m_device, &dslCreateInfo, nullptr, &m_descriptorSetLayout),
+					"Failed to create Descriptor Set Layout!"
+				);
 
 				constexpr VkDescriptorPoolSize poolSize
 				{
@@ -746,11 +708,10 @@ void Vulkan::Init(GLFWwindow* window)
 				};
 
 				// Create the descriptor pool
-				if (result = vkCreateDescriptorPool(m_device, &dpCreateInfo, nullptr, &m_descriptorPool);
-					result != VK_SUCCESS)
-				{
-					throw VulkanError("Failed to create Descriptor Pool!", result);
-				}
+				Try(
+					vkCreateDescriptorPool(m_device, &dpCreateInfo, nullptr, &m_descriptorPool),
+					"Failed to create Descriptor Pool!"
+				);
 
 				// Allocate the descriptor sets
 				constexpr VkDescriptorSetVariableDescriptorCountAllocateInfo vdcAllocateInfo
@@ -769,11 +730,10 @@ void Vulkan::Init(GLFWwindow* window)
 					.pSetLayouts = &m_descriptorSetLayout
 				};
 
-				if (result = vkAllocateDescriptorSets(m_device, &dsAllocateInfo, &m_descriptorSet);
-					result != VK_SUCCESS)
-				{
-					throw VulkanError("Failed to allocate Descriptor Sets!", result);
-				}
+				Try(
+					vkAllocateDescriptorSets(m_device, &dsAllocateInfo, &m_descriptorSet),
+					"Failed to allocate Descriptor Sets!"
+				);
 
 				// Write to the descriptor sets
 				WriteTextureDescriptorSets();
@@ -784,6 +744,15 @@ void Vulkan::Init(GLFWwindow* window)
 				vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
 			}
 		);
+
+		// Set the resize callback
+		glfwSetWindowSizeCallback(window, [](GLFWwindow* win, int w, int h)
+			{
+				Application::GetWindow()->SetWidth(w);
+				Application::GetWindow()->SetWidth(h);
+
+				Instance()->m_recreateSwapChain = true;
+			});
 
 		// All functions ran safely, so we loaded correctly. 
 		m_loaded = true;
@@ -796,7 +765,398 @@ void Vulkan::Init(GLFWwindow* window)
 
 void Vulkan::RecreateSwapChain()
 {
+	vkDeviceWaitIdle(m_device);
 
+	const Window* window = Application::GetWindow();
+
+	// Try to get the device capabilities
+	VkSurfaceCapabilitiesKHR surfaceCaps;
+	Try(
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice, m_surface, &surfaceCaps),
+		"Failed to get the device capabilities!"
+	);
+
+	// Verify the window size
+	VkExtent2D swapChainExtent = surfaceCaps.currentExtent;
+	if (surfaceCaps.currentExtent.width == 0xffffffff)
+	{
+
+		// Use the glfw window size as the swap chain size
+		swapChainExtent =
+		{
+			.width = static_cast<uint32>(window->Width()),
+			.height = static_cast<uint32>(window->Height())
+		};
+	}
+
+	// Generate the Swap Chain Create Information
+	constexpr VkFormat imageFormat = VK_FORMAT_B8G8R8A8_SRGB;
+	VkSwapchainCreateInfoKHR swapChainCI{};
+	swapChainCI.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+	swapChainCI.surface = m_surface;
+	swapChainCI.minImageCount = surfaceCaps.minImageCount;
+	swapChainCI.imageFormat = imageFormat;
+	swapChainCI.imageColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+	swapChainCI.imageExtent = { .width = swapChainExtent.width, .height = swapChainExtent.height };
+	swapChainCI.imageArrayLayers = 1;
+	swapChainCI.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	swapChainCI.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+	swapChainCI.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+	swapChainCI.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+	swapChainCI.oldSwapchain = m_swapChain;
+
+	// Create the new swap chain
+	Try(
+		vkCreateSwapchainKHR(m_device, &swapChainCI, nullptr, &m_swapChain),
+		"Failed to Recreate Swap Chain!"
+	);
+
+	// Destroy old swap chain images
+	uint32 imageCount = static_cast<uint32>(m_swapChainImages.size());
+	for (uint32 i = 0; i < imageCount; ++i)
+	{
+		vkDestroyImageView(m_device, m_swapChainImageViews[i], nullptr);
+	}
+
+	// Get the new Swap Chain Images
+	imageCount = 0;
+	Try(
+		vkGetSwapchainImagesKHR(m_device, m_swapChain, &imageCount, nullptr),
+		"Failed to get Swap Chain Image Count!"
+	);
+	m_swapChainImages.resize(imageCount);
+	Try(
+		vkGetSwapchainImagesKHR(m_device, m_swapChain, &imageCount, m_swapChainImages.data()),
+		"Failed to get Swap Chain Images!"
+	);
+	m_swapChainImageViews.resize(imageCount);
+
+	// Create the new Swap Chain image views
+	for (uint32 i = 0; i < imageCount; ++i)
+	{
+		VkImageViewCreateInfo viewCreateInfo{};
+		viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		viewCreateInfo.image = m_swapChainImages[i];
+		viewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		viewCreateInfo.format = imageFormat;
+		viewCreateInfo.subresourceRange = { .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .levelCount = 1, .layerCount = 1 };  // NOLINT(clang-diagnostic-missing-designated-field-initializers)
+
+		Try(
+			vkCreateImageView(m_device, &viewCreateInfo, nullptr, &m_swapChainImageViews[i]),
+			std::format("Failed to create Swap Chain Image View for index: {}", i)
+		);
+	}
+
+	// Destroy old semaphores
+	for (VkSemaphore& semaphore : m_renderCompleteSemaphores)
+	{
+		vkDestroySemaphore(m_device, semaphore, nullptr);
+	}
+
+	// Recreate semaphores
+	VkSemaphoreCreateInfo semaphoreCreateInfo{};
+	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+	m_renderCompleteSemaphores.resize(imageCount);
+	for (VkSemaphore& semaphore : m_renderCompleteSemaphores)
+	{
+		Try(
+			vkCreateSemaphore(m_device, &semaphoreCreateInfo, nullptr, &semaphore),
+			"Failed to recreate semaphore!"
+		);
+	}
+
+	// Destroy the old swap chain and depth image / image view
+	vkDestroySwapchainKHR(m_device, swapChainCI.oldSwapchain, nullptr);
+	vmaDestroyImage(m_vmaAllocator, m_depthImage, m_depthImageAllocation);
+	vkDestroyImageView(m_device, m_depthImageView, nullptr);
+
+	CreateDepthImage(
+		{ .width = static_cast<uint32>(window->Width()), .height = static_cast<uint32>(window->Height()), .depth = 1 },
+		GetDepthFormat()
+	);
+}
+
+VkCommandBuffer Vulkan::BeginFrame()
+{
+	// Wait on and reset fences
+	Try(
+		vkWaitForFences(m_device, 1, &m_fences[m_frameIndex], true, UINT64_MAX),
+		std::format("Failed to wait for fence on frame: {}!", m_frameIndex)
+	);
+	Try(
+		vkResetFences(m_device, 1, &m_fences[m_frameIndex]),
+		std::format("Failed to reset fence on frame: {}!", m_frameIndex)
+	);
+
+	// Try to get the swap chain image index for this frame
+	CheckSwapChain(
+		vkAcquireNextImageKHR(
+		m_device, m_swapChain, UINT64_MAX, m_imageAcquiredSemaphores[m_frameIndex], VK_NULL_HANDLE, &m_imageIndex
+	),
+		std::format("Failed to acquire Swap Chain Image index for frame: {}!", m_frameIndex)
+	);
+
+	// Try to reset and retrieve the command buffer
+	const VkCommandBuffer cmdBuf = m_commandBuffers[m_frameIndex];
+	Try(
+		vkResetCommandBuffer(cmdBuf, 0),
+		std::format("Failed to reset Command Buffer for frame: {}!", m_frameIndex)
+	);
+
+	// Begin using the command buffer
+	VkCommandBufferBeginInfo cbBeginInfo{};
+	cbBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	cbBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	Try(
+		vkBeginCommandBuffer(cmdBuf, &cbBeginInfo),
+		std::format("Failed to begin Command Buffer for frame: {}!", m_frameIndex)
+	);
+
+	// Transition swap chain and depth images
+	TransitionFrameImages(cmdBuf);
+
+	// Begin rendering
+	VkRenderingAttachmentInfo colorAttachmentInfo{};
+	colorAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+	colorAttachmentInfo.imageView = m_swapChainImageViews[m_imageIndex];
+	colorAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL;
+	colorAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	colorAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	colorAttachmentInfo.clearValue = { .color = { m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a } };  // NOLINT(clang-diagnostic-missing-braces)
+
+	VkRenderingAttachmentInfo depthAttachmentInfo{};
+	depthAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+	depthAttachmentInfo.imageView = m_depthImageView;
+	depthAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL;
+	depthAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	depthAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	depthAttachmentInfo.clearValue = { .depthStencil = { 1.f, 0 } };
+
+	const Window* window = Application::GetWindow();
+	VkRenderingInfo renderingInfo{};
+	renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+	renderingInfo.renderArea = { .extent = { static_cast<uint32>(window->Width()), static_cast<uint32>(window->Height()) } };  // NOLINT(clang-diagnostic-missing-designated-field-initializers)
+	renderingInfo.layerCount = 1;
+	renderingInfo.colorAttachmentCount = 1;
+	renderingInfo.pColorAttachments = &colorAttachmentInfo;
+	renderingInfo.pDepthAttachment = &depthAttachmentInfo;
+	vkCmdBeginRendering(cmdBuf, &renderingInfo);
+
+	// Set the viewport and scissor
+	const VkViewport vp =
+	{
+		.x = 0.f,
+		.y = 0.f,
+		.width = window->Width(),
+		.height = window->Height(),
+		.minDepth = 0.f,
+		.maxDepth = 1.f
+	};
+	vkCmdSetViewport(cmdBuf, 0, 1, &vp);
+
+	const VkRect2D scissor =
+	{
+		.offset = { 0, 0 },
+		.extent = renderingInfo.renderArea.extent
+	};
+	vkCmdSetScissor(cmdBuf, 0, 1, &scissor);
+
+	return cmdBuf;
+}
+
+void Vulkan::EndFrame(VkCommandBuffer cmdBuffer)
+{
+	// End the rendering and transition the swap chain image
+	vkCmdEndRendering(cmdBuffer);
+
+	VkImageMemoryBarrier2 barrierPresent{};
+	barrierPresent.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2;
+	barrierPresent.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+	barrierPresent.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+	barrierPresent.dstStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+	barrierPresent.dstAccessMask = 0;
+	barrierPresent.oldLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL;
+	barrierPresent.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	barrierPresent.image = m_swapChainImages[m_imageIndex];
+	barrierPresent.subresourceRange = { .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .levelCount = 1, .layerCount = 1 };  // NOLINT(clang-diagnostic-missing-designated-field-initializers)
+
+	VkDependencyInfo barrierPresentDependencyInfo{};
+	barrierPresentDependencyInfo.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+	barrierPresentDependencyInfo.imageMemoryBarrierCount = 1;
+	barrierPresentDependencyInfo.pImageMemoryBarriers = &barrierPresent;
+	vkCmdPipelineBarrier2(cmdBuffer, &barrierPresentDependencyInfo);
+
+	// Try to end the command buffer
+	Try(
+		vkEndCommandBuffer(cmdBuffer),
+		std::format("Failed to end Command Buffer for frame: {}!", m_frameIndex)
+	);
+
+	// Try to submit the queue
+	VkPipelineStageFlags waitStages = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+	VkSubmitInfo submitInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+		.pNext = nullptr,
+		.waitSemaphoreCount = 1,
+		.pWaitSemaphores = &m_imageAcquiredSemaphores[m_frameIndex],
+		.pWaitDstStageMask = &waitStages,
+		.commandBufferCount = 1,
+		.pCommandBuffers = &cmdBuffer,
+		.signalSemaphoreCount = 1,
+		.pSignalSemaphores = &m_renderCompleteSemaphores[m_imageIndex]
+	};
+	Try(
+		vkQueueSubmit(m_queue, 1, &submitInfo, m_fences[m_frameIndex]),
+		std::format("Failed to submit queue for frame: {}!", m_frameIndex)
+	);
+
+	// Try to present the queue
+	m_frameIndex = (m_frameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
+	VkPresentInfoKHR presentInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+		.pNext = nullptr,
+		.waitSemaphoreCount = 1,
+		.pWaitSemaphores = &m_renderCompleteSemaphores[m_imageIndex],
+		.swapchainCount = 1,
+		.pSwapchains = &m_swapChain,
+		.pImageIndices = &m_imageIndex,
+		.pResults = nullptr
+	};
+	CheckSwapChain(
+		vkQueuePresentKHR(m_queue, &presentInfo),
+		std::format("Failed to present queue for frame: {}!", m_frameIndex)
+	);
+
+	// Recreate the Swap Chain if needed
+	if (m_recreateSwapChain)
+	{
+		m_recreateSwapChain = false;
+		RecreateSwapChain();
+	}
+}
+
+void Vulkan::TransitionFrameImages(const VkCommandBuffer cmdBuffer) const
+{
+	const array outputBarriers
+	{
+		VkImageMemoryBarrier2
+		{
+			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+			.pNext = nullptr,
+			.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+			.srcAccessMask = 0,
+			.dstStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+			.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+			.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+			.newLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
+			.srcQueueFamilyIndex = 0,
+			.dstQueueFamilyIndex = 0,
+			.image = m_swapChainImages[m_imageIndex],
+			.subresourceRange =
+			{
+				.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+				.baseMipLevel = 0,
+				.levelCount = 1,
+				.baseArrayLayer = 0,
+				.layerCount = 1
+			}
+		},
+		VkImageMemoryBarrier2
+		{
+			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+			.pNext = nullptr,
+			.srcStageMask = VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
+			.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+			.dstStageMask = VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
+			.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+			.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+			.newLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
+			.srcQueueFamilyIndex = 0,
+			.dstQueueFamilyIndex = 0,
+			.image = m_depthImage,
+			.subresourceRange =
+			{
+				.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT,
+				.baseMipLevel = 0,
+				.levelCount = 1,
+				.baseArrayLayer = 0,
+				.layerCount = 1
+			}
+		}
+	};
+	VkDependencyInfo barrierDependencyInfo{};
+	barrierDependencyInfo.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+	barrierDependencyInfo.imageMemoryBarrierCount = static_cast<uint32>(outputBarriers.size());
+	barrierDependencyInfo.pImageMemoryBarriers = outputBarriers.data();
+	vkCmdPipelineBarrier2(cmdBuffer, &barrierDependencyInfo);
+}
+
+void Vulkan::CreateDepthImage(const VkExtent3D& extent, const VkFormat& format)
+{
+	VkImageCreateInfo depthImageCI{};
+	depthImageCI.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	depthImageCI.imageType = VK_IMAGE_TYPE_2D;
+	depthImageCI.format = format;
+	depthImageCI.extent = extent;
+	depthImageCI.mipLevels = 1;
+	depthImageCI.arrayLayers = 1;
+	depthImageCI.samples = VK_SAMPLE_COUNT_1_BIT;
+	depthImageCI.tiling = VK_IMAGE_TILING_OPTIMAL;
+	depthImageCI.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+	depthImageCI.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+	VmaAllocationCreateInfo allocCI{};
+	allocCI.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+	allocCI.usage = VMA_MEMORY_USAGE_AUTO;
+
+	// Attempt to create the depth image
+	Try(
+		vmaCreateImage(m_vmaAllocator, &depthImageCI, &allocCI, &m_depthImage, &m_depthImageAllocation, nullptr),
+		"Failed to create Depth Image!"
+	);
+
+	VkImageViewCreateInfo depthViewCI
+	{
+		.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.image = m_depthImage,
+		.viewType = VK_IMAGE_VIEW_TYPE_2D,
+		.format = format,
+		.components = { VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY },
+		.subresourceRange{.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT, .baseMipLevel = 0, .levelCount = 1, .baseArrayLayer = 0, .layerCount = 1 }
+	};
+
+	// Attempt to create the depth image view
+	Try(
+		vkCreateImageView(m_device, &depthViewCI, nullptr, &m_depthImageView),
+		"Failed to create Depth Image View!"
+	);
+}
+
+VkFormat Vulkan::GetDepthFormat() const
+{
+	// Attempt to get the correct format for the swap chain images
+	const vector depthFormatList = { VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT };
+	VkFormat depthFormat = VK_FORMAT_UNDEFINED;
+	for (const VkFormat& format : depthFormatList)
+	{
+		// Get the device format properties
+		VkFormatProperties2 formatProperties{};
+		formatProperties.sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
+		vkGetPhysicalDeviceFormatProperties2(m_physicalDevice, format, &formatProperties);
+
+		// If this format properties contains the tiling features we want, store and break
+		if (formatProperties.formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
+		{
+			depthFormat = format;
+			break;
+		}
+	}
+
+	return depthFormat;
 }
 
 void Vulkan::InitAndPushResource(const InitFunction& init, const CleanupFunction& cleanup) const

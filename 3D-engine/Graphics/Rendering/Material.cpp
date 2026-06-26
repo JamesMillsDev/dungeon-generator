@@ -19,7 +19,7 @@ Material::~Material()
 	m_pipeline = nullptr;
 }
 
-void Material::Render(const VkCommandBuffer cmdBuffer) const
+void Material::Bind(const VkCommandBuffer cmdBuffer, const Matrix4& transform) const
 {
 	const VulkanBuffer* materialBuffer = Vulkan::Instance()->GetMaterialBuffer();
 	const MaterialUniform materialUniform
@@ -36,4 +36,14 @@ void Material::Render(const VkCommandBuffer cmdBuffer) const
 	materialBuffer->Fill(&materialUniform);
 
 	vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->Get());
+	Vulkan::Instance()->BindTextureDescriptorSets(cmdBuffer, m_pipeline->GetLayout());
+
+	vkCmdPushConstants(
+		cmdBuffer, m_pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, 
+		sizeof(Matrix4), &transform
+	);
+	vkCmdPushConstants(
+		cmdBuffer, m_pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(Matrix4),
+		sizeof(VkDeviceAddress), &materialBuffer->GetAddress()
+	);
 }
