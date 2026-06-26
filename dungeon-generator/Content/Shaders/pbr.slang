@@ -1,4 +1,5 @@
 #include "global.slang"
+#include "graphics.slang"
 
 struct VSInput
 {
@@ -18,10 +19,8 @@ struct VSOutput
     float2 uv0;
 };
 
-[[vk::push_constant]] float4x4 transform;
-
 [shader("vertex")]
-VSOutput main(VSInput input, uint instanceIndex: SV_VulkanInstanceID)
+VSOutput main(VSInput input)
 {
     VSOutput output;
 

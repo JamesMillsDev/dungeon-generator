@@ -5,13 +5,12 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include <slang/slang-com-ptr.h>
-#include <slang/slang.h>
 #include <vma/vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
 
 #include "Utility/ResourceStack.h"
 
+class VulkanGraphicsPipeline;
 class Texture;
 class VulkanBuffer;
 struct GLFWwindow;
@@ -26,10 +25,11 @@ using std::runtime_error;
 using std::string;
 using std::vector;
 
-using slang::IGlobalSession;
-using Slang::ComPtr;
-
 constexpr int32 MAX_FRAMES_IN_FLIGHT = 2;
+
+#define DEFINE_ACCESSOR(TYPE, NAME) \
+	[[nodiscard]] static const TYPE& ##NAME(); \
+	[[nodiscard]] const TYPE& Get##NAME() const; \
 
 class Vulkan  // NOLINT(cppcoreguidelines-special-member-functions)
 {
@@ -40,9 +40,9 @@ private:
 
 public:
 	[[nodiscard]] static Vulkan* Instance();
-	[[nodiscard]] static const VkDevice& Device();
-	[[nodiscard]] static const VmaAllocator& Allocator();
-	[[nodiscard]] static const ComPtr<IGlobalSession>& SlangSession();
+	DEFINE_ACCESSOR(VkDevice, Device)
+	DEFINE_ACCESSOR(VmaAllocator, Allocator)
+	DEFINE_ACCESSOR(VkDescriptorSetLayout, DescriptorSetLayout)
 
 	[[nodiscard]] static bool IsLoaded();
 	[[nodiscard]] static runtime_error VulkanError(const string& message, VkResult result);
@@ -59,8 +59,6 @@ private:
 
 	ResourceStack* m_resourceStack;
 	bool m_loaded;
-
-	ComPtr<IGlobalSession> m_slangSession;
 
 	VmaAllocator m_vmaAllocator;
 	VkInstance m_vkInstance;
@@ -89,23 +87,28 @@ private:
 	VkCommandPool m_commandPool;
 	array<VkCommandBuffer, MAX_FRAMES_IN_FLIGHT> m_commandBuffers;
 
-	array<VulkanBuffer*, MAX_FRAMES_IN_FLIGHT> m_materialBuffer;
+	array<VulkanBuffer*, MAX_FRAMES_IN_FLIGHT> m_projViewBuffers;
+	array<VulkanBuffer*, MAX_FRAMES_IN_FLIGHT> m_lightBuffers;
+	array<VulkanBuffer*, MAX_FRAMES_IN_FLIGHT> m_materialBuffers;
+
 	VkDescriptorPool m_descriptorPool;
 	VkDescriptorSetLayout m_descriptorSetLayout;
 	VkDescriptorSet m_descriptorSet;
 	vector<Texture*> m_textures;
+
+	// TODO: Handle multiple pipelines
+	VulkanGraphicsPipeline* m_pipeline;
 
 private:
 	explicit Vulkan(Config* config, GLFWwindow* window);
 	~Vulkan();
 
 public:
-	[[nodiscard]] const VkDevice& GetDevice() const;
-	[[nodiscard]] const VmaAllocator& GetAllocator() const;
-
 	void BeginOneTimeCommand(VkCommandBuffer& buffer, VkFence& fence) const;
 	void EndOneTimeCommand(const VkCommandBuffer& buffer, const VkFence& fence) const;
 
+	[[nodiscard]] VulkanBuffer* GetProjectionViewBuffer() const;
+	[[nodiscard]] VulkanBuffer* GetLightBuffer() const;
 	[[nodiscard]] VulkanBuffer* GetMaterialBuffer() const;
 
 	void AddTexture(Texture* texture);

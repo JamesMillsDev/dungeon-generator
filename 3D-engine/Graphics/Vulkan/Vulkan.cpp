@@ -8,6 +8,7 @@
 
 #include "Uniforms.h"
 #include "VulkanBuffer.h"
+#include "VulkanGraphicsPipeline.h"
 #include "Graphics/Rendering/Texture.h"
 #include "Utility/Console.h"
 #include "Utility/ResourceStack.h"
@@ -34,9 +35,9 @@ const VmaAllocator& Vulkan::Allocator()
 	return m_instance->GetAllocator();
 }
 
-const ComPtr<IGlobalSession>& Vulkan::SlangSession()
+const VkDescriptorSetLayout& Vulkan::DescriptorSetLayout()
 {
-	return m_instance->m_slangSession;
+	return m_instance->GetDescriptorSetLayout();
 }
 
 bool Vulkan::IsLoaded()
@@ -86,6 +87,11 @@ const VkDevice& Vulkan::GetDevice() const
 const VmaAllocator& Vulkan::GetAllocator() const
 {
 	return m_vmaAllocator;
+}
+
+const VkDescriptorSetLayout& Vulkan::GetDescriptorSetLayout() const
+{
+	return m_descriptorSetLayout;
 }
 
 void Vulkan::BeginOneTimeCommand(VkCommandBuffer& buffer, VkFence& fence) const
@@ -152,10 +158,22 @@ void Vulkan::EndOneTimeCommand(const VkCommandBuffer& buffer, const VkFence& fen
 	}
 }
 
+VulkanBuffer* Vulkan::GetProjectionViewBuffer() const
+{
+	// TODO: This needs to be the current frame
+	return m_projViewBuffers[0];
+}
+
+VulkanBuffer* Vulkan::GetLightBuffer() const
+{
+	// TODO: This needs to be the current frame
+	return m_lightBuffers[0];
+}
+
 VulkanBuffer* Vulkan::GetMaterialBuffer() const
 {
 	// TODO: This needs to be the current frame
-	return m_materialBuffer[0];
+	return m_materialBuffers[0];
 }
 
 void Vulkan::AddTexture(Texture* texture)
@@ -554,11 +572,14 @@ void Vulkan::Init(GLFWwindow* window)
 				{
 					vector<VulkanBuffer*> buffers;
 
-					buffers.emplace_back(new VulkanBuffer{ sizeof(ProjectionViewUniform), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this });
-					buffers.emplace_back(new VulkanBuffer{ sizeof(LightUniform), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this });
+					m_projViewBuffers[i] = new VulkanBuffer{ sizeof(ProjectionViewUniform), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this };
+					buffers.emplace_back(m_projViewBuffers[i]);
 
-					m_materialBuffer[i] = new VulkanBuffer{ sizeof(MaterialUniform), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this };
-					buffers.emplace_back(m_materialBuffer[i]);
+					m_lightBuffers[i] = new VulkanBuffer{ sizeof(LightUniform), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this };
+					buffers.emplace_back(m_lightBuffers[i]);
+
+					m_materialBuffers[i] = new VulkanBuffer{ sizeof(MaterialUniform), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this };
+					buffers.emplace_back(m_materialBuffers[i]);
 
 					m_shaderDataBuffers[i] = buffers;
 				}
@@ -766,7 +787,19 @@ void Vulkan::Init(GLFWwindow* window)
 			}
 		);
 
-		slang::createGlobalSession(m_slangSession.writeRef());
+		// Graphics Pipeline
+		InitAndPushResource(
+			[this]
+			{
+				GraphicsPipelineConfig config = GraphicsPipelineConfig{ "Shaders/pbr", this };
+
+				m_pipeline = new VulkanGraphicsPipeline{ config, this };
+			},
+			[this]
+			{
+				delete m_pipeline;
+			}
+		);
 
 		// All functions ran safely, so we loaded correctly. 
 		m_loaded = true;

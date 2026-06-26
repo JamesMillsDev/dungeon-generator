@@ -38,6 +38,9 @@
     <None Include="Content\Shaders\global.slang">
       <Filter>Content Files\Shaders</Filter>
     </None>
+    <None Include="Content\Shaders\graphics.slang">
+      <Filter>Content Files\Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DungeonGameInstance.h">

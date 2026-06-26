@@ -99,14 +99,13 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\lib\;$(VULKAN_SDK)\Lib\;$(KTX_SDK)\lib\;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;3dengine.lib;ktx.lib;slang.lib;slang-compiler.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;3dengine.lib;ktx.lib;slang.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>"$(ProjectDir)BuildTools/PostBuild.bat" "$(OutDir)/" "$(ProjectDir)" "$(SolutionDir)Dependencies/native/" "Config/" "Content/" "*.frag *.vert *.png *.jpg *.tga"</Command>
+      <Command>"$(ProjectDir)BuildTools/PostBuild.bat" "$(OutDir)/" "$(ProjectDir)" "$(SolutionDir)Dependencies/native/" "Config/" "Content/" "*.frag *.vert *.slang *.png *.jpg *.tga"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>"$(ProjectDir)BuildTools\CompileShaders.bat" "$(VULKAN_SDK)\Bin\slangc.exe" "$(ProjectDir)Content\Shaders" "$(ProjectDir)Content\Shaders"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -124,14 +123,13 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\lib\;$(VULKAN_SDK)\Lib\;$(KTX_SDK)\lib\;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;3dengine.lib;ktx.lib;slang.lib;slang-compiler.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;3dengine.lib;ktx.lib;slang.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>"$(ProjectDir)BuildTools/PostBuild.bat" "$(OutDir)/" "$(ProjectDir)" "$(SolutionDir)Dependencies/native/" "Config/" "Content/" "*.frag *.vert *.png *.jpg *.tga"</Command>
+      <Command>"$(ProjectDir)BuildTools/PostBuild.bat" "$(OutDir)/" "$(ProjectDir)" "$(SolutionDir)Dependencies/native/" "Config/" "Content/" "*.frag *.vert *.slang *.png *.jpg *.tga"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>"$(ProjectDir)BuildTools\CompileShaders.bat" "$(VULKAN_SDK)\Bin\slangc.exe" "$(ProjectDir)Content\Shaders" "$(ProjectDir)Content\Shaders"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -147,14 +145,13 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\lib\;$(VULKAN_SDK)\Lib\;$(KTX_SDK)\lib\;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;3dengine.lib;ktx.lib;slang.lib;slang-compiler.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;3dengine.lib;ktx.lib;slang.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>"$(ProjectDir)BuildTools/PostBuild.bat" "$(OutDir)/" "$(ProjectDir)" "$(SolutionDir)Dependencies/native/" "Config/" "Content/" "*.frag *.vert *.png *.jpg *.tga"</Command>
+      <Command>"$(ProjectDir)BuildTools/PostBuild.bat" "$(OutDir)/" "$(ProjectDir)" "$(SolutionDir)Dependencies/native/" "Config/" "Content/" "*.frag *.vert *.slang *.png *.jpg *.tga"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>"$(ProjectDir)BuildTools\CompileShaders.bat" "$(VULKAN_SDK)\Bin\slangc.exe" "$(ProjectDir)Content\Shaders" "$(ProjectDir)Content\Shaders"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -172,14 +169,13 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\lib\;$(VULKAN_SDK)\Lib\;$(KTX_SDK)\lib\;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;3dengine.lib;ktx.lib;slang.lib;slang-compiler.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;3dengine.lib;ktx.lib;slang.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>"$(ProjectDir)BuildTools/PostBuild.bat" "$(OutDir)/" "$(ProjectDir)" "$(SolutionDir)Dependencies/native/" "Config/" "Content/" "*.frag *.vert *.png *.jpg *.tga"</Command>
+      <Command>"$(ProjectDir)BuildTools/PostBuild.bat" "$(OutDir)/" "$(ProjectDir)" "$(SolutionDir)Dependencies/native/" "Config/" "Content/" "*.frag *.vert *.slang *.png *.jpg *.tga"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>"$(ProjectDir)BuildTools\CompileShaders.bat" "$(VULKAN_SDK)\Bin\slangc.exe" "$(ProjectDir)Content\Shaders" "$(ProjectDir)Content\Shaders"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -189,6 +185,7 @@
   <ItemGroup>
     <None Include="Config\Engine.json" />
     <None Include="Content\Shaders\global.slang" />
+    <None Include="Content\Shaders\graphics.slang" />
     <None Include="Content\Shaders\pbr.slang" />
   </ItemGroup>
   <ItemGroup>

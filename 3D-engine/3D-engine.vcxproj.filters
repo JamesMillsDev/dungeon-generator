@@ -32,6 +32,7 @@
     <ClInclude Include="Graphics\Vulkan\VulkanBuffer.h" />
     <ClInclude Include="Graphics\Rendering\Material.h" />
     <ClInclude Include="Graphics\Rendering\Shader.h" />
+    <ClInclude Include="Graphics\Vulkan\VulkanGraphicsPipeline.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
@@ -61,5 +62,6 @@
     <ClCompile Include="Graphics\Vulkan\VulkanBuffer.cpp" />
     <ClCompile Include="Graphics\Rendering\Material.cpp" />
     <ClCompile Include="Graphics\Rendering\Shader.cpp" />
+    <ClCompile Include="Graphics\Vulkan\VulkanGraphicsPipeline.cpp" />
   </ItemGroup>
 </Project>

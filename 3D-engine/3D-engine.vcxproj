@@ -107,7 +107,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;assimp-vc145-mt.lib;ktx.lib;slang.lib;slang-compiler.lib;</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;assimp-vc145-mt.lib;ktx.lib;slang.lib;</AdditionalDependencies>
     </Lib>
     <Lib>
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\lib\;$(VULKAN_SDK)\Lib\;$(KTX_SDK)\lib\</AdditionalLibraryDirectories>
@@ -132,7 +132,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;assimp-vc145-mt.lib;ktx.lib;slang.lib;slang-compiler.lib;</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;assimp-vc145-mt.lib;ktx.lib;slang.lib;</AdditionalDependencies>
     </Lib>
     <Lib>
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\lib\;$(VULKAN_SDK)\Lib\;$(KTX_SDK)\lib\</AdditionalLibraryDirectories>
@@ -155,7 +155,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;assimp-vc145-mt.lib;ktx.lib;slang.lib;slang-compiler.lib;</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;assimp-vc145-mt.lib;ktx.lib;slang.lib;</AdditionalDependencies>
     </Lib>
     <Lib>
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\lib\;$(VULKAN_SDK)\Lib\;$(KTX_SDK)\lib\</AdditionalLibraryDirectories>
@@ -180,7 +180,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;assimp-vc145-mt.lib;ktx.lib;slang.lib;slang-compiler.lib;</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;glfw3dll.lib;assimp-vc145-mt.lib;ktx.lib;slang.lib;</AdditionalDependencies>
     </Lib>
     <Lib>
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\lib\;$(VULKAN_SDK)\Lib\;$(KTX_SDK)\lib\</AdditionalLibraryDirectories>
@@ -199,6 +199,7 @@
     <ClInclude Include="Graphics\Rendering\Shader.h" />
     <ClInclude Include="Graphics\Vulkan\Vulkan.h" />
     <ClInclude Include="Graphics\Vulkan\VulkanBuffer.h" />
+    <ClInclude Include="Graphics\Vulkan\VulkanGraphicsPipeline.h" />
     <ClInclude Include="Maths\Alias.h" />
     <ClInclude Include="Maths\Maths.h" />
     <ClInclude Include="Maths\Color.h" />
@@ -231,6 +232,7 @@
     <ClCompile Include="Graphics\Rendering\Shader.cpp" />
     <ClCompile Include="Graphics\Vulkan\Vulkan.cpp" />
     <ClCompile Include="Graphics\Vulkan\VulkanBuffer.cpp" />
+    <ClCompile Include="Graphics\Vulkan\VulkanGraphicsPipeline.cpp" />
     <ClCompile Include="Maths\Maths.cpp" />
     <ClCompile Include="Maths\Color.cpp" />
     <ClCompile Include="Maths\Matrix3.cpp" />
