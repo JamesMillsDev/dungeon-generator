@@ -1,0 +1,19 @@
+{
+    "project_name": "dungeon-generator",
+    "vulkan_sdk": "$VULKAN_SDK",
+    "shader_extensions": [ "slang" ],
+    "ignore_extensions": [ "slang", "png" ],
+    "compiler":
+    {
+        "name": "slangc",
+        "flags": [ "-target", "spirv", "-fvk-use-entrypoint-name" ]
+    },
+    "directories":
+    {
+        "shaders": "Shaders",
+        "config": "Config",
+        "content": "Content",
+        "dlls": "Dependencies/native/",
+        "solution": "../"
+    }
+}

@@ -48,7 +48,7 @@ const VkShaderModule& Shader::GetShaderModule() const
 
 void Shader::Init(const Vulkan* vulkan)
 {
-	const string path = "./Content/" + m_path + ".slang.spv";
+	const string path = "./Content/" + m_path + ".spv";
 
 	const vector<char> code = ReadShaderFile(path);
 

@@ -5,3 +5,4 @@ Build/
 Intermediate/
 *.user
 *.spv
+*/__pycache__
