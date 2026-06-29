@@ -7,3 +7,4 @@ Intermediate/
 *.spv
 */__pycache__
 */Resources/
+*/.vscode/
