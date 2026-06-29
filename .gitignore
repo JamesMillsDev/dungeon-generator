@@ -6,3 +6,4 @@ Intermediate/
 *.user
 *.spv
 */__pycache__
+*/Resources/
