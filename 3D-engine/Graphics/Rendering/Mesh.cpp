@@ -8,6 +8,7 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
+#include "Resources.h"
 #include "Graphics/Vulkan/Vulkan.h"
 #include "Graphics/Vulkan/VulkanBuffer.h"
 
@@ -97,11 +98,11 @@ Mesh* Mesh::MakeQuad()
 
 Mesh* Mesh::MakeFromAssimp(const string& file)
 {
-	string path = "./Content/" + file;
+	ResourceData meshData = Resources::Find(file);
 
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(
-		path.c_str(),
+	const aiScene* scene = importer.ReadFileFromMemory(
+		meshData.data, meshData.length,
 		aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_GlobalScale
 	);
 

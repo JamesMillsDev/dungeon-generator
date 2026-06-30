@@ -7,6 +7,7 @@
 #include <GLFW/glfw3.h>
 
 #include "GameTime.h"
+#include "Resources.h"
 
 #include "Gameplay/Actors/World.h"
 
@@ -72,6 +73,7 @@ EExitCode Application::Run() const
 		return EExitCode::RendererFailedToInit;
 	}
 
+	Resources::Init(m_config);
 	GameTime::Init();
 
 	// Initialise the game instance
@@ -103,6 +105,7 @@ EExitCode Application::Run() const
 	// Shutdown the game instance and close the window
 	m_game->Shutdown();
 
+	Resources::Shutdown();
 	Renderer::Destroy();
 
 	m_window->Close();

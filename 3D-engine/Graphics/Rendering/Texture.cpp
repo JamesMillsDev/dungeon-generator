@@ -4,6 +4,7 @@
 #include <ktxvulkan.h>
 #include <stdexcept>
 
+#include "Resources.h"
 #include "Graphics/Vulkan/Vulkan.h"
 #include "Graphics/Vulkan/VulkanBuffer.h"
 
@@ -54,8 +55,10 @@ uint32 Texture::GetId() const
 void Texture::CreateBuffer()
 {
 	// Attempt to load the texture from memory
-	const string file = "./Content/" + m_file + ".pvr";
-	if (ktx_error_code_e error = ktxTexture_CreateFromNamedFile(file.c_str(), KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &m_texture);
+	const string file = m_file + ".pvr";
+	ResourceData textureData = Resources::Find(file);
+
+	if (ktx_error_code_e error = ktxTexture_CreateFromMemory(textureData.data, textureData.length, KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &m_texture);
 		error != KTX_SUCCESS)
 	{
 		throw runtime_error(std::format("Failed to load texture from file! Error Code: {}", static_cast<int32>(error)));

@@ -4,6 +4,7 @@
 #include <fstream>
 #include <stdexcept>
 
+#include "Resources.h"
 #include "Graphics/Vulkan/Vulkan.h"
 
 using std::ifstream;
@@ -48,9 +49,8 @@ const VkShaderModule& Shader::GetShaderModule() const
 
 void Shader::Init(const Vulkan* vulkan)
 {
-	const string path = "./Content/" + m_path + ".spv";
-
-	const vector<char> code = ReadShaderFile(path);
+	const string path = m_path + ".spv";
+	ResourceData shaderData = Resources::Find(path);
 
 	// Create the vulkan shader module
 	const VkShaderModuleCreateInfo smCreateInfo
@@ -58,8 +58,8 @@ void Shader::Init(const Vulkan* vulkan)
 		.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
 		.pNext = nullptr,
 		.flags = 0,
-		.codeSize = code.size(),
-		.pCode = reinterpret_cast<const uint32_t*>(code.data())
+		.codeSize = static_cast<uint64>(shaderData.length),
+		.pCode = reinterpret_cast<uint32*>(shaderData.data)
 	};
 	if (const VkResult result = vkCreateShaderModule(vulkan->GetDevice(), &smCreateInfo, nullptr, &m_shaderModule);
 		result != VK_SUCCESS)

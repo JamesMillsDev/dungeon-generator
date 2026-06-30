@@ -16,6 +16,10 @@
   },
   "Engine": {
     "Title": "TinyVulkan",
-    "Version": [ 0, 0, 1 ]
+    "Version": [ 0, 0, 1 ],
+    "Content": {
+      "Directory": "Resources",
+      "FileName": "Resources"
+    }
   }
 }

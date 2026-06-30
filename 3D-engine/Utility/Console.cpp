@@ -1,12 +1,8 @@
 #include "pch.h"
 #include "Console.h"
 
-#include <chrono>
-#include <format>
+#include <ctime>
 #include <iostream>
-
-using std::chrono::seconds;
-using std::chrono::system_clock;
 
 ELogLevel Console::m_filter = ELogLevel::Debug | ELogLevel::Info | ELogLevel::Warning | ELogLevel::Error | ELogLevel::Exception;
 
@@ -52,12 +48,15 @@ void Console::Log(const ELogLevel level, const string& message)
 		return;
 	}
 
-	auto utc = std::chrono::time_point_cast<seconds>(system_clock::now());
-	auto now = std::chrono::zoned_time{ std::chrono::current_zone(), utc };
-	std::cout << std::format(
-		"{}[{}][{:%T}] {}\n\033[37m",
-		LevelColor(level), LevelString(level), now, message
-	);
+	time_t t = time(nullptr);
+	tm timeInfo;
+	(void)localtime_s(&timeInfo, &t);
+
+	char timeBuffer[80];
+	(void)strftime(timeBuffer, sizeof(timeBuffer), "%H:%M:%S", &timeInfo);
+
+	std::cout << LevelColor(level) << "[" << LevelString(level) << "]" <<
+		"[" << timeBuffer << "]" << message << "\n\033[37m";
 }
 
 string Console::LevelString(const ELogLevel level)
