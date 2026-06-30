@@ -106,6 +106,7 @@ private:
 	VkCommandPool m_commandPool;
 	array<VkCommandBuffer, MAX_FRAMES_IN_FLIGHT> m_commandBuffers;
 
+	array<VulkanBuffer*, MAX_FRAMES_IN_FLIGHT> m_uboBuffers;
 	array<VulkanBuffer*, MAX_FRAMES_IN_FLIGHT> m_lightBuffers;
 	array<VulkanBuffer*, MAX_FRAMES_IN_FLIGHT> m_materialBuffers;
 
@@ -126,6 +127,7 @@ public:
 	void BeginOneTimeCommand(VkCommandBuffer& buffer, VkFence& fence) const;
 	void EndOneTimeCommand(const VkCommandBuffer& buffer, const VkFence& fence) const;
 
+	[[nodiscard]] VulkanBuffer* GetUboBuffer() const;
 	[[nodiscard]] VulkanBuffer* GetLightBuffer() const;
 	[[nodiscard]] VulkanBuffer* GetMaterialBuffer() const;
 

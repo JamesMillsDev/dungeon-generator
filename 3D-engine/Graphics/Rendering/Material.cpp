@@ -23,6 +23,7 @@ Material::~Material()
 void Material::Bind(const VkCommandBuffer cmdBuffer, const Matrix4& transform) const
 {
 	const VulkanBuffer* materialBuffer = Vulkan::Instance()->GetMaterialBuffer();
+
 	const MaterialUniform materialUniform
 	{
 		.color = color,
@@ -36,19 +37,21 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const Matrix4& transform) c
 	};
 	materialBuffer->Fill(&materialUniform);
 
+	const VulkanBuffer* uboBuffer = Vulkan::Instance()->GetUboBuffer();
+	ProjectionViewUniform ubo = Renderer::ProjectionViewMatrix();
+	ubo.model = transform;
+	uboBuffer->Fill(&ubo);
+
 	vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->Get());
 	Vulkan::Instance()->BindTextureDescriptorSets(cmdBuffer, m_pipeline->GetLayout());
 
-	ProjectionViewUniform ubo = Renderer::ProjectionViewMatrix();
-	ubo.model = transform;
-
 	vkCmdPushConstants(
 		cmdBuffer, m_pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0,
-		sizeof(ProjectionViewUniform), &ubo
+		sizeof(VkDeviceAddress), &uboBuffer->GetAddress()
 	);
 
 	vkCmdPushConstants(
-		cmdBuffer, m_pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(ProjectionViewUniform),
+		cmdBuffer, m_pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0,
 		sizeof(VkDeviceAddress), &materialBuffer->GetAddress()
 	);
 }

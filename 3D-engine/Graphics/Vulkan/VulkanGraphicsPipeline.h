@@ -80,11 +80,11 @@ public:
 		{
 			.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
 			.offset = 0,
-			.size = sizeof(ProjectionViewUniform)
+			.size = sizeof(VkDeviceAddress)
 		},
 		{
 			.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-			.offset = sizeof(ProjectionViewUniform),
+			.offset = sizeof(VkDeviceAddress),
 			.size = sizeof(VkDeviceAddress)
 		}
 	};

@@ -311,6 +311,11 @@ void Vulkan::EndOneTimeCommand(const VkCommandBuffer& buffer, const VkFence& fen
 	}
 }
 
+VulkanBuffer* Vulkan::GetUboBuffer() const
+{
+	return m_uboBuffers[m_frameIndex];
+}
+
 VulkanBuffer* Vulkan::GetLightBuffer() const
 {
 	return m_lightBuffers[m_frameIndex];
@@ -534,10 +539,17 @@ void Vulkan::Init(GLFWwindow* window)
 
 				// Generate the feature and extension supports we need
 				const vector deviceExtensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+				VkPhysicalDeviceVulkan11Features enabledVk11Features{};
+				enabledVk11Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+				enabledVk11Features.variablePointers = true;
+				enabledVk11Features.variablePointersStorageBuffer = true;
+
 				VkPhysicalDeviceVulkan12Features enabledVk12Features{};
 				enabledVk12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+				enabledVk12Features.pNext = &enabledVk11Features;
 				enabledVk12Features.descriptorIndexing = true;
 				enabledVk12Features.shaderSampledImageArrayNonUniformIndexing = true;
+				enabledVk12Features.descriptorBindingUniformBufferUpdateAfterBind = true;
 				enabledVk12Features.descriptorBindingVariableDescriptorCount = true;
 				enabledVk12Features.runtimeDescriptorArray = true;
 				enabledVk12Features.bufferDeviceAddress = true;
@@ -742,6 +754,9 @@ void Vulkan::Init(GLFWwindow* window)
 				{
 					vector<VulkanBuffer*> buffers;
 
+					m_uboBuffers[i] = new VulkanBuffer{ sizeof(ProjectionViewUniform), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this };
+					buffers.emplace_back(m_uboBuffers[i]);
+
 					m_lightBuffers[i] = new VulkanBuffer{ sizeof(LightUniform), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this };
 					buffers.emplace_back(m_lightBuffers[i]);
 
@@ -860,26 +875,48 @@ void Vulkan::Init(GLFWwindow* window)
 					VkDescriptorSetLayoutBinding
 					{
 						.binding = 0,
+						.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+						.descriptorCount = 1,
+						.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+						.pImmutableSamplers = nullptr,
+					},
+					VkDescriptorSetLayoutBinding
+					{
+						.binding = 1,
+						.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+						.descriptorCount = 1,
+						.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+						.pImmutableSamplers = nullptr,
+					},
+					VkDescriptorSetLayoutBinding
+					{
+						.binding = 2,
 						.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 						.descriptorCount = MAX_TEXTURE_DESCRIPTORS,
 						.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
 						.pImmutableSamplers = nullptr,
-					}
+					},
 				};
 
-				VkDescriptorBindingFlags flags = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
+				array flags =
+				{
+					VkDescriptorBindingFlags{ VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT },
+					VkDescriptorBindingFlags{ VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT },
+					VkDescriptorBindingFlags{ VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT },
+				};
 
 				const VkDescriptorSetLayoutBindingFlagsCreateInfo dslFlagsCreateInfo
 				{
 					.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,
 					.pNext = nullptr,
 					.bindingCount = static_cast<uint32>(dslBindings.size()),
-					.pBindingFlags = &flags
+					.pBindingFlags = flags.data()
 				};
 
 				VkDescriptorSetLayoutCreateInfo dslCreateInfo{};
 				dslCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 				dslCreateInfo.pNext = &dslFlagsCreateInfo;
+				dslCreateInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
 				dslCreateInfo.bindingCount = static_cast<uint32>(dslBindings.size());
 				dslCreateInfo.pBindings = dslBindings.data();
 
@@ -898,7 +935,7 @@ void Vulkan::Init(GLFWwindow* window)
 				{
 					.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
 					.pNext = nullptr,
-					.flags = 0,
+					.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT,
 					.maxSets = 1,
 					.poolSizeCount = 1,
 					.pPoolSizes = &poolSize
