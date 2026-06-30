@@ -5,6 +5,8 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
+#include "Uniforms.h"
+
 class Vulkan;
 
 using std::set;
@@ -78,11 +80,11 @@ public:
 		{
 			.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
 			.offset = 0,
-			.size = sizeof(Matrix4)
+			.size = sizeof(ProjectionViewUniform)
 		},
 		{
 			.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-			.offset = sizeof(Matrix4),
+			.offset = sizeof(ProjectionViewUniform),
 			.size = sizeof(VkDeviceAddress)
 		}
 	};

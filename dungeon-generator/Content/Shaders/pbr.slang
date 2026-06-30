@@ -20,11 +20,11 @@ struct VSOutput
 };
 
 [shader("vertex")]
-VSOutput main(VSInput input, uniform float4x4 transform)
+VSOutput main(VSInput input, uniform ProjectionViewUniform ubo)
 {
     VSOutput output;
 
-    output.location = mul(ubo.proj, mul(ubo.view, mul(transform, float4(input.location.xyz, 1.0))));
+    output.location = mul(ubo.proj, mul(ubo.view, mul(ubo.model, float4(input.location.xyz, 1.0))));
     output.uv0 = input.uv0;
 
     return output;

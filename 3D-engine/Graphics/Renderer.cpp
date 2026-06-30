@@ -7,7 +7,6 @@
 #include "Rendering/Material.h"
 #include "Vulkan/Uniforms.h"
 #include "Vulkan/Vulkan.h"
-#include "Vulkan/VulkanBuffer.h"
 
 Renderer* Renderer::m_instance = nullptr;
 
@@ -19,6 +18,18 @@ Renderer* Renderer::Instance()
 bool Renderer::IsValid()
 {
 	return m_instance != nullptr && Vulkan::IsLoaded();
+}
+
+ProjectionViewUniform Renderer::ProjectionViewMatrix()
+{
+	Window* window = Application::GetWindow();
+
+	return 
+	{
+		.proj = Matrix4::MakePerspective(Maths::Radians(45.f), window->Aspect(), .1f, 32.f),
+		.view = Matrix4::MakeLookAt({ 2.f, 2.f, 2.f }, { 0.f, 0.f, 0.f }, { 0.f, 0.f, 1.f }),
+		.cameraLocation = { 2.f, 2.f, 2.f }
+	};
 }
 
 void Renderer::Create(Config* config, GLFWwindow* window)
@@ -76,17 +87,6 @@ void Renderer::BeginFrame()
 	}
 
 	m_frameCmdBuf = m_vulkan->BeginFrame();
-
-	// TODO: make camera class
-	Window* window = Application::GetWindow();
-	VulkanBuffer* prjViewBuff = m_vulkan->GetProjectionViewBuffer();
-	ProjectionViewUniform prjView
-	{
-		.proj = Matrix4::MakePerspective(Maths::Radians(45.f), window->Aspect(), .1f, 32.f),
-		.view = Matrix4::MakeLookAt({ 2.f, 2.f, 2.f }, { 0.f, 0.f, 0.f }, { 0.f, 0.f, 1.f }),
-		.cameraLocation = { 2.f, 2.f, 2.f }
-	};
-	prjViewBuff->Fill(&prjView);
 }
 
 void Renderer::EndFrame()

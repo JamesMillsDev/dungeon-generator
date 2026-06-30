@@ -2,6 +2,7 @@
 #include "Material.h"
 
 #include "Texture.h"
+#include "Graphics/Renderer.h"
 #include "Graphics/Vulkan/Uniforms.h"
 #include "Graphics/Vulkan/Vulkan.h"
 #include "Graphics/Vulkan/VulkanBuffer.h"
@@ -38,12 +39,16 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const Matrix4& transform) c
 	vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->Get());
 	Vulkan::Instance()->BindTextureDescriptorSets(cmdBuffer, m_pipeline->GetLayout());
 
+	ProjectionViewUniform ubo = Renderer::ProjectionViewMatrix();
+	ubo.model = transform;
+
 	vkCmdPushConstants(
-		cmdBuffer, m_pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, 
-		sizeof(Matrix4), &transform
+		cmdBuffer, m_pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0,
+		sizeof(ProjectionViewUniform), &ubo
 	);
+
 	vkCmdPushConstants(
-		cmdBuffer, m_pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(Matrix4),
+		cmdBuffer, m_pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(ProjectionViewUniform),
 		sizeof(VkDeviceAddress), &materialBuffer->GetAddress()
 	);
 }

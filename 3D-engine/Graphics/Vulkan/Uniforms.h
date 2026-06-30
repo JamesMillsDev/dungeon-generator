@@ -9,6 +9,7 @@ struct ProjectionViewUniform
 {
 	Matrix4 proj;
 	Matrix4 view;
+	Matrix4 model;
 	Vector3 cameraLocation;
 };
 

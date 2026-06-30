@@ -311,11 +311,6 @@ void Vulkan::EndOneTimeCommand(const VkCommandBuffer& buffer, const VkFence& fen
 	}
 }
 
-VulkanBuffer* Vulkan::GetProjectionViewBuffer() const
-{
-	return m_projViewBuffers[m_frameIndex];
-}
-
 VulkanBuffer* Vulkan::GetLightBuffer() const
 {
 	return m_lightBuffers[m_frameIndex];
@@ -746,9 +741,6 @@ void Vulkan::Init(GLFWwindow* window)
 				for (uint32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 				{
 					vector<VulkanBuffer*> buffers;
-
-					m_projViewBuffers[i] = new VulkanBuffer{ sizeof(ProjectionViewUniform), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this };
-					buffers.emplace_back(m_projViewBuffers[i]);
 
 					m_lightBuffers[i] = new VulkanBuffer{ sizeof(LightUniform), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this };
 					buffers.emplace_back(m_lightBuffers[i]);

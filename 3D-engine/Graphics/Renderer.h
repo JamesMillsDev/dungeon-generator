@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Graphics/Vulkan/Uniforms.h"
+
 #include <string>
 #include <vulkan/vulkan.h>
 
@@ -17,13 +19,14 @@ class Renderer
 {
 	friend Application;
 
-
 private:
 	static Renderer* m_instance;
 
 public:
 	static Renderer* Instance();
 	[[nodiscard]] static bool IsValid();
+
+	static ProjectionViewUniform ProjectionViewMatrix();
 
 private:
 	static void Create(Config* config, GLFWwindow* window);
