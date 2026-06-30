@@ -1174,7 +1174,7 @@ VkCommandBuffer Vulkan::BeginFrame()
 	colorAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL;
 	colorAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	colorAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-	colorAttachmentInfo.clearValue = { .color = { m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a } };  // NOLINT(clang-diagnostic-missing-braces)
+	colorAttachmentInfo.clearValue = { .color = static_cast<VkClearColorValue>(m_clearColor) };  // NOLINT(clang-diagnostic-missing-braces)
 
 	VkRenderingAttachmentInfo depthAttachmentInfo{};
 	depthAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;

@@ -5,6 +5,8 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
+#include <vulkan/vulkan_core.h>
+
 #include "Maths/Alias.h"
 
 using std::ostream;
@@ -239,6 +241,8 @@ public:
 
 	/** @brief Converts this Color to a GLM @c vec4 with components in [0.0, 1.0]. */
 	explicit operator vec4() const;
+
+	explicit operator VkClearColorValue() const;
 
 	/** @brief Returns @c true if both colors have identical RGBA values. */
 	bool operator==(const Color& rhs) const;

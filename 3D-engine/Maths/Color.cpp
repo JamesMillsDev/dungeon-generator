@@ -357,6 +357,11 @@ Color::operator vec4() const
 	return vec4{ r, g, b, a };
 }
 
+Color::operator VkClearColorValue() const
+{
+	return { r / 255.f, g / 255.f, b / 255.f, a / 255.f };
+}
+
 bool Color::operator==(const Color& rhs) const
 {
 	// Early exit if the memory addresses are the same.
