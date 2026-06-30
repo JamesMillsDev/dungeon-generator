@@ -926,10 +926,23 @@ void Vulkan::Init(GLFWwindow* window)
 					"Failed to create Descriptor Set Layout!"
 				);
 
-				constexpr VkDescriptorPoolSize poolSize
+				array poolSizes
 				{
-					.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-					.descriptorCount = MAX_TEXTURE_DESCRIPTORS
+					VkDescriptorPoolSize
+					{
+						.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+						.descriptorCount = MAX_TEXTURE_DESCRIPTORS
+					},
+					VkDescriptorPoolSize
+					{
+						.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+						.descriptorCount = 1
+					},
+					VkDescriptorPoolSize
+					{
+						.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+						.descriptorCount = 1
+					}
 				};
 				const VkDescriptorPoolCreateInfo dpCreateInfo
 				{
@@ -937,8 +950,8 @@ void Vulkan::Init(GLFWwindow* window)
 					.pNext = nullptr,
 					.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT,
 					.maxSets = 1,
-					.poolSizeCount = 1,
-					.pPoolSizes = &poolSize
+					.poolSizeCount = static_cast<uint32>(poolSizes.size()),
+					.pPoolSizes = poolSizes.data()
 				};
 
 				// Create the descriptor pool

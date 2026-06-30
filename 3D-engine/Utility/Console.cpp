@@ -116,7 +116,7 @@ string Console::LevelColor(const ELogLevel level)
 
 		case ELogLevel::Error:
 		{
-			return "\033[37m";
+			return "\033[91m";
 		}
 
 		case ELogLevel::Exception:
