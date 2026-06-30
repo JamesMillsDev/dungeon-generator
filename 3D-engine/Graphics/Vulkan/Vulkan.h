@@ -109,6 +109,7 @@ private:
 	array<VulkanBuffer*, MAX_FRAMES_IN_FLIGHT> m_uboBuffers;
 	array<VulkanBuffer*, MAX_FRAMES_IN_FLIGHT> m_lightBuffers;
 	array<VulkanBuffer*, MAX_FRAMES_IN_FLIGHT> m_materialBuffers;
+	array<VulkanBuffer*, MAX_FRAMES_IN_FLIGHT> m_pushConstantBuffers;
 
 	VkDescriptorPool m_descriptorPool;
 	VkDescriptorSetLayout m_descriptorSetLayout;
@@ -130,6 +131,7 @@ public:
 	[[nodiscard]] VulkanBuffer* GetUboBuffer() const;
 	[[nodiscard]] VulkanBuffer* GetLightBuffer() const;
 	[[nodiscard]] VulkanBuffer* GetMaterialBuffer() const;
+	[[nodiscard]] VulkanBuffer* GetPushConstantBuffer() const;
 
 	void AddTexture(Texture* texture);
 	void RemoveTexture(Texture* texture);

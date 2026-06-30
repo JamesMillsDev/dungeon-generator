@@ -326,6 +326,11 @@ VulkanBuffer* Vulkan::GetMaterialBuffer() const
 	return m_materialBuffers[m_frameIndex];
 }
 
+VulkanBuffer* Vulkan::GetPushConstantBuffer() const
+{
+	return m_pushConstantBuffers[m_frameIndex];
+}
+
 void Vulkan::AddTexture(Texture* texture)
 {
 	m_textures.emplace_back(texture);
@@ -762,6 +767,9 @@ void Vulkan::Init(GLFWwindow* window)
 
 					m_materialBuffers[i] = new VulkanBuffer{ sizeof(MaterialUniform), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this };
 					buffers.emplace_back(m_materialBuffers[i]);
+
+					m_pushConstantBuffers[i] = new VulkanBuffer{ sizeof(PushConstantData), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this };
+					buffers.emplace_back(m_pushConstantBuffers[i]);
 
 					m_shaderDataBuffers[i] = buffers;
 				}

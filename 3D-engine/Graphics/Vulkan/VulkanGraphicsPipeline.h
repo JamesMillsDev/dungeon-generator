@@ -78,14 +78,9 @@ public:
 	vector<VkPushConstantRange> pushConstantRanges =
 	{
 		{
-			.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+			.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
 			.offset = 0,
-			.size = sizeof(VkDeviceAddress)
-		},
-		{
-			.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-			.offset = sizeof(VkDeviceAddress),
-			.size = sizeof(VkDeviceAddress)
+			.size = sizeof(PushConstantData)
 		}
 	};
 

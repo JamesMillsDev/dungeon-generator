@@ -1,6 +1,12 @@
 #include "global.slang"
 #include "graphics.slang"
 
+struct PushConstantData
+{
+    ProjectionViewUniform *ubo;
+    MaterialUniform *material;
+};
+
 struct VSInput
 {
     float3 location;
@@ -20,18 +26,18 @@ struct VSOutput
 };
 
 [shader("vertex")]
-VSOutput main(VSInput input, uniform ProjectionViewUniform *ubo)
+VSOutput main(VSInput input, uniform PushConstantData *pushData)
 {
     VSOutput output;
 
-    output.location = mul(ubo->proj, mul(ubo->view, mul(ubo->model, float4(input.location.xyz, 1.0))));
+    output.location = mul(pushData->ubo->proj, mul(pushData->ubo->view, mul(pushData->ubo->model, float4(input.location.xyz, 1.0))));
     output.uv0 = input.uv0;
 
     return output;
 }
 
 [shader("fragment")]
-float4 main(VSOutput input, uniform MaterialUniform *material) : SV_Target
+float4 main(VSOutput input, uniform PushConstantData *pushData) : SV_Target
 {
-    return material->color;
+    return pushData->material->color;
 }

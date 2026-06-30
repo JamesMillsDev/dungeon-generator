@@ -45,13 +45,16 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const Matrix4& transform) c
 	vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->Get());
 	Vulkan::Instance()->BindTextureDescriptorSets(cmdBuffer, m_pipeline->GetLayout());
 
-	vkCmdPushConstants(
-		cmdBuffer, m_pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0,
-		sizeof(VkDeviceAddress), &uboBuffer->GetAddress()
-	);
+	const VulkanBuffer* pushConstantBuffer = Vulkan::Instance()->GetPushConstantBuffer();
+	PushConstantData pushConstantData
+	{
+		.uboAddress = uboBuffer->GetAddress(),
+		.materialAddress = materialBuffer->GetAddress()
+	};
+	pushConstantBuffer->Fill(&pushConstantData);
 
 	vkCmdPushConstants(
-		cmdBuffer, m_pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0,
-		sizeof(VkDeviceAddress), &materialBuffer->GetAddress()
+		cmdBuffer, m_pipeline->GetLayout(), VK_SHADER_STAGE_ALL_GRAPHICS, 0,
+		sizeof(PushConstantData), &pushConstantBuffer->GetAddress()
 	);
 }
