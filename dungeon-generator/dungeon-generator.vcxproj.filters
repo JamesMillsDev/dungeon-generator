@@ -19,6 +19,12 @@
     <Filter Include="Content Files\Shaders">
       <UniqueIdentifier>{6e8d21ca-6fa7-4871-9cda-9aa050d07bc7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Content Files\Textures">
+      <UniqueIdentifier>{a7317857-dbfc-45b6-9068-d82558de7181}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Content Files\Meshes">
+      <UniqueIdentifier>{278c3e89-06d8-47c4-8572-1e543c30c9a9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -40,6 +46,144 @@
     </None>
     <None Include="Content\Shaders\graphics.slang">
       <Filter>Content Files\Shaders</Filter>
+    </None>
+    <None Include="Content\Textures\colormap.pvr">
+      <Filter>Content Files\Textures</Filter>
+    </None>
+    <None Include="Content\Textures\T_Windmill_BC.pvr">
+      <Filter>Content Files\Textures</Filter>
+    </None>
+    <None Include="Content\Textures\T_Windmill_M.pvr">
+      <Filter>Content Files\Textures</Filter>
+    </None>
+    <None Include="Content\Textures\T_Windmill_N.pvr">
+      <Filter>Content Files\Textures</Filter>
+    </None>
+    <None Include="Content\Textures\T_Windmill_O.pvr">
+      <Filter>Content Files\Textures</Filter>
+    </None>
+    <None Include="Content\Textures\T_Windmill_R.pvr">
+      <Filter>Content Files\Textures</Filter>
+    </None>
+    <None Include="Content\Meshes\corridor.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\corridor-corner.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\corridor-end.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\corridor-intersection.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\corridor-junction.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\corridor-transition.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\corridor-wide.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\corridor-wide-corner.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\corridor-wide-end.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\corridor-wide-intersection.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\corridor-wide-junction.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\gate.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\gate-door.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\gate-door-window.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\gate-metal-bars.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\room-corner.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\room-large.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\room-large-variation.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\room-small.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\room-small-variation.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\room-wide.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\room-wide-variation.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\SM_Windmill.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\stairs.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\stairs-wide.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\template-corner.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\template-detail.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\template-floor.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\template-floor-big.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\template-floor-detail.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\template-floor-detail-a.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\template-floor-layer.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\template-floor-layer-hole.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\template-floor-layer-raised.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\template-wall.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\template-wall-corner.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\template-wall-detail-a.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\template-wall-half.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\template-wall-stairs.fbx">
+      <Filter>Content Files\Meshes</Filter>
+    </None>
+    <None Include="Content\Meshes\template-wall-top.fbx">
+      <Filter>Content Files\Meshes</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

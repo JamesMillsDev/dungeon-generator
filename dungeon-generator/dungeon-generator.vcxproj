@@ -193,9 +193,55 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Config\Engine.json" />
+    <None Include="Content\Meshes\corridor-corner.fbx" />
+    <None Include="Content\Meshes\corridor-end.fbx" />
+    <None Include="Content\Meshes\corridor-intersection.fbx" />
+    <None Include="Content\Meshes\corridor-junction.fbx" />
+    <None Include="Content\Meshes\corridor-transition.fbx" />
+    <None Include="Content\Meshes\corridor-wide-corner.fbx" />
+    <None Include="Content\Meshes\corridor-wide-end.fbx" />
+    <None Include="Content\Meshes\corridor-wide-intersection.fbx" />
+    <None Include="Content\Meshes\corridor-wide-junction.fbx" />
+    <None Include="Content\Meshes\corridor-wide.fbx" />
+    <None Include="Content\Meshes\corridor.fbx" />
+    <None Include="Content\Meshes\gate-door-window.fbx" />
+    <None Include="Content\Meshes\gate-door.fbx" />
+    <None Include="Content\Meshes\gate-metal-bars.fbx" />
+    <None Include="Content\Meshes\gate.fbx" />
+    <None Include="Content\Meshes\room-corner.fbx" />
+    <None Include="Content\Meshes\room-large-variation.fbx" />
+    <None Include="Content\Meshes\room-large.fbx" />
+    <None Include="Content\Meshes\room-small-variation.fbx" />
+    <None Include="Content\Meshes\room-small.fbx" />
+    <None Include="Content\Meshes\room-wide-variation.fbx" />
+    <None Include="Content\Meshes\room-wide.fbx" />
+    <None Include="Content\Meshes\SM_Windmill.fbx" />
+    <None Include="Content\Meshes\stairs-wide.fbx" />
+    <None Include="Content\Meshes\stairs.fbx" />
+    <None Include="Content\Meshes\template-corner.fbx" />
+    <None Include="Content\Meshes\template-detail.fbx" />
+    <None Include="Content\Meshes\template-floor-big.fbx" />
+    <None Include="Content\Meshes\template-floor-detail-a.fbx" />
+    <None Include="Content\Meshes\template-floor-detail.fbx" />
+    <None Include="Content\Meshes\template-floor-layer-hole.fbx" />
+    <None Include="Content\Meshes\template-floor-layer-raised.fbx" />
+    <None Include="Content\Meshes\template-floor-layer.fbx" />
+    <None Include="Content\Meshes\template-floor.fbx" />
+    <None Include="Content\Meshes\template-wall-corner.fbx" />
+    <None Include="Content\Meshes\template-wall-detail-a.fbx" />
+    <None Include="Content\Meshes\template-wall-half.fbx" />
+    <None Include="Content\Meshes\template-wall-stairs.fbx" />
+    <None Include="Content\Meshes\template-wall-top.fbx" />
+    <None Include="Content\Meshes\template-wall.fbx" />
     <None Include="Content\Shaders\global.slang" />
     <None Include="Content\Shaders\graphics.slang" />
     <None Include="Content\Shaders\pbr.slang" />
+    <None Include="Content\Textures\colormap.pvr" />
+    <None Include="Content\Textures\T_Windmill_BC.pvr" />
+    <None Include="Content\Textures\T_Windmill_M.pvr" />
+    <None Include="Content\Textures\T_Windmill_N.pvr" />
+    <None Include="Content\Textures\T_Windmill_O.pvr" />
+    <None Include="Content\Textures\T_Windmill_R.pvr" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DungeonGameInstance.h" />
