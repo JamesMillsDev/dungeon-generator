@@ -55,21 +55,38 @@ class Mesh
 	friend class Vulkan;
 
 public:
+	struct SubMesh
+	{
+		friend Mesh;
+
+	public:
+		vector<Vertex> vertices;
+		vector<uint16> indices;
+
+	private:
+		VkDeviceSize m_vertexBufferSize;
+		VkDeviceSize m_indexBufferSize;
+
+		VulkanBuffer* m_vertexBuffer;
+
+	public:
+		SubMesh(const vector<Vertex>& vertices, const vector<uint16>& indices);
+		~SubMesh();
+
+	private:
+		void CreateBuffer();
+
+	};
+
+public:
 	static Mesh* MakeQuad();
 	static Mesh* MakeFromAssimp(const string& file);
 
 public:
-	vector<Vertex> vertices;
-	vector<uint16> indices;
-
-private:
-	VkDeviceSize m_vertexBufferSize;
-	VkDeviceSize m_indexBufferSize;
-
-	VulkanBuffer* m_vertexBuffer;
+	vector<SubMesh*> subMeshes;
 
 public:
-	Mesh(const vector<Vertex>& vertices, const vector<uint16>& indices);
+	explicit Mesh(const vector<SubMesh*>& subMeshes);
 	~Mesh();
 
 private:

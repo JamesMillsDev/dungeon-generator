@@ -52,46 +52,79 @@ array<VkVertexInputAttributeDescription, VertexAttributeCount> Vertex::GetAttrib
 	return attributeDescriptions;
 }
 
+Mesh::SubMesh::SubMesh(const vector<Vertex>& vertices, const vector<uint16>& indices)
+	:vertices{ vertices }, indices{ indices }, m_vertexBufferSize{ sizeof(Vertex) * vertices.size() },
+	m_indexBufferSize{ sizeof(uint16) * indices.size() }, m_vertexBuffer{ VK_NULL_HANDLE }
+{
+
+}
+
+Mesh::SubMesh::~SubMesh()
+{
+	delete m_vertexBuffer;
+	m_vertexBuffer = nullptr;
+}
+
+void Mesh::SubMesh::CreateBuffer()
+{
+	m_vertexBuffer = new VulkanBuffer
+	{
+		m_vertexBufferSize + m_indexBufferSize,
+		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+		Vulkan::Instance()
+	};
+
+	// Copy the vertex and index information into the buffer
+	m_vertexBuffer->Fill(vertices.data(), m_vertexBufferSize);
+	m_vertexBuffer->Fill(indices.data(), m_indexBufferSize, m_vertexBufferSize);
+}
+
 Mesh* Mesh::MakeQuad()
 {
 	return new Mesh
 	{
 		{
+			new SubMesh
 			{
-				.location = { -.5f, -.5f, 0.f },
-				.normal = { 0.f, 0.f, 0.f, 0.f },
-				.tangent = { 0.f, 0.f, 0.f, 0.f },
-				.biTangent = { 0.f, 0.f, 0.f, 0.f },
-				.uv = { 1.f, 0.f },
-				.color = { 1.f, 0.f, 0.f, 1.f }
-			},
-			{
-				.location = { .5f, -.5f, 0.f },
-				.normal = { 0.f, 0.f, 0.f, 0.f },
-				.tangent = { 0.f, 0.f, 0.f, 0.f },
-				.biTangent = { 0.f, 0.f, 0.f, 0.f },
-				.uv = { 0.f, 0.f },
-				.color = { 0.f, 1.f, 0.0f, 1.f }
-			},
-			{
-				.location = { .5f, .5f, 0.f },
-				.normal = { 0.f, 0.f, 0.f, 0.f },
-				.tangent = { 0.f, 0.f, 0.f, 0.f },
-				.biTangent = { 0.f, 0.f, 0.f, 0.f },
-				.uv = { 0.f, 1.f },
-				.color = { 0.f, 0.f, 1.f, 1.f }
-			},
-			{
-				.location = { -.5f, .5f, 0.f },
-				.normal = { 0.f, 0.f, 0.f, 0.f },
-				.tangent = { 0.f, 0.f, 0.f, 0.f },
-				.biTangent = { 0.f, 0.f, 0.f, 0.f },
-				.uv = { 1.f, 1.f },
-				.color = { 1.f, 1.f, 1.f, 1.f }
+				{
+					{
+						.location = { -.5f, -.5f, 0.f },
+						.normal = { 0.f, 0.f, 0.f, 0.f },
+						.tangent = { 0.f, 0.f, 0.f, 0.f },
+						.biTangent = { 0.f, 0.f, 0.f, 0.f },
+						.uv = { 1.f, 0.f },
+						.color = { 1.f, 0.f, 0.f, 1.f }
+					},
+					{
+						.location = { .5f, -.5f, 0.f },
+						.normal = { 0.f, 0.f, 0.f, 0.f },
+						.tangent = { 0.f, 0.f, 0.f, 0.f },
+						.biTangent = { 0.f, 0.f, 0.f, 0.f },
+						.uv = { 0.f, 0.f },
+						.color = { 0.f, 1.f, 0.0f, 1.f }
+					},
+					{
+						.location = { .5f, .5f, 0.f },
+						.normal = { 0.f, 0.f, 0.f, 0.f },
+						.tangent = { 0.f, 0.f, 0.f, 0.f },
+						.biTangent = { 0.f, 0.f, 0.f, 0.f },
+						.uv = { 0.f, 1.f },
+						.color = { 0.f, 0.f, 1.f, 1.f }
+					},
+					{
+						.location = { -.5f, .5f, 0.f },
+						.normal = { 0.f, 0.f, 0.f, 0.f },
+						.tangent = { 0.f, 0.f, 0.f, 0.f },
+						.biTangent = { 0.f, 0.f, 0.f, 0.f },
+						.uv = { 1.f, 1.f },
+						.color = { 1.f, 1.f, 1.f, 1.f }
+					}
+				},
+				vector<uint16>
+				{
+					0, 1, 2, 2, 3, 0
+				}
 			}
-		},
-		{
-			0, 1, 2, 2, 3, 0
 		}
 	};
 }
@@ -106,13 +139,14 @@ Mesh* Mesh::MakeFromAssimp(const string& file)
 		aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_GlobalScale
 	);
 
-	vector<Vertex> vertices;
-	vector<uint16> indices;
+	vector<SubMesh*> subMeshes(scene->mNumMeshes);
 
 	for (uint32 i = 0; i < scene->mNumMeshes; ++i)
 	{
 		const aiMesh* mesh = scene->mMeshes[i];
-		vertices.resize(mesh->mNumVertices);
+
+		vector<Vertex> vertices;
+		vector<uint16> indices;
 
 		for (uint32 v = 0; v < mesh->mNumVertices; ++v)
 		{
@@ -155,7 +189,7 @@ Mesh* Mesh::MakeFromAssimp(const string& file)
 				vert.color = Color{ color0.r, color0.g, color0.b, color0.a };
 			}
 
-			vertices[v] = vert;
+			vertices.emplace_back(vert);
 		}
 
 		if (mesh->HasFaces())
@@ -171,14 +205,15 @@ Mesh* Mesh::MakeFromAssimp(const string& file)
 				}
 			}
 		}
+
+		subMeshes[i] = new SubMesh{ vertices, indices };
 	}
 
-	return new Mesh{ vertices, indices };
+	return new Mesh{ subMeshes };
 }
 
-Mesh::Mesh(const vector<Vertex>& vertices, const vector<uint16>& indices) :
-	vertices{ vertices }, indices{ indices }, m_vertexBufferSize{ sizeof(Vertex) * vertices.size() },
-	m_indexBufferSize{ sizeof(uint16) * indices.size() }, m_vertexBuffer{ VK_NULL_HANDLE }
+Mesh::Mesh(const vector<SubMesh*>& subMeshes)
+	: subMeshes{ subMeshes }
 {
 	CreateBuffers();
 }
@@ -190,32 +225,33 @@ Mesh::~Mesh()
 
 void Mesh::CreateBuffers()
 {
-	m_vertexBuffer = new VulkanBuffer
-	{ 
-		m_vertexBufferSize + m_indexBufferSize, 
-		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-		Vulkan::Instance()
-	};
-
-	// Copy the vertex and index information into the buffer
-	m_vertexBuffer->Fill(vertices.data(), m_vertexBufferSize);
-	m_vertexBuffer->Fill(indices.data(), m_indexBufferSize, m_vertexBufferSize);
+	for (SubMesh*& subMesh : subMeshes)
+	{
+		subMesh->CreateBuffer();
+	}
 }
 
 void Mesh::DestroyBuffers()
 {
-	delete m_vertexBuffer;
-	m_vertexBuffer = nullptr;
+	for (SubMesh*& subMesh : subMeshes)
+	{
+		delete subMesh;
+	}
+
+	subMeshes.clear();
 }
 
 void Mesh::Render(const VkCommandBuffer buffer, const uint32 instances, const uint32 firstInstance) const
 {
 	VkDeviceSize offsets[] = { 0 };
 
-	vkCmdBindVertexBuffers(buffer, 0, 1, &m_vertexBuffer->Get(), offsets);
-	vkCmdBindIndexBuffer(buffer, m_vertexBuffer->Get(), m_vertexBufferSize, VK_INDEX_TYPE_UINT16);
+	for (SubMesh* subMesh : subMeshes)
+	{
+		vkCmdBindVertexBuffers(buffer, 0, 1, &subMesh->m_vertexBuffer->Get(), offsets);
+		vkCmdBindIndexBuffer(buffer, subMesh->m_vertexBuffer->Get(), subMesh->m_vertexBufferSize, VK_INDEX_TYPE_UINT16);
 
-	vkCmdDrawIndexed(
-		buffer, static_cast<uint32>(indices.size()), instances, 0, 0, firstInstance
-	);
+		vkCmdDrawIndexed(
+			buffer, static_cast<uint32>(subMesh->indices.size()), instances, 0, 0, firstInstance
+		);
+	}
 }
