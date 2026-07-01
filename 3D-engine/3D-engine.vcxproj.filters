@@ -34,6 +34,7 @@
     <ClInclude Include="Graphics\Rendering\Shader.h" />
     <ClInclude Include="Graphics\Vulkan\VulkanGraphicsPipeline.h" />
     <ClInclude Include="Resources.h" />
+    <ClInclude Include="Gameplay\Actors\Components\Rendering\LightComponent.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
@@ -65,5 +66,6 @@
     <ClCompile Include="Graphics\Rendering\Shader.cpp" />
     <ClCompile Include="Graphics\Vulkan\VulkanGraphicsPipeline.cpp" />
     <ClCompile Include="Resources.cpp" />
+    <ClCompile Include="Gameplay\Actors\Components\Rendering\LightComponent.cpp" />
   </ItemGroup>
 </Project>

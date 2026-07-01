@@ -5,8 +5,6 @@
 #include "Maths/Matrix4.h"
 #include "Maths/Vector3.h"
 
-#include <vulkan/vulkan.h>
-
 struct ProjectionViewUniform
 {
 	Matrix4 proj;
@@ -30,14 +28,15 @@ struct MaterialUniform
 
 struct LightUniform
 {
-	uint32 type;
 	Vector3 location;
 	Vector3 direction;
 	Color color;
+	int32 type;
 };
 
 struct PushConstantData
 {
 	VkDeviceAddress uboAddress;
 	VkDeviceAddress materialAddress;
+	VkDeviceAddress lightingAddress;
 };

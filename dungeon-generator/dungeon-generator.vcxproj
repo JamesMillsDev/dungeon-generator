@@ -235,6 +235,7 @@
     <None Include="Content\Meshes\template-wall.fbx" />
     <None Include="Content\Shaders\global.slang" />
     <None Include="Content\Shaders\graphics.slang" />
+    <None Include="Content\Shaders\lighting.slang" />
     <None Include="Content\Shaders\pbr.slang" />
     <None Include="Content\Textures\colormap.pvr" />
     <None Include="Content\Textures\T_Windmill_BC.pvr" />

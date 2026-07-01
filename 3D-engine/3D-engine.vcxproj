@@ -205,6 +205,7 @@
   <ItemGroup>
     <ClInclude Include="Gameplay\Actors\Actor.h" />
     <ClInclude Include="Gameplay\Actors\Components\IComponent.h" />
+    <ClInclude Include="Gameplay\Actors\Components\Rendering\LightComponent.h" />
     <ClInclude Include="Gameplay\Actors\Components\Rendering\MeshComponent.h" />
     <ClInclude Include="Gameplay\Actors\Transform.h" />
     <ClInclude Include="Gameplay\Actors\World.h" />
@@ -239,6 +240,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Gameplay\Actors\Actor.cpp" />
+    <ClCompile Include="Gameplay\Actors\Components\Rendering\LightComponent.cpp" />
     <ClCompile Include="Gameplay\Actors\Components\Rendering\MeshComponent.cpp" />
     <ClCompile Include="Gameplay\Actors\Transform.cpp" />
     <ClCompile Include="Gameplay\Actors\World.cpp" />

@@ -185,6 +185,9 @@
     <None Include="Content\Meshes\template-wall-top.fbx">
       <Filter>Content Files\Meshes</Filter>
     </None>
+    <None Include="Content\Shaders\lighting.slang">
+      <Filter>Content Files\Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DungeonGameInstance.h">

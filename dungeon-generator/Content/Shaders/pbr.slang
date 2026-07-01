@@ -1,10 +1,12 @@
 #include "global.slang"
 #include "graphics.slang"
+#include "lighting.slang"
 
 struct PushConstantData
 {
     ProjectionViewUniform *ubo;
     MaterialUniform *material;
+    LightUniform *lighting;
 };
 
 struct VSInput
@@ -21,12 +23,13 @@ struct VSInput
 struct VSOutput
 {
     float4 location : SV_Position;
-    float4 normal;
+    float3 normal;
     float4 tangent;
     float4 biTangent;
 
     float2 uv0;
     float4 color;
+    float3 objectSpaceLocation;
 };
 
 [shader("vertex")]
@@ -34,12 +37,14 @@ VSOutput main(VSInput input, uniform PushConstantData *pushData)
 {
     VSOutput output;
 
-    output.location = mul(pushData->ubo->proj, mul(pushData->ubo->view, mul(pushData->ubo->model, float4(input.location.xyz, 1.0))));
+    output.location = TransformVertex(pushData->ubo, input.location);
     output.uv0 = input.uv0;
-    output.normal = input.normal;
-    output.tangent = input.tangent;
-    output.biTangent = input.biTangent;
+    output.normal = normalize(input.normal).xyz;
+    output.tangent = normalize(input.tangent);
+    output.biTangent = normalize(input.biTangent);
     output.color = input.color;
+
+    output.objectSpaceLocation = mul(pushData->ubo->model, float4(input.location, 1.0)).xyz;
 
     return output;
 }
@@ -47,7 +52,9 @@ VSOutput main(VSInput input, uniform PushConstantData *pushData)
 [shader("fragment")]
 float4 main(VSOutput input, uniform PushConstantData *pushData) : SV_Target
 {
+    float diff = max(dot(input.normal, LightDirection(pushData->lighting, input.objectSpaceLocation)), 0);
+
     float4 color = Sample(pushData->material->baseColorMap, input.uv0, float4(1.0, 1.0, 1.0, 1.0)) * pushData->material->color;
 
-    return color;
+    return diff * color;
 }

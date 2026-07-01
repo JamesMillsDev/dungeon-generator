@@ -27,8 +27,8 @@ Material::~Material()
 
 void Material::Bind(const VkCommandBuffer cmdBuffer, const Matrix4& transform) const
 {
+	// Update the material uniform with this material's data
 	const VulkanBuffer* materialBuffer = Vulkan::Instance()->GetMaterialBuffer();
-
 	const MaterialUniform materialUniform
 	{
 		.color = color,
@@ -42,21 +42,36 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const Matrix4& transform) c
 	};
 	materialBuffer->Fill(&materialUniform);
 
+	// Update the transform buffer with our object's transform
 	const VulkanBuffer* uboBuffer = Vulkan::Instance()->GetUboBuffer();
 	ProjectionViewUniform ubo = Renderer::ProjectionViewMatrix();
 	ubo.model = transform;
 	uboBuffer->Fill(&ubo);
 
-	vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->Get());
-	Vulkan::Instance()->BindTextureDescriptorSets(cmdBuffer, m_pipeline->GetLayout());
+	// TODO: Use more dynamic lighting. This is a test
+	const VulkanBuffer* lightBuffer = Vulkan::Instance()->GetLightBuffer();
+	LightUniform lighting
+	{
+		.location = { 0.f, 0.f, 0.f },
+		.direction = { -.32f, -.77f, .56f }, // this is the unity default light direction
+		.color = Color::WHITE,
+		.type = 0,
+	};
+	lightBuffer->Fill(&lighting);
 
+	// Send off the push constant pointers
 	const VulkanBuffer* pushConstantBuffer = Vulkan::Instance()->GetPushConstantBuffer();
 	PushConstantData pushConstantData
 	{
 		.uboAddress = uboBuffer->GetAddress(),
-		.materialAddress = materialBuffer->GetAddress()
+		.materialAddress = materialBuffer->GetAddress(),
+		.lightingAddress = lightBuffer->GetAddress()
 	};
 	pushConstantBuffer->Fill(&pushConstantData);
+
+	// Bind the pipeline and push the push constants to the command buffer
+	vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->Get());
+	Vulkan::Instance()->BindTextureDescriptorSets(cmdBuffer, m_pipeline->GetLayout());
 
 	vkCmdPushConstants(
 		cmdBuffer, m_pipeline->GetLayout(), VK_SHADER_STAGE_ALL_GRAPHICS, 0,
