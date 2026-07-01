@@ -895,22 +895,6 @@ void Vulkan::Init(GLFWwindow* window)
 					VkDescriptorSetLayoutBinding
 					{
 						.binding = m_maxDescriptorBinding++,
-						.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-						.descriptorCount = 1,
-						.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-						.pImmutableSamplers = nullptr,
-					},
-					VkDescriptorSetLayoutBinding
-					{
-						.binding = m_maxDescriptorBinding++,
-						.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-						.descriptorCount = 1,
-						.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-						.pImmutableSamplers = nullptr,
-					},
-					VkDescriptorSetLayoutBinding
-					{
-						.binding = m_maxDescriptorBinding++,
 						.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 						.descriptorCount = MAX_TEXTURE_DESCRIPTORS,
 						.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
@@ -920,8 +904,6 @@ void Vulkan::Init(GLFWwindow* window)
 
 				array flags =
 				{
-					VkDescriptorBindingFlags{ VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT },
-					VkDescriptorBindingFlags{ VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT },
 					VkDescriptorBindingFlags{ VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT },
 				};
 
@@ -954,16 +936,6 @@ void Vulkan::Init(GLFWwindow* window)
 					{
 						.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 						.descriptorCount = MAX_TEXTURE_DESCRIPTORS
-					},
-					VkDescriptorPoolSize
-					{
-						.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-						.descriptorCount = 1
-					},
-					VkDescriptorPoolSize
-					{
-						.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-						.descriptorCount = 1
 					}
 				};
 				const VkDescriptorPoolCreateInfo dpCreateInfo

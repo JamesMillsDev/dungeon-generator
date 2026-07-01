@@ -11,7 +11,7 @@ struct MaterialUniform
     int32_t emissiveMap;
 };
 
-[[vk::binding(2, 0)]]Sampler2D textures[];
+Sampler2D textures[];
 
 float4 Sample(int32_t index, float2 uv, float4 defaultValue = float4(0, 0, 0, 0))
 {
