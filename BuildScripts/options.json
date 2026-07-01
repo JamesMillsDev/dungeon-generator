@@ -12,7 +12,7 @@
     "texture_transcoder":
     {
         "name": "ktx",
-        "flags": [ "--format", "R8G8B8A8_SRGB", "--encode", "basis-lz" ]
+        "flags": [ "--format", "R8G8B8A8_SRGB", "--encode", "basis-lz", "--assign-tf", "srgb" ]
     },
     "directories":
     {

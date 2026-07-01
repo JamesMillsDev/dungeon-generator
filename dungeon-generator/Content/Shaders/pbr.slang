@@ -47,5 +47,14 @@ VSOutput main(VSInput input, uniform PushConstantData *pushData)
 [shader("fragment")]
 float4 main(VSOutput input, uniform PushConstantData *pushData) : SV_Target
 {
-    return pushData->material->color;
+    float4 color = pushData->material->color;
+
+    if (pushData->material->baseColorMap != -1)
+    {
+        float3 baseColorSample = textures[pushData->material->baseColorMap].Sample(input.uv0).rgb;
+
+        color = float4(baseColorSample, 1.0) * color;
+    }
+
+    return color;
 }

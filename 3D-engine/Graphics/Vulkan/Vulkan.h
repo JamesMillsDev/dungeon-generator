@@ -45,7 +45,6 @@ const vector VALIDATION_LAYERS =
 
 class Vulkan  // NOLINT(cppcoreguidelines-special-member-functions)
 {
-	friend class Application;
 	friend Renderer;
 	friend void CheckSwapChain(VkResult result, const string& errorMsg);
 
@@ -120,7 +119,7 @@ private:
 	uint32 m_frameIndex;
 	uint32 m_imageIndex;
 	bool m_recreateSwapChain;
-	bool m_isShuttingDown;
+	bool m_updateTextureDescriptors;
 	uint32 m_maxDescriptorBinding;
 
 private:
@@ -139,7 +138,7 @@ public:
 	void AddTexture(Texture* texture);
 	void RemoveTexture(Texture* texture);
 
-	void WriteTextureDescriptorSets() const;
+	void WriteTextureDescriptorSets();
 	void BindTextureDescriptorSets(VkCommandBuffer cmdBuf, VkPipelineLayout layout) const;
 	VkFormat GetDepthFormat() const;
 

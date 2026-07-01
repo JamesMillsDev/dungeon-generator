@@ -3,7 +3,6 @@
 #include <set>
 #include <string>
 #include <vector>
-#include <vulkan/vulkan.h>
 
 #include "Uniforms.h"
 

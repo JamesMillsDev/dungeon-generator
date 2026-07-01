@@ -11,4 +11,4 @@ struct MaterialUniform
     int32_t emissiveMap;
 };
 
-Sampler2D textures[];
+[[vk::binding(2, 0)]]Sampler2D textures[];

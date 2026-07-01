@@ -242,7 +242,7 @@ Vulkan::Vulkan(Config* config, GLFWwindow* window)
 
 Vulkan::~Vulkan()
 {
-	m_isShuttingDown = true;
+	m_updateTextureDescriptors = true;
 
 	delete m_resourceStack;
 	delete m_appVersion;
@@ -338,7 +338,8 @@ VulkanBuffer* Vulkan::GetPushConstantBuffer() const
 void Vulkan::AddTexture(Texture* texture)
 {
 	m_textures.emplace_back(texture);
-	WriteTextureDescriptorSets();
+
+	m_updateTextureDescriptors = true;
 }
 
 void Vulkan::RemoveTexture(Texture* texture)
@@ -349,13 +350,13 @@ void Vulkan::RemoveTexture(Texture* texture)
 			return texture == t;
 		}
 	);
-	WriteTextureDescriptorSets();
+
+	m_updateTextureDescriptors = true;
 }
 
-// TODO: Do this only at the end of each frame if necessary
-void Vulkan::WriteTextureDescriptorSets() const
+void Vulkan::WriteTextureDescriptorSets()
 {
-	if (m_isShuttingDown)
+	if (!m_updateTextureDescriptors)
 	{
 		return;
 	}
@@ -380,6 +381,8 @@ void Vulkan::WriteTextureDescriptorSets() const
 		.pTexelBufferView = nullptr
 	};
 	vkUpdateDescriptorSets(m_device, 1, &writeDescSet, 0, nullptr);
+
+	m_updateTextureDescriptors = false;
 }
 
 void Vulkan::BindTextureDescriptorSets(const VkCommandBuffer cmdBuf, const VkPipelineLayout layout) const
@@ -930,12 +933,14 @@ void Vulkan::Init(GLFWwindow* window)
 					.pBindingFlags = flags.data()
 				};
 
-				VkDescriptorSetLayoutCreateInfo dslCreateInfo{};
-				dslCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-				dslCreateInfo.pNext = &dslFlagsCreateInfo;
-				dslCreateInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
-				dslCreateInfo.bindingCount = static_cast<uint32>(dslBindings.size());
-				dslCreateInfo.pBindings = dslBindings.data();
+				const VkDescriptorSetLayoutCreateInfo dslCreateInfo
+				{
+					.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+					.pNext = &dslFlagsCreateInfo,
+					.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT,
+					.bindingCount = static_cast<uint32>(dslBindings.size()),
+					.pBindings = dslBindings.data()
+				};
 
 				// Create the descriptor set layout
 				Try(
@@ -1139,6 +1144,8 @@ void Vulkan::RecreateSwapChain()
 
 VkCommandBuffer Vulkan::BeginFrame()
 {
+	WriteTextureDescriptorSets();
+
 	// Wait on and reset fences
 	Try(
 		vkWaitForFences(m_device, 1, &m_fences[m_frameIndex], true, UINT64_MAX),
