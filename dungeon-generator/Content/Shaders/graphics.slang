@@ -12,3 +12,13 @@ struct MaterialUniform
 };
 
 [[vk::binding(2, 0)]]Sampler2D textures[];
+
+float4 Sample(int32_t index, float2 uv, float4 defaultValue = float4(0, 0, 0, 0))
+{
+    if (index == -1)
+    {
+        return defaultValue;
+    }
+
+    return textures[index].Sample(uv);
+}

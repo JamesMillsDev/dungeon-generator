@@ -19,6 +19,7 @@ with open(str(script_dir) + '/options.json') as json_data:
     directories = data["directories"]
 
     Resources.ignore_file_extensions.extend(shader_ext)
+    Resources.ignore_file_extensions.extend(texture_ext)
     Textures.ignore_file_extensions.extend(texture_ext)
 
     Textures.transcode(project, ktx_sdk, texture_ext, texture_transcoder, directories, script_dir)

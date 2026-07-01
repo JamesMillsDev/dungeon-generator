@@ -136,7 +136,7 @@ Mesh* Mesh::MakeFromAssimp(const string& file)
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFileFromMemory(
 		meshData.data, meshData.length,
-		aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_GlobalScale
+		aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_GlobalScale | aiProcess_FlipUVs
 	);
 
 	vector<SubMesh*> subMeshes(scene->mNumMeshes);
@@ -194,14 +194,18 @@ Mesh* Mesh::MakeFromAssimp(const string& file)
 
 		if (mesh->HasFaces())
 		{
-			indices.reserve((size_t)(mesh->mNumFaces * 3));
 			for (uint32 f = 0; f < mesh->mNumFaces; ++f)
 			{
-				aiFace face = mesh->mFaces[f];
+				indices.emplace_back(mesh->mFaces[f].mIndices[1]);
+				indices.emplace_back(mesh->mFaces[f].mIndices[2]);
+				indices.emplace_back(mesh->mFaces[f].mIndices[0]);
 
-				for (uint32 index = 0; index < face.mNumIndices; ++index)
+				// generate a second triangle for quads
+				if (mesh->mFaces[f].mNumIndices == 4)
 				{
-					indices.emplace_back(face.mIndices[index]);
+					indices.emplace_back(mesh->mFaces[f].mIndices[2]);
+					indices.emplace_back(mesh->mFaces[f].mIndices[3]);
+					indices.emplace_back(mesh->mFaces[f].mIndices[0]);
 				}
 			}
 		}

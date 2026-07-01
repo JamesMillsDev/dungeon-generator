@@ -4,6 +4,8 @@
 #include "Maths/Matrix3.h"
 #include "Maths/Vector3.h"
 
+#include <glm/gtc/matrix_transform.hpp>
+
 Matrix4 Matrix4::MakeTranslate(const Vector3& trans)
 {
 	return Matrix4
@@ -96,10 +98,10 @@ Matrix4 Matrix4::MakePerspective(const float fovY, const float aspect, const flo
 
 	return Matrix4
 	{
-		1.f / (aspect * tanFov), 0.f, 0.f, 0.f,
-		0.f, 1.f / tanFov, 0.f, 0.f,
-		0.f, 0.f, -(far + near) / (far - near), -1.f,
-		0.f, 0.f, -(2.f * far * near) / (far - near), 0.f
+		{ 1.f / (aspect * tanFov), 0.f, 0.f, 0.f },
+		{ 0.f, 1.f / tanFov, 0.f, 0.f },
+		{ 0.f, 0.f, -(far + near) / (far - near), -1.f },
+		{ 0.f, 0.f, -(2.f * far * near) / (far - near), 0.f }
 	};
 }
 
@@ -122,10 +124,10 @@ Matrix4 Matrix4::MakeLookAt(const Vector3& eye, const Vector3& center, const Vec
 
 	return Matrix4
 	{
-		s.x, u.x, -f.x, 0.f,
-		s.y, u.y, -f.y, 0.f,
-		s.z, u.z, -f.z, 0.f,
-		-Vector3::Dot(s, eye), -Vector3::Dot(u, eye), Vector3::Dot(f, eye), 1.f
+		{ s.x, s.y, s.z, 0.f },
+		{ u.x, u.y, u.z, 0.f },
+		{ -f.x, -f.y, -f.z, 0.f },
+		{ -Vector3::Dot(s, eye), -Vector3::Dot(u, eye), Vector3::Dot(f, eye), 1.f }
 	};
 }
 
@@ -152,8 +154,8 @@ Matrix4::Matrix4(const float _11, const float _12, const float _13, const float 
 	const float _21, const float _22, const float _23, const float _24,
 	const float _31, const float _32, const float _33, const float _34,
 	const float _41, const float _42, const float _43, const float _44)
-	: column1{ _11, _12, _13, _14 }, column2{ _21, _22, _23, _24 },
-	column3{ _31, _32, _33, _34 }, column4{ _41, _42, _43, _44 }
+	: column1{ _11, _21, _31, _41 }, column2{ _12, _22, _32, _42 },
+	column3{ _13, _23, _33, _43 }, column4{ _14, _24, _34, _44 }
 {}
 
 Matrix4::Matrix4(const mat4& mat)
@@ -358,25 +360,30 @@ Matrix4 Matrix4::operator*(const Matrix4& rhs) const
 {
 	return Matrix4
 	{
-		column1.x * rhs.column1.x + column1.y * rhs.column2.x + column1.z * rhs.column3.x + column1.w * rhs.column4.x,
-		column2.x * rhs.column1.x + column2.y * rhs.column2.x + column2.z * rhs.column3.x + column2.w * rhs.column4.x,
-		column3.x * rhs.column1.x + column3.y * rhs.column2.x + column3.z * rhs.column3.x + column3.w * rhs.column4.x,
-		column4.x * rhs.column1.x + column4.y * rhs.column2.x + column4.z * rhs.column3.x + column4.w * rhs.column4.x,
-
-		column1.x * rhs.column1.y + column1.y * rhs.column2.y + column1.z * rhs.column3.y + column1.w * rhs.column4.y,
-		column2.x * rhs.column1.y + column2.y * rhs.column2.y + column2.z * rhs.column3.y + column2.w * rhs.column4.y,
-		column3.x * rhs.column1.y + column3.y * rhs.column2.y + column3.z * rhs.column3.y + column3.w * rhs.column4.y,
-		column4.x * rhs.column1.y + column4.y * rhs.column2.y + column4.z * rhs.column3.y + column4.w * rhs.column4.y,
-
-		column1.x * rhs.column1.z + column1.y * rhs.column2.z + column1.z * rhs.column3.z + column1.w * rhs.column4.z,
-		column2.x * rhs.column1.z + column2.y * rhs.column2.z + column2.z * rhs.column3.z + column2.w * rhs.column4.z,
-		column3.x * rhs.column1.z + column3.y * rhs.column2.z + column3.z * rhs.column3.z + column3.w * rhs.column4.z,
-		column4.x * rhs.column1.z + column4.y * rhs.column2.z + column4.z * rhs.column3.z + column4.w * rhs.column4.z,
-
-		column1.x * rhs.column1.w + column1.y * rhs.column2.w + column1.z * rhs.column3.w + column1.w * rhs.column4.w,
-		column2.x * rhs.column1.w + column2.y * rhs.column2.w + column2.z * rhs.column3.w + column2.w * rhs.column4.w,
-		column3.x * rhs.column1.w + column3.y * rhs.column2.w + column3.z * rhs.column3.w + column3.w * rhs.column4.w,
-		column4.x * rhs.column1.w + column4.y * rhs.column2.w + column4.z * rhs.column3.w + column4.w * rhs.column4.w
+		{
+			column1.x * rhs.column1.x + column2.x * rhs.column1.y + column3.x * rhs.column1.z + column4.x * rhs.column1.w,
+			column1.y * rhs.column1.x + column2.y * rhs.column1.y + column3.y * rhs.column1.z + column4.y * rhs.column1.w,
+			column1.z * rhs.column1.x + column2.z * rhs.column1.y + column3.z * rhs.column1.z + column4.z * rhs.column1.w,
+			column1.w * rhs.column1.x + column2.w * rhs.column1.y + column3.w * rhs.column1.z + column4.w * rhs.column1.w,
+		},
+		{
+			column1.x * rhs.column2.x + column2.x * rhs.column2.y + column3.x * rhs.column2.z + column4.x * rhs.column2.w,
+			column1.y * rhs.column2.x + column2.y * rhs.column2.y + column3.y * rhs.column2.z + column4.y * rhs.column2.w,
+			column1.z * rhs.column2.x + column2.z * rhs.column2.y + column3.z * rhs.column2.z + column4.z * rhs.column2.w,
+			column1.w * rhs.column2.x + column2.w * rhs.column2.y + column3.w * rhs.column2.z + column4.w * rhs.column2.w,
+		},
+		{
+			column1.x * rhs.column3.x + column2.x * rhs.column3.y + column3.x * rhs.column3.z + column4.x * rhs.column3.w,
+			column1.y * rhs.column3.x + column2.y * rhs.column3.y + column3.y * rhs.column3.z + column4.y * rhs.column3.w,
+			column1.z * rhs.column3.x + column2.z * rhs.column3.y + column3.z * rhs.column3.z + column4.z * rhs.column3.w,
+			column1.w * rhs.column3.x + column2.w * rhs.column3.y + column3.w * rhs.column3.z + column4.w * rhs.column3.w,
+		},
+		{
+			column1.x * rhs.column4.x + column2.x * rhs.column4.y + column3.x * rhs.column4.z + column4.x * rhs.column4.w,
+			column1.y * rhs.column4.x + column2.y * rhs.column4.y + column3.y * rhs.column4.z + column4.y * rhs.column4.w,
+			column1.z * rhs.column4.x + column2.z * rhs.column4.y + column3.z * rhs.column4.z + column4.z * rhs.column4.w,
+			column1.w * rhs.column4.x + column2.w * rhs.column4.y + column3.w * rhs.column4.z + column4.w * rhs.column4.w,
+		},
 	};
 }
 

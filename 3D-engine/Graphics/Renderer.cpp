@@ -27,7 +27,7 @@ ProjectionViewUniform Renderer::ProjectionViewMatrix()
 	return 
 	{
 		.proj = Matrix4::MakePerspective(Maths::Radians(45.f), window->Aspect(), .1f, 32.f),
-		.view = Matrix4::MakeLookAt({ 2.f, 2.f, 2.f }, { 0.f, 0.f, 0.f }, { 0.f, 0.f, 1.f }),
+		.view = Matrix4::MakeLookAt({ 0.f, 0.f, 1.f }, { 0.f, 0.f, 0.f }, { 0.f, 1.f, 0.f }),
 		.cameraLocation = { 2.f, 2.f, 2.f }
 	};
 }

@@ -317,14 +317,14 @@ Vector4& Vector4::operator/=(const float rhs)
 
 float& Vector4::operator[](const int index)
 {
-	assert(index >= 0 && index < 3 && "Index out of bounds!");
+	assert(index >= 0 && index <= 3 && "Index out of bounds!");
 
 	return (&x)[index];
 }
 
 const float& Vector4::operator[](const int index) const
 {
-	assert(index >= 0 && index < 3 && "Index out of bounds!");
+	assert(index >= 0 && index <= 3 && "Index out of bounds!");
 
 	return (&x)[index];
 }

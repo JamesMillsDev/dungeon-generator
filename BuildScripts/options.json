@@ -3,7 +3,7 @@
     "vulkan_sdk": "$VULKAN_SDK",
     "ktx_sdk": "$KTX_SDK",
     "shader_extensions": [ "slang" ],
-    "texture_extensions": [ "png" ],
+    "texture_extensions": [ "png", "tga" ],
     "shader_compiler":
     {
         "name": "slangc",
