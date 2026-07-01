@@ -55,17 +55,18 @@ uint32 Texture::GetId() const
 void Texture::CreateBuffer()
 {
 	// Attempt to load the texture from memory
-	const string file = m_file + ".pvr";
+	const string file = m_file + ".ktx2";
 	ResourceData textureData = Resources::Find(file);
 
-	if (ktx_error_code_e error = ktxTexture_CreateFromMemory(textureData.data, textureData.length, KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &m_texture);
+	if (ktx_error_code_e error = ktxTexture2_CreateFromMemory(textureData.data, textureData.length, KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &m_texture);
 		error != KTX_SUCCESS)
 	{
 		throw runtime_error(std::format("Failed to load texture from file! Error Code: {}", static_cast<int32>(error)));
 	}
 
+	ktx_error_code_e error = ktxTexture2_TranscodeBasis(m_texture, KTX_TTF_BC7_RGBA, KTX_TF_HIGH_QUALITY);
 	// Get the format and extent from the texture
-	m_imageFormat = ktxTexture_GetVkFormat(m_texture);
+	m_imageFormat = static_cast<VkFormat>(m_texture->vkFormat);
 	m_imageExtent.width = m_texture->baseWidth;
 	m_imageExtent.height = m_texture->baseHeight;
 	m_imageExtent.depth = 1;
@@ -137,7 +138,7 @@ void Texture::CreateBuffer()
 	}
 
 	// Destroy the texture and set up the descriptors
-	ktxTexture_Destroy(m_texture);
+	ktxTexture2_Destroy(m_texture);
 	m_texture = nullptr;
 
 	m_textureDescriptors.sampler = m_sampler;
@@ -188,7 +189,7 @@ void Texture::TransitionImage() const
 	for (uint32 i = 0; i < m_texture->numLevels; ++i)
 	{
 		ktx_size_t mipOffset = 0;
-		ktxTexture_GetImageOffset(m_texture, i, 0, 0, &mipOffset);
+		ktxTexture2_GetImageOffset(m_texture, i, 0, 0, &mipOffset);
 
 		VkBufferImageCopy& copy = copyRegions[i];
 

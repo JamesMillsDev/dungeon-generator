@@ -150,6 +150,7 @@ void Resources::Init(Config* config)
 		{
 			// Get the index from the mapping
 			int index = part[0] - '0';
+			std::erase(part, ']');
 
 			// Iterate over each mapping
 			for (string path : Split(part.substr(2), ",'"))

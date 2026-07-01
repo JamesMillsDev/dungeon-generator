@@ -6,6 +6,7 @@
 
 #include "Graphics/Rendering/Material.h"
 #include "Graphics/Rendering/Mesh.h"
+#include "Graphics/Rendering/Texture.h"
 
 DungeonGameInstance::DungeonGameInstance() :
 	m_actor{ nullptr }, m_material{ nullptr }, m_mesh{ nullptr }
@@ -15,6 +16,7 @@ void DungeonGameInstance::Init()
 {
 	m_mesh = Mesh::MakeFromAssimp("Meshes/SM_Windmill.fbx");
 	m_material = new Material{ "Shaders/pbr" };
+	m_material->baseColorMap = new Texture{ "Textures/T_Windmill_BC" };
 
 	m_actor = GetWorld()->MakeActor<Actor>();
 	m_actor->GetTransform()->AddRelativeScale({ 10.f, 10.f, 10.f });

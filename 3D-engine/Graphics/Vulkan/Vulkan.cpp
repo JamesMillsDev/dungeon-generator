@@ -242,6 +242,8 @@ Vulkan::Vulkan(Config* config, GLFWwindow* window)
 
 Vulkan::~Vulkan()
 {
+	m_isShuttingDown = true;
+
 	delete m_resourceStack;
 	delete m_appVersion;
 	delete m_engineVersion;
@@ -309,6 +311,8 @@ void Vulkan::EndOneTimeCommand(const VkCommandBuffer& buffer, const VkFence& fen
 	{
 		throw VulkanError("Fence timed out!", result);
 	}
+
+	vkDestroyFence(m_device, fence, nullptr);
 }
 
 VulkanBuffer* Vulkan::GetUboBuffer() const
@@ -351,6 +355,11 @@ void Vulkan::RemoveTexture(Texture* texture)
 // TODO: Do this only at the end of each frame if necessary
 void Vulkan::WriteTextureDescriptorSets() const
 {
+	if (m_isShuttingDown)
+	{
+		return;
+	}
+
 	vector<VkDescriptorImageInfo> textureDescriptors(m_textures.size());
 	for (uint64 i = 0; i < m_textures.size(); ++i)
 	{
@@ -362,7 +371,7 @@ void Vulkan::WriteTextureDescriptorSets() const
 		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.pNext = nullptr,
 		.dstSet = m_descriptorSet,
-		.dstBinding = 1,
+		.dstBinding = m_maxDescriptorBinding - 1,
 		.dstArrayElement = 0,
 		.descriptorCount = static_cast<uint32>(textureDescriptors.size()),
 		.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
@@ -882,7 +891,7 @@ void Vulkan::Init(GLFWwindow* window)
 				{
 					VkDescriptorSetLayoutBinding
 					{
-						.binding = 0,
+						.binding = m_maxDescriptorBinding++,
 						.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 						.descriptorCount = 1,
 						.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
@@ -890,7 +899,7 @@ void Vulkan::Init(GLFWwindow* window)
 					},
 					VkDescriptorSetLayoutBinding
 					{
-						.binding = 1,
+						.binding = m_maxDescriptorBinding++,
 						.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 						.descriptorCount = 1,
 						.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
@@ -898,7 +907,7 @@ void Vulkan::Init(GLFWwindow* window)
 					},
 					VkDescriptorSetLayoutBinding
 					{
-						.binding = 2,
+						.binding = m_maxDescriptorBinding++,
 						.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 						.descriptorCount = MAX_TEXTURE_DESCRIPTORS,
 						.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,

@@ -34,7 +34,7 @@ private:
 	VkFormat m_imageFormat;
 
 	VulkanBuffer* m_buffer;
-	ktxTexture* m_texture;
+	ktxTexture2* m_texture;
 
 	VkDescriptorImageInfo m_textureDescriptors;
 

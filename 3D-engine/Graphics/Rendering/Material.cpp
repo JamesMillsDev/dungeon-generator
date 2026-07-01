@@ -16,6 +16,11 @@ Material::Material(const string& shaderPath)
 
 Material::~Material()
 {
+	delete baseColorMap;
+	delete normalMap;
+	delete ormMap;
+	delete emissiveMap;
+
 	delete m_pipeline;
 	m_pipeline = nullptr;
 }

@@ -12,6 +12,7 @@
 #include "Gameplay/Actors/World.h"
 
 #include "Graphics/Renderer.h"
+#include "Graphics/Vulkan/Vulkan.h"
 
 #include "Utility/Config.h"
 
@@ -97,6 +98,7 @@ EExitCode Application::Run() const
 		Renderer::Instance()->EndFrame();
 	}
 
+	Renderer::Instance()->m_vulkan->m_isShuttingDown = true;
 	Renderer::WaitIdle();
 
 	// delete the current world to pre-cleanup

@@ -45,6 +45,7 @@ const vector VALIDATION_LAYERS =
 
 class Vulkan  // NOLINT(cppcoreguidelines-special-member-functions)
 {
+	friend class Application;
 	friend Renderer;
 	friend void CheckSwapChain(VkResult result, const string& errorMsg);
 
@@ -119,6 +120,8 @@ private:
 	uint32 m_frameIndex;
 	uint32 m_imageIndex;
 	bool m_recreateSwapChain;
+	bool m_isShuttingDown;
+	uint32 m_maxDescriptorBinding;
 
 private:
 	explicit Vulkan(Config* config, GLFWwindow* window);

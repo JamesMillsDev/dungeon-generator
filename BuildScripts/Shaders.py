@@ -1,4 +1,4 @@
-import subprocess, json, os, shutil
+import subprocess, json, os
 from pathlib import Path
 
 ignore_file_extensions = []
