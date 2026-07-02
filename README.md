@@ -5,7 +5,7 @@ A simple 3D dungeon generator using a custom Vulkan renderer with multithreading
 
 ## Acknowledgements
 
- - [Vulkan Tutorial](https://vulkan-tutorial.com/Development_environment)
+ - [HowToVulkan](howtovulkan.com/)
  - [Kenney](https://kenney.nl)
  - [GLFW](https://www.glfw.org)
  - [GLM](https://github.com/g-truc/glm)
