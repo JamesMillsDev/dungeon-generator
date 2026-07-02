@@ -32,6 +32,8 @@
     <ClInclude Include="Gameplay\Actors\Components\Rendering\LightComponent.h" />
     <ClInclude Include="Gameplay\Actors\Components\Rendering\CameraComponent.h" />
     <ClInclude Include="Gameplay\SimpleInput.h" />
+    <ClInclude Include="Graphics\Rendering\Camera.h" />
+    <ClInclude Include="Graphics\Rendering\SceneCamera.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
@@ -61,5 +63,7 @@
     <ClCompile Include="Gameplay\Actors\Components\Rendering\LightComponent.cpp" />
     <ClCompile Include="Gameplay\Actors\Components\Rendering\CameraComponent.cpp" />
     <ClCompile Include="Gameplay\SimpleInput.cpp" />
+    <ClCompile Include="Graphics\Rendering\Camera.cpp" />
+    <ClCompile Include="Graphics\Rendering\SceneCamera.cpp" />
   </ItemGroup>
 </Project>

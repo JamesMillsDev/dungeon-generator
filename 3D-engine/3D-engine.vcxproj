@@ -214,7 +214,9 @@
     <ClInclude Include="Gameplay\GameInstance.h" />
     <ClInclude Include="Gameplay\SimpleInput.h" />
     <ClInclude Include="GameTime.h" />
+    <ClInclude Include="Graphics\Rendering\Camera.h" />
     <ClInclude Include="Graphics\Rendering\Material.h" />
+    <ClInclude Include="Graphics\Rendering\SceneCamera.h" />
     <ClInclude Include="Graphics\Rendering\Shader.h" />
     <ClInclude Include="Graphics\Vulkan\Vulkan.h" />
     <ClInclude Include="Graphics\Vulkan\VulkanBuffer.h" />
@@ -246,7 +248,9 @@
     <ClCompile Include="Gameplay\GameInstance.cpp" />
     <ClCompile Include="Gameplay\SimpleInput.cpp" />
     <ClCompile Include="GameTime.cpp" />
+    <ClCompile Include="Graphics\Rendering\Camera.cpp" />
     <ClCompile Include="Graphics\Rendering\Material.cpp" />
+    <ClCompile Include="Graphics\Rendering\SceneCamera.cpp" />
     <ClCompile Include="Graphics\Rendering\Shader.cpp" />
     <ClCompile Include="Graphics\Vulkan\Vulkan.cpp" />
     <ClCompile Include="Graphics\Vulkan\VulkanBuffer.cpp" />

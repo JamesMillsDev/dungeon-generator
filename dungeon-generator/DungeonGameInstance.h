@@ -2,15 +2,16 @@
 
 #include <Gameplay/GameInstance.h>
 
+class Actor;
+class FlyCamera;
 class Mesh;
 class Material;
-class Actor;
 
 class DungeonGameInstance final : public GameInstance
 {
 private:
 	Actor* m_meshActor;
-	Actor* m_cameraActor;
+	FlyCamera* m_camera;
 
 	Material* m_material;
 	Mesh* m_mesh;

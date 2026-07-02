@@ -190,9 +190,11 @@
   <ItemGroup>
     <ClCompile Include="DungeonGameInstance.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Source\FlyCamera.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DungeonGameInstance.h" />
+    <ClInclude Include="Source\FlyCamera.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Config\Engine.json" />

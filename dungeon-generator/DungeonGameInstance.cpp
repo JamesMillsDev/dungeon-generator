@@ -8,16 +8,16 @@
 #include "Graphics/Rendering/Material.h"
 #include "Graphics/Rendering/Mesh.h"
 #include "Graphics/Rendering/Texture.h"
+#include "Source/FlyCamera.h"
 
 DungeonGameInstance::DungeonGameInstance() :
-	m_meshActor{ nullptr }, m_cameraActor{ nullptr }, m_material{ nullptr }, m_mesh{ nullptr }
+	m_meshActor{ nullptr }, m_camera{ nullptr }, m_material{ nullptr }, m_mesh{ nullptr }
 {}
 
 void DungeonGameInstance::Init()
 {
-	m_cameraActor = GetWorld()->MakeActor<Actor>();
-	m_cameraActor->MakeComponent<CameraComponent>(45.f, .1f, 100.f);
-	m_cameraActor->GetTransform()->location += vec3{ 0.f, 2.f, -10.f };
+	m_camera = new FlyCamera{ 45.f, .1f, 100.f };
+	m_camera->location = vec3{ 0.f, 2.f, -10.f };
 
 	m_mesh = Mesh::MakeFromAssimp("Meshes/SM_Soulspear.fbx");
 	m_material = new Material{ "Shaders/pbr" };
@@ -29,12 +29,15 @@ void DungeonGameInstance::Init()
 
 void DungeonGameInstance::Shutdown()
 {
+	delete m_camera;
 	delete m_mesh;
 	delete m_material;
 }
 
 void DungeonGameInstance::Tick()
-{}
+{
+	m_camera->Tick();
+}
 
 void DungeonGameInstance::Render()
 {}

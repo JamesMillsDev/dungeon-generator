@@ -5,7 +5,7 @@
 #include <string>
 #include <vulkan/vulkan.h>
 
-class CameraComponent;
+class Camera;
 class Application;
 class Config;
 struct GLFWwindow;
@@ -22,14 +22,14 @@ class Renderer
 
 private:
 	static Renderer* m_instance;
-	static CameraComponent* m_currentCamera;
+	static Camera* m_currentCamera;
 
 public:
 	static Renderer* Instance();
 	[[nodiscard]] static bool IsValid();
 
-	static CameraComponent* GetCurrentCamera();
-	static void SetCurrent(CameraComponent* newCurrent);
+	static Camera* GetCurrentCamera();
+	static void SetCurrent(Camera* newCurrent);
 
 private:
 	static void Create(Config* config, GLFWwindow* window);

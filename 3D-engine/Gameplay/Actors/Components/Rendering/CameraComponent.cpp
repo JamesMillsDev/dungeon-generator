@@ -3,25 +3,23 @@
 
 #include "Application.h"
 #include "Gameplay/Actors/Actor.h"
-#include "Gameplay/Actors/Transform.h"
 #include "Graphics/Renderer.h"
+#include "Graphics/Rendering/Camera.h"
+#include "Graphics/Rendering/SceneCamera.h"
 
 CameraComponent::CameraComponent(const float fovY, const float nearPlane, const float farPlane)
-	: fovY{ fovY }, nearPlane{ nearPlane }, farPlane{ farPlane }, m_window{ Application::GetWindow() }
+	: camera{ new SceneCamera{ fovY, nearPlane, farPlane } }, m_window{ Application::GetWindow() }
 {
-	Renderer::SetCurrent(this);
+	Renderer::SetCurrent(camera);
 }
 
-void CameraComponent::GetPvm(ProjectionViewModelUniform& pvm) const
+CameraComponent::~CameraComponent()
 {
-	const Transform* transform = Owner()->GetTransform();
-
-	pvm.proj = glm::perspective(Maths::Radians(fovY), m_window->Aspect(), nearPlane, farPlane);
-	pvm.view = transform->LocalToWorld();
-	pvm.cameraLocation = transform->location;
+	delete camera;
+	camera = nullptr;
 }
 
-bool CameraComponent::IsCurrent() const
+void CameraComponent::BeginPlay()
 {
-	return m_isCurrent;
+	camera->SetTransform(Owner()->GetTransform());
 }

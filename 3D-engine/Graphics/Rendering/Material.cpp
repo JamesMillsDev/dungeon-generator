@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Material.h"
 
+#include "Camera.h"
 #include "Texture.h"
 #include "Gameplay/Actors/Components/Rendering/CameraComponent.h"
 #include "Graphics/Renderer.h"

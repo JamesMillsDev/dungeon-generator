@@ -1,13 +1,13 @@
 #include "pch.h"
 #include "Renderer.h"
 
-#include "Gameplay/Actors/Components/Rendering/CameraComponent.h"
 #include "Graphics/Rendering/Mesh.h"
+#include "Rendering/Camera.h"
 #include "Rendering/Material.h"
 #include "Vulkan/Vulkan.h"
 
 Renderer* Renderer::m_instance = nullptr;
-CameraComponent* Renderer::m_currentCamera = nullptr;
+Camera* Renderer::m_currentCamera = nullptr;
 
 Renderer* Renderer::Instance()
 {
@@ -19,12 +19,12 @@ bool Renderer::IsValid()
 	return m_instance != nullptr && Vulkan::IsLoaded();
 }
 
-CameraComponent* Renderer::GetCurrentCamera()
+Camera* Renderer::GetCurrentCamera()
 {
 	return m_currentCamera;
 }
 
-void Renderer::SetCurrent(CameraComponent* newCurrent)
+void Renderer::SetCurrent(Camera* newCurrent)
 {
 	if (m_currentCamera != nullptr)
 	{

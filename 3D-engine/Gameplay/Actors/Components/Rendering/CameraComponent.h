@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Gameplay/Actors/Components/IComponent.h"
-#include "Graphics/Vulkan/Uniforms.h"
 
+class SceneCamera;
 class Window;
 
 class CameraComponent : public IComponent
@@ -10,20 +10,16 @@ class CameraComponent : public IComponent
 	friend class Renderer;
 
 public:
-	float fovY;
-	float nearPlane;
-	float farPlane;
+	SceneCamera* camera;
 
 private:
 	Window* m_window;
-	bool m_isCurrent;
 
 public:
 	CameraComponent(float fovY, float nearPlane, float farPlane);
+	~CameraComponent() override;
 
 public:
-	void GetPvm(ProjectionViewModelUniform& pvm) const;
-
-	[[nodiscard]] bool IsCurrent() const;
+	void BeginPlay() override;
 
 };
