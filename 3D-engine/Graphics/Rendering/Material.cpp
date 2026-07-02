@@ -12,7 +12,8 @@
 #include "Graphics/Vulkan/VulkanGraphicsPipeline.h"
 
 Material::Material(const string& shaderPath)
-	: color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ 0 }, metallic{ 0 }, baseColorMap{ nullptr },
+	: color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ 0 }, metallic{ 0 },
+	specularColor{ Color::WHITE }, specularStrength{ .5f }, baseColorMap{ nullptr },
 	normalMap{ nullptr }, ormMap{ nullptr }, emissiveMap{ nullptr },
 	m_pipeline{ new VulkanGraphicsPipeline{ GraphicsPipelineConfig{ shaderPath } } }
 {}
@@ -36,8 +37,10 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform) cons
 	{
 		.color = color,
 		.emissiveTint = emissiveTint,
+		.specularColor = specularColor,
 		.roughness = roughness,
 		.metallic = metallic,
+		.specularStrength = specularStrength,
 		.baseColorMap = baseColorMap != nullptr ? static_cast<int32>(baseColorMap->GetId()) : -1,
 		.normalMap = normalMap != nullptr ? static_cast<int32>(normalMap->GetId()) : -1,
 		.ormMap = ormMap != nullptr ? static_cast<int32>(ormMap->GetId()) : -1,
@@ -79,7 +82,7 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform) cons
 		.uboAddress = uboBuffer->GetAddress(),
 		.materialAddress = materialBuffer->GetAddress(),
 		.sceneLightingAddress = sceneLightBuffer->GetAddress(),
-		.lightsAddress = 
+		.lightsAddress =
 		{
 			light0Buffer->GetAddress(), 0, 0, 0, 0, 0, 0, 0
 		}

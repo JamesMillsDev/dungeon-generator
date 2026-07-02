@@ -19,8 +19,11 @@ struct MaterialUniform
 {
 	Color color;
 	Color emissiveTint;
+	Color specularColor;
+
 	float roughness;
 	float metallic;
+	float specularStrength;
 
 	int32 baseColorMap;
 	int32 normalMap;
@@ -37,6 +40,9 @@ public:
 	Color emissiveTint;
 	float roughness;
 	float metallic;
+
+	Color specularColor;
+	float specularStrength;
 
 	Texture* baseColorMap;
 	Texture* normalMap;

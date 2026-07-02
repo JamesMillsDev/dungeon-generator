@@ -55,10 +55,16 @@ float4 main(VSOutput input, uniform PushConstantData *pushData) : SV_Target
 {
     float diff = max(dot(input.normal, LightDirection(pushData->lights[0], input.objectSpaceLocation)), 0);
 
+    float3 viewDir = normalize(pushData->pvm->cameraLocation - input.objectSpaceLocation);
+    float3 reflectDir = reflect(-LightDirection(pushData->lights[0], input.objectSpaceLocation), input.normal);
+
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+    float4 specular = pushData->material->specularStrength * spec * pushData->material->specularColor;
+
     float4 ambient = pushData->sceneLighting->ambientColor * pushData->sceneLighting->ambientStrength;
     float4 diffuse = pushData->lights[0]->color * diff;
 
-    float4 result = (ambient + diff) * pushData->material->color;
+    float4 result = (ambient + diff + specular) * pushData->material->color;
 
     return result;
 }

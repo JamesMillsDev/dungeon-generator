@@ -2,8 +2,11 @@ struct MaterialUniform
 {
     float4 color;
     float4 emissiveTint;
+    float4 specularColor;
+
     float roughness;
     float metallic;
+    float specularStrength;
 
     int32_t baseColorMap;
     int32_t normalMap;

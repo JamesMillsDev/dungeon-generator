@@ -11,6 +11,13 @@ Actor::Actor()
 
 Actor::~Actor()
 {
+	while (m_transform->lastChild != nullptr)
+	{
+		Transform* transform = m_transform->lastChild;
+		transform->SetParent(nullptr);
+		delete transform->Owner();
+	}
+
 	delete m_transform;
 
 	for (IComponent* component : m_components)
