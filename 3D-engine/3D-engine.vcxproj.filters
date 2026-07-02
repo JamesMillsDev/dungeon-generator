@@ -34,6 +34,7 @@
     <ClInclude Include="Gameplay\SimpleInput.h" />
     <ClInclude Include="Graphics\Rendering\Camera.h" />
     <ClInclude Include="Graphics\Rendering\SceneCamera.h" />
+    <ClInclude Include="Graphics\Rendering\SceneLightingData.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />

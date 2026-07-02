@@ -10,6 +10,9 @@
 #include "Uniforms.h"
 #include "VulkanBuffer.h"
 #include "Window.h"
+#include "Gameplay/Actors/Components/Rendering/LightComponent.h"
+#include "Graphics/Rendering/Material.h"
+#include "Graphics/Rendering/SceneLightingData.h"
 #include "Graphics/Rendering/Texture.h"
 #include "Utility/Console.h"
 #include "Utility/ResourceStack.h"
@@ -321,9 +324,14 @@ VulkanBuffer* Vulkan::GetUboBuffer() const
 	return m_uboBuffers[m_frameIndex];
 }
 
-VulkanBuffer* Vulkan::GetLightBuffer() const
+VulkanBuffer* Vulkan::GetLightBuffer(int index) const
 {
-	return m_lightBuffers[m_frameIndex];
+	return m_lightBuffers[m_frameIndex][index];
+}
+
+VulkanBuffer* Vulkan::GetSceneLightingBuffer() const
+{
+	return m_sceneLightingBuffers[m_frameIndex];
 }
 
 VulkanBuffer* Vulkan::GetMaterialBuffer() const
@@ -775,8 +783,14 @@ void Vulkan::Init(GLFWwindow* window)
 					m_uboBuffers[i] = new VulkanBuffer{ sizeof(ProjectionViewModelUniform), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this };
 					buffers.emplace_back(m_uboBuffers[i]);
 
-					m_lightBuffers[i] = new VulkanBuffer{ sizeof(LightUniform), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this };
-					buffers.emplace_back(m_lightBuffers[i]);
+					for (int l = 0; l < MAX_LIGHT_COUNT; ++l)
+					{
+						m_lightBuffers[i][l] = new VulkanBuffer{ sizeof(LightUniform), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this };
+						buffers.emplace_back(m_lightBuffers[i][l]);
+					}
+
+					m_sceneLightingBuffers[i] = new VulkanBuffer{ sizeof(SceneLightingData), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this };
+					buffers.emplace_back(m_sceneLightingBuffers[i]);
 
 					m_materialBuffers[i] = new VulkanBuffer{ sizeof(MaterialUniform), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this };
 					buffers.emplace_back(m_materialBuffers[i]);

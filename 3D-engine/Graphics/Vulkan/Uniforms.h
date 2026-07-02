@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Maths/Alias.h"
-#include "Maths/Color.h"
+#include "Gameplay/Actors/Components/Rendering/LightComponent.h"
 
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
@@ -17,30 +16,10 @@ struct ProjectionViewModelUniform
 	vec3 cameraLocation;
 };
 
-struct MaterialUniform
-{
-	Color color;
-	Color emissiveTint;
-	float roughness;
-	float metallic;
-
-	int32 baseColorMap;
-	int32 normalMap;
-	int32 ormMap;
-	int32 emissiveMap;
-};
-
-struct LightUniform
-{
-	vec3 location;
-	vec3 direction;
-	Color color;
-	int32 type;
-};
-
 struct PushConstantData
 {
 	VkDeviceAddress uboAddress;
 	VkDeviceAddress materialAddress;
-	VkDeviceAddress lightingAddress;
+	VkDeviceAddress sceneLightingAddress;
+	VkDeviceAddress lightsAddress[MAX_LIGHT_COUNT];
 };

@@ -4,6 +4,16 @@
 #include "Maths/Color.h"
 #include "Gameplay/Actors/Components/IComponent.h"
 
+constexpr int MAX_LIGHT_COUNT = 8;
+
+struct LightUniform
+{
+	vec3 location;
+	vec3 direction;
+	Color color;
+	int32 type;
+};
+
 class LightComponent : public IComponent
 {
 public:

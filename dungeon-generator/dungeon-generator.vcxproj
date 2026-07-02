@@ -198,6 +198,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Config\Engine.json" />
+    <None Include="Content\Shaders\global.slang" />
+    <None Include="Content\Shaders\graphics.slang" />
+    <None Include="Content\Shaders\lighting.slang" />
+    <None Include="Content\Shaders\pbr.slang" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

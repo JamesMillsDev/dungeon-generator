@@ -8,6 +8,7 @@
 #include <vma/vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
 
+#include "Gameplay/Actors/Components/Rendering/LightComponent.h"
 #include "Maths/Color.h"
 #include "Utility/ResourceStack.h"
 
@@ -107,7 +108,8 @@ private:
 	array<VkCommandBuffer, MAX_FRAMES_IN_FLIGHT> m_commandBuffers;
 
 	array<VulkanBuffer*, MAX_FRAMES_IN_FLIGHT> m_uboBuffers;
-	array<VulkanBuffer*, MAX_FRAMES_IN_FLIGHT> m_lightBuffers;
+	array<array<VulkanBuffer*, MAX_LIGHT_COUNT>, MAX_FRAMES_IN_FLIGHT> m_lightBuffers;
+	array<VulkanBuffer*, MAX_FRAMES_IN_FLIGHT> m_sceneLightingBuffers;
 	array<VulkanBuffer*, MAX_FRAMES_IN_FLIGHT> m_materialBuffers;
 	array<VulkanBuffer*, MAX_FRAMES_IN_FLIGHT> m_pushConstantBuffers;
 
@@ -131,7 +133,8 @@ public:
 	void EndOneTimeCommand(const VkCommandBuffer& buffer, const VkFence& fence) const;
 
 	[[nodiscard]] VulkanBuffer* GetUboBuffer() const;
-	[[nodiscard]] VulkanBuffer* GetLightBuffer() const;
+	[[nodiscard]] VulkanBuffer* GetLightBuffer(int index) const;
+	[[nodiscard]] VulkanBuffer* GetSceneLightingBuffer() const;
 	[[nodiscard]] VulkanBuffer* GetMaterialBuffer() const;
 	[[nodiscard]] VulkanBuffer* GetPushConstantBuffer() const;
 

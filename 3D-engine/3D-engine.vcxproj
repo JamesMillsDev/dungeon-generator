@@ -217,6 +217,7 @@
     <ClInclude Include="Graphics\Rendering\Camera.h" />
     <ClInclude Include="Graphics\Rendering\Material.h" />
     <ClInclude Include="Graphics\Rendering\SceneCamera.h" />
+    <ClInclude Include="Graphics\Rendering\SceneLightingData.h" />
     <ClInclude Include="Graphics\Rendering\Shader.h" />
     <ClInclude Include="Graphics\Vulkan\Vulkan.h" />
     <ClInclude Include="Graphics\Vulkan\VulkanBuffer.h" />

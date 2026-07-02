@@ -15,6 +15,19 @@ using glm::mat4;
 using std::string;
 using std::vector;
 
+struct MaterialUniform
+{
+	Color color;
+	Color emissiveTint;
+	float roughness;
+	float metallic;
+
+	int32 baseColorMap;
+	int32 normalMap;
+	int32 ormMap;
+	int32 emissiveMap;
+};
+
 class Material
 {
 	friend class Renderer;

@@ -6,6 +6,13 @@ struct LightUniform
 	int32_t type;
 };
 
+struct SceneLightingUniform
+{
+    float4 ambientColor;
+};
+
+const static int MAX_LIGHT_COUNT = 8;
+
 float3 LightDirection(LightUniform* light, float3 location)
 {
     if (light->type == 0)

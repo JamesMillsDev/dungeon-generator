@@ -2,8 +2,9 @@
 #include "Material.h"
 
 #include "Camera.h"
+#include "SceneLightingData.h"
 #include "Texture.h"
-#include "Gameplay/Actors/Components/Rendering/CameraComponent.h"
+#include "Gameplay/Actors/Components/Rendering/LightComponent.h"
 #include "Graphics/Renderer.h"
 #include "Graphics/Vulkan/Uniforms.h"
 #include "Graphics/Vulkan/Vulkan.h"
@@ -53,15 +54,22 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform) cons
 	uboBuffer->Fill(&pvm);
 
 	// TODO: Use more dynamic lighting. This is a test
-	const VulkanBuffer* lightBuffer = Vulkan::Instance()->GetLightBuffer();
-	LightUniform lighting
+	const VulkanBuffer* light0Buffer = Vulkan::Instance()->GetLightBuffer(0);
+	LightUniform light0
 	{
 		.location = { 0.f, 0.f, 0.f },
-		.direction = { -.32f, -.77f, .56f }, // this is the unity default light direction
+		.direction = { .32f, -.77f, -.56f }, // this is the unity default light direction
 		.color = Color::WHITE,
 		.type = 0,
 	};
-	lightBuffer->Fill(&lighting);
+	light0Buffer->Fill(&light0);
+
+	const VulkanBuffer* sceneLightBuffer = Vulkan::Instance()->GetSceneLightingBuffer();
+	SceneLightingData sceneLighting
+	{
+		.ambientColor = Color::WHITE
+	};
+	sceneLightBuffer->Fill(&sceneLighting);
 
 	// Send off the push constant pointers
 	const VulkanBuffer* pushConstantBuffer = Vulkan::Instance()->GetPushConstantBuffer();
@@ -69,7 +77,11 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform) cons
 	{
 		.uboAddress = uboBuffer->GetAddress(),
 		.materialAddress = materialBuffer->GetAddress(),
-		.lightingAddress = lightBuffer->GetAddress()
+		.sceneLightingAddress = sceneLightBuffer->GetAddress(),
+		.lightsAddress = 
+		{
+			light0Buffer->GetAddress(), 0, 0, 0, 0, 0, 0, 0
+		}
 	};
 	pushConstantBuffer->Fill(&pushConstantData);
 

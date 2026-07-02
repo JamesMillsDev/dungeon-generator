@@ -12,6 +12,9 @@
     <Filter Include="Config Files">
       <UniqueIdentifier>{287787fa-2b47-49ef-80c2-356c88a87bf1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shader Files">
+      <UniqueIdentifier>{a65a9f7c-8ff5-437c-bdee-f70939898fae}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -35,6 +38,18 @@
   <ItemGroup>
     <None Include="Config\Engine.json">
       <Filter>Config Files</Filter>
+    </None>
+    <None Include="Content\Shaders\global.slang">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="Content\Shaders\graphics.slang">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="Content\Shaders\lighting.slang">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="Content\Shaders\pbr.slang">
+      <Filter>Shader Files</Filter>
     </None>
   </ItemGroup>
 </Project>
