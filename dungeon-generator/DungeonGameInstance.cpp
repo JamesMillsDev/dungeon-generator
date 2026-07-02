@@ -2,7 +2,6 @@
 
 #include "Gameplay/Actors/Transform.h"
 #include "Gameplay/Actors/World.h"
-#include "Gameplay/Actors/Components/FlyMovement.h"
 #include "Gameplay/Actors/Components/Rendering/CameraComponent.h"
 #include "Gameplay/Actors/Components/Rendering/MeshComponent.h"
 
@@ -19,7 +18,6 @@ void DungeonGameInstance::Init()
 	m_cameraActor = GetWorld()->MakeActor<Actor>();
 	m_cameraActor->MakeComponent<CameraComponent>(45.f, .1f, 100.f);
 	m_cameraActor->GetTransform()->location += vec3{ 0.f, 2.f, -10.f };
-	m_cameraActor->MakeComponent<FlyMovement>(180.f, 5.f);
 
 	m_mesh = Mesh::MakeFromAssimp("Meshes/SM_Soulspear.fbx");
 	m_material = new Material{ "Shaders/pbr" };

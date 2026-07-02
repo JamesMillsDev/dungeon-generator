@@ -31,7 +31,6 @@
     <ClInclude Include="Resources.h" />
     <ClInclude Include="Gameplay\Actors\Components\Rendering\LightComponent.h" />
     <ClInclude Include="Gameplay\Actors\Components\Rendering\CameraComponent.h" />
-    <ClInclude Include="Gameplay\Actors\Components\FlyMovement.h" />
     <ClInclude Include="Gameplay\SimpleInput.h" />
   </ItemGroup>
   <ItemGroup>
@@ -61,7 +60,6 @@
     <ClCompile Include="Resources.cpp" />
     <ClCompile Include="Gameplay\Actors\Components\Rendering\LightComponent.cpp" />
     <ClCompile Include="Gameplay\Actors\Components\Rendering\CameraComponent.cpp" />
-    <ClCompile Include="Gameplay\Actors\Components\FlyMovement.cpp" />
     <ClCompile Include="Gameplay\SimpleInput.cpp" />
   </ItemGroup>
 </Project>

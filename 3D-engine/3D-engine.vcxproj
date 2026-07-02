@@ -204,7 +204,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Gameplay\Actors\Actor.h" />
-    <ClInclude Include="Gameplay\Actors\Components\FlyMovement.h" />
     <ClInclude Include="Gameplay\Actors\Components\IComponent.h" />
     <ClInclude Include="Gameplay\Actors\Components\Rendering\CameraComponent.h" />
     <ClInclude Include="Gameplay\Actors\Components\Rendering\LightComponent.h" />
@@ -238,7 +237,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Gameplay\Actors\Actor.cpp" />
-    <ClCompile Include="Gameplay\Actors\Components\FlyMovement.cpp" />
     <ClCompile Include="Gameplay\Actors\Components\Rendering\CameraComponent.cpp" />
     <ClCompile Include="Gameplay\Actors\Components\Rendering\LightComponent.cpp" />
     <ClCompile Include="Gameplay\Actors\Components\Rendering\MeshComponent.cpp" />
