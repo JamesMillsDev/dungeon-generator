@@ -25,6 +25,7 @@ void DungeonGameInstance::Init()
 
 	m_meshActor = GetWorld()->MakeActor<Actor>();
 	m_meshActor->MakeComponent<MeshComponent>(m_mesh, m_material);
+	m_material->color = Color{ 1.f, .5f, .31f, 1.f };
 }
 
 void DungeonGameInstance::Shutdown()

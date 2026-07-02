@@ -9,6 +9,7 @@ struct LightUniform
 struct SceneLightingUniform
 {
     float4 ambientColor;
+    float ambientStrength;
 };
 
 const static int MAX_LIGHT_COUNT = 8;

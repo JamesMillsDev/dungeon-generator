@@ -6,5 +6,6 @@ struct SceneLightingData
 {
 public:
 	Color ambientColor;
+	float ambientStrength;
 
 };

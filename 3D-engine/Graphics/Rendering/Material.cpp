@@ -67,7 +67,8 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform) cons
 	const VulkanBuffer* sceneLightBuffer = Vulkan::Instance()->GetSceneLightingBuffer();
 	SceneLightingData sceneLighting
 	{
-		.ambientColor = Color::WHITE
+		.ambientColor = Color::WHITE,
+		.ambientStrength = .1f
 	};
 	sceneLightBuffer->Fill(&sceneLighting);
 
