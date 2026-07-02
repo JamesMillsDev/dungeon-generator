@@ -1,4 +1,4 @@
-struct ProjectionViewUniform
+struct ProjectionViewModelUniform
 {
     float4x4 proj;
     float4x4 view;
@@ -6,7 +6,7 @@ struct ProjectionViewUniform
     float3 cameraLocation;
 };
 
-float4 TransformVertex(ProjectionViewUniform* ubo, float3 vertex)
+float4 TransformVertex(ProjectionViewModelUniform* pvm, float3 vertex)
 {
-    return mul(ubo->proj, mul(ubo->view, mul(ubo->model, float4(vertex.xyz, 1.0))));
+    return mul(pvm->proj, mul(pvm->view, mul(pvm->model, float4(vertex.xyz, 1.0))));
 }

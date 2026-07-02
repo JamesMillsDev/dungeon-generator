@@ -4,7 +4,7 @@
 
 struct PushConstantData
 {
-    ProjectionViewUniform *ubo;
+    ProjectionViewModelUniform *pvm;
     MaterialUniform *material;
     LightUniform *lighting;
 };
@@ -37,14 +37,14 @@ VSOutput main(VSInput input, uniform PushConstantData *pushData)
 {
     VSOutput output;
 
-    output.location = TransformVertex(pushData->ubo, input.location);
+    output.location = TransformVertex(pushData->pvm, input.location);
     output.uv0 = input.uv0;
     output.normal = normalize(input.normal).xyz;
     output.tangent = normalize(input.tangent);
     output.biTangent = normalize(input.biTangent);
     output.color = input.color;
 
-    output.objectSpaceLocation = mul(pushData->ubo->model, float4(input.location, 1.0)).xyz;
+    output.objectSpaceLocation = mul(pushData->pvm->model, float4(input.location, 1.0)).xyz;
 
     return output;
 }

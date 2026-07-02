@@ -771,7 +771,7 @@ void Vulkan::Init(GLFWwindow* window)
 				{
 					vector<VulkanBuffer*> buffers;
 
-					m_uboBuffers[i] = new VulkanBuffer{ sizeof(ProjectionViewUniform), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this };
+					m_uboBuffers[i] = new VulkanBuffer{ sizeof(ProjectionViewModelUniform), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this };
 					buffers.emplace_back(m_uboBuffers[i]);
 
 					m_lightBuffers[i] = new VulkanBuffer{ sizeof(LightUniform), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this };
@@ -1186,9 +1186,9 @@ VkCommandBuffer Vulkan::BeginFrame()
 	const VkViewport vp =
 	{
 		.x = 0.f,
-		.y = 0.f,
+		.y = window->Height(),
 		.width = window->Width(),
-		.height = window->Height(),
+		.height = -window->Height(),
 		.minDepth = 0.f,
 		.maxDepth = 1.f
 	};

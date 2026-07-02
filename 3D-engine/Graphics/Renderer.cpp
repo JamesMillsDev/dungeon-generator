@@ -1,14 +1,13 @@
 #include "pch.h"
 #include "Renderer.h"
 
-#include "Application.h"
-#include "Window.h"
+#include "Gameplay/Actors/Components/Rendering/CameraComponent.h"
 #include "Graphics/Rendering/Mesh.h"
 #include "Rendering/Material.h"
-#include "Vulkan/Uniforms.h"
 #include "Vulkan/Vulkan.h"
 
 Renderer* Renderer::m_instance = nullptr;
+CameraComponent* Renderer::m_currentCamera = nullptr;
 
 Renderer* Renderer::Instance()
 {
@@ -20,17 +19,20 @@ bool Renderer::IsValid()
 	return m_instance != nullptr && Vulkan::IsLoaded();
 }
 
-ProjectionViewUniform Renderer::ProjectionViewMatrix()
+CameraComponent* Renderer::GetCurrentCamera()
 {
-	Window* window = Application::GetWindow();
+	return m_currentCamera;
+}
 
-	return 
+void Renderer::SetCurrent(CameraComponent* newCurrent)
+{
+	if (m_currentCamera != nullptr)
 	{
-		.proj = Matrix4::MakePerspective(Maths::Radians(45.f), window->Aspect(), .1f, 32.f),
-		.view = Matrix4::MakeLookAt({ 0.f, 0.f, 1.f }, { 0.f, 0.f, 0.f }, { 0.f, 1.f, 0.f }),
-		.model = Matrix4::Identity(),
-		.cameraLocation = { 0.f, 0.f, 1.f },
-	};
+		m_currentCamera->m_isCurrent = false;
+	}
+
+	m_currentCamera = newCurrent;
+	m_currentCamera->m_isCurrent = true;
 }
 
 void Renderer::Create(Config* config, GLFWwindow* window)
@@ -73,7 +75,7 @@ Renderer::~Renderer()
 	DestroyVulkan();
 }
 
-void Renderer::Render(const Mesh* mesh, const Material* material, const Matrix4& transform) const
+void Renderer::Render(const Mesh* mesh, const Material* material, const mat4& transform) const
 {
 	material->Bind(m_frameCmdBuf, transform);
 

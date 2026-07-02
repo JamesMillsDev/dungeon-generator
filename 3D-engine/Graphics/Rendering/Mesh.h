@@ -7,13 +7,18 @@
 #include <vulkan/vulkan.h>
 
 #include "Maths/Color.h"
-#include "Maths/Vector2.h"
-#include "Maths/Vector3.h"
-#include "Maths/Vector4.h"
+
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 
 class VulkanBuffer;
+
 using std::array;
 using std::vector;
+using glm::vec2;
+using glm::vec3;
+using glm::vec4;
 
 enum : uint8
 {
@@ -34,16 +39,16 @@ public:
 
 public:
 	/** @brief The location of the vertex in model space. */
-	Vector3 location;
+	vec3 location;
 	/** @brief The normal of the vertex in model space. */
-	Vector4 normal;
+	vec4 normal;
 	/** @brief The tangent of the vertex in model space. */
-	Vector4 tangent;
+	vec4 tangent;
 	/** @brief The bitangent of the vertex in model space. */
-	Vector4 biTangent;
+	vec4 biTangent;
 
 	/** @brief The first texture coordinate of the vertex. */
-	Vector2 uv;
+	vec2 uv;
 	/** @brief The first color of the vertex. */
 	Color color;
 

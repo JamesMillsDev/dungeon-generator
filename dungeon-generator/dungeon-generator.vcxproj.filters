@@ -10,20 +10,7 @@
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
     <Filter Include="Config Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="Content Files">
-      <UniqueIdentifier>{b6a75576-45c9-47cf-b450-e5a4b3da6643}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Content Files\Shaders">
-      <UniqueIdentifier>{6e8d21ca-6fa7-4871-9cda-9aa050d07bc7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Content Files\Textures">
-      <UniqueIdentifier>{a7317857-dbfc-45b6-9068-d82558de7181}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Content Files\Meshes">
-      <UniqueIdentifier>{278c3e89-06d8-47c4-8572-1e543c30c9a9}</UniqueIdentifier>
+      <UniqueIdentifier>{287787fa-2b47-49ef-80c2-356c88a87bf1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -35,163 +22,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Config\Engine.json">
-      <Filter>Config Files</Filter>
-    </None>
-    <None Include="Content\Shaders\pbr.slang">
-      <Filter>Content Files\Shaders</Filter>
-    </None>
-    <None Include="Content\Shaders\global.slang">
-      <Filter>Content Files\Shaders</Filter>
-    </None>
-    <None Include="Content\Shaders\graphics.slang">
-      <Filter>Content Files\Shaders</Filter>
-    </None>
-    <None Include="Content\Textures\colormap.pvr">
-      <Filter>Content Files\Textures</Filter>
-    </None>
-    <None Include="Content\Textures\T_Windmill_BC.pvr">
-      <Filter>Content Files\Textures</Filter>
-    </None>
-    <None Include="Content\Textures\T_Windmill_M.pvr">
-      <Filter>Content Files\Textures</Filter>
-    </None>
-    <None Include="Content\Textures\T_Windmill_N.pvr">
-      <Filter>Content Files\Textures</Filter>
-    </None>
-    <None Include="Content\Textures\T_Windmill_O.pvr">
-      <Filter>Content Files\Textures</Filter>
-    </None>
-    <None Include="Content\Textures\T_Windmill_R.pvr">
-      <Filter>Content Files\Textures</Filter>
-    </None>
-    <None Include="Content\Meshes\corridor.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\corridor-corner.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\corridor-end.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\corridor-intersection.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\corridor-junction.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\corridor-transition.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\corridor-wide.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\corridor-wide-corner.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\corridor-wide-end.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\corridor-wide-intersection.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\corridor-wide-junction.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\gate.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\gate-door.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\gate-door-window.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\gate-metal-bars.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\room-corner.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\room-large.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\room-large-variation.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\room-small.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\room-small-variation.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\room-wide.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\room-wide-variation.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\SM_Windmill.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\stairs.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\stairs-wide.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\template-corner.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\template-detail.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\template-floor.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\template-floor-big.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\template-floor-detail.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\template-floor-detail-a.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\template-floor-layer.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\template-floor-layer-hole.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\template-floor-layer-raised.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\template-wall.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\template-wall-corner.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\template-wall-detail-a.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\template-wall-half.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\template-wall-stairs.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Meshes\template-wall-top.fbx">
-      <Filter>Content Files\Meshes</Filter>
-    </None>
-    <None Include="Content\Shaders\lighting.slang">
-      <Filter>Content Files\Shaders</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="DungeonGameInstance.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Config\Engine.json">
+      <Filter>Config Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

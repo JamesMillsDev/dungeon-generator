@@ -5,11 +5,13 @@
 #include <vulkan/vulkan.h>
 
 #include "Maths/Color.h"
-#include "Maths/Matrix4.h"
+
+#include <glm/mat4x4.hpp>
 
 class VulkanGraphicsPipeline;
 class Texture;
 
+using glm::mat4;
 using std::string;
 using std::vector;
 
@@ -36,6 +38,6 @@ public:
 	~Material();
 
 private:
-	void Bind(VkCommandBuffer cmdBuffer, const Matrix4& transform) const;
+	void Bind(VkCommandBuffer cmdBuffer, const mat4& transform) const;
 
 };

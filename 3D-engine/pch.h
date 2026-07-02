@@ -19,10 +19,5 @@
 
 #include "Maths/Color.h"
 #include "Maths/Maths.h"
-#include "Maths/Matrix3.h"
-#include "Maths/Matrix4.h"
-#include "Maths/Vector2.h"
-#include "Maths/Vector3.h"
-#include "Maths/Vector4.h"
 
 #endif //PCH_H

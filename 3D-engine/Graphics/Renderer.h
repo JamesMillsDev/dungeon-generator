@@ -5,6 +5,7 @@
 #include <string>
 #include <vulkan/vulkan.h>
 
+class CameraComponent;
 class Application;
 class Config;
 struct GLFWwindow;
@@ -21,12 +22,14 @@ class Renderer
 
 private:
 	static Renderer* m_instance;
+	static CameraComponent* m_currentCamera;
 
 public:
 	static Renderer* Instance();
 	[[nodiscard]] static bool IsValid();
 
-	static ProjectionViewUniform ProjectionViewMatrix();
+	static CameraComponent* GetCurrentCamera();
+	static void SetCurrent(CameraComponent* newCurrent);
 
 private:
 	static void Create(Config* config, GLFWwindow* window);
@@ -46,7 +49,7 @@ private:
 	~Renderer();
 
 public:
-	void Render(const Mesh* mesh, const Material* material, const Matrix4& transform) const;
+	void Render(const Mesh* mesh, const Material* material, const mat4& transform) const;
 	
 private:
 	void BeginFrame();

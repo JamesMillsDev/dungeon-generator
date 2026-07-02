@@ -1,7 +1,10 @@
 #include "pch.h"
 #include "Material.h"
 
+#include <glm/ext/matrix_transform.hpp>
+
 #include "Texture.h"
+#include "Gameplay/Actors/Components/Rendering/CameraComponent.h"
 #include "Graphics/Renderer.h"
 #include "Graphics/Vulkan/Uniforms.h"
 #include "Graphics/Vulkan/Vulkan.h"
@@ -25,7 +28,7 @@ Material::~Material()
 	m_pipeline = nullptr;
 }
 
-void Material::Bind(const VkCommandBuffer cmdBuffer, const Matrix4& transform) const
+void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform) const
 {
 	// Update the material uniform with this material's data
 	const VulkanBuffer* materialBuffer = Vulkan::Instance()->GetMaterialBuffer();
@@ -44,9 +47,11 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const Matrix4& transform) c
 
 	// Update the transform buffer with our object's transform
 	const VulkanBuffer* uboBuffer = Vulkan::Instance()->GetUboBuffer();
-	ProjectionViewUniform ubo = Renderer::ProjectionViewMatrix();
-	ubo.model = transform;
-	uboBuffer->Fill(&ubo);
+	ProjectionViewModelUniform pvm;
+	Renderer::GetCurrentCamera()->GetPvm(pvm);
+
+	pvm.model = transform;
+	uboBuffer->Fill(&pvm);
 
 	// TODO: Use more dynamic lighting. This is a test
 	const VulkanBuffer* lightBuffer = Vulkan::Instance()->GetLightBuffer();

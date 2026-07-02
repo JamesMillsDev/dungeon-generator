@@ -2,6 +2,7 @@
 
 #include "Gameplay/Actors/Transform.h"
 #include "Gameplay/Actors/World.h"
+#include "Gameplay/Actors/Components/Rendering/CameraComponent.h"
 #include "Gameplay/Actors/Components/Rendering/MeshComponent.h"
 
 #include "Graphics/Rendering/Material.h"
@@ -9,20 +10,21 @@
 #include "Graphics/Rendering/Texture.h"
 
 DungeonGameInstance::DungeonGameInstance() :
-	m_actor{ nullptr }, m_material{ nullptr }, m_mesh{ nullptr }
+	m_meshActor{ nullptr }, m_cameraActor{ nullptr }, m_material{ nullptr }, m_mesh{ nullptr }
 {}
 
 void DungeonGameInstance::Init()
 {
+	m_cameraActor = GetWorld()->MakeActor<Actor>();
+	m_cameraActor->MakeComponent<CameraComponent>(45.f, .1f, 100.f);
+	m_cameraActor->GetTransform()->AddRelativeLocation({ 0.f, 2.f, -10.f });
+
 	m_mesh = Mesh::MakeFromAssimp("Meshes/SM_Soulspear.fbx");
 	m_material = new Material{ "Shaders/pbr" };
 	m_material->baseColorMap = new Texture{ "Textures/T_Soulspear_B" }; 
 
-	m_actor = GetWorld()->MakeActor<Actor>();
-	m_actor->GetTransform()->AddRelativeScale({ 10.f, 10.f, 10.f });
-	m_actor->GetTransform()->AddRelativeLocation({ 0.f, .02f, -.01f });
-	m_actor->GetTransform()->AddRelativeEulerAngles({ 0.f, 0.f, 180.f });
-	m_actor->MakeComponent<MeshComponent>(m_mesh, m_material);
+	m_meshActor = GetWorld()->MakeActor<Actor>();
+	m_meshActor->MakeComponent<MeshComponent>(m_mesh, m_material);
 }
 
 void DungeonGameInstance::Shutdown()

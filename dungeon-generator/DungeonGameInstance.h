@@ -9,7 +9,9 @@ class Actor;
 class DungeonGameInstance final : public GameInstance
 {
 private:
-	Actor* m_actor;
+	Actor* m_meshActor;
+	Actor* m_cameraActor;
+
 	Material* m_material;
 	Mesh* m_mesh;
 

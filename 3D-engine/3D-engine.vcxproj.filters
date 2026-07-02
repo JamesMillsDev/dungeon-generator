@@ -7,11 +7,6 @@
     <ClInclude Include="Maths\Alias.h" />
     <ClInclude Include="Maths\Maths.h" />
     <ClInclude Include="Maths\Color.h" />
-    <ClInclude Include="Maths\Matrix3.h" />
-    <ClInclude Include="Maths\Matrix4.h" />
-    <ClInclude Include="Maths\Vector2.h" />
-    <ClInclude Include="Maths\Vector3.h" />
-    <ClInclude Include="Maths\Vector4.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Graphics\Renderer.h" />
     <ClInclude Include="Utility\Config.h" />
@@ -35,17 +30,13 @@
     <ClInclude Include="Graphics\Vulkan\VulkanGraphicsPipeline.h" />
     <ClInclude Include="Resources.h" />
     <ClInclude Include="Gameplay\Actors\Components\Rendering\LightComponent.h" />
+    <ClInclude Include="Gameplay\Actors\Components\Rendering\CameraComponent.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="GameTime.cpp" />
     <ClCompile Include="Maths\Maths.cpp" />
     <ClCompile Include="Maths\Color.cpp" />
-    <ClCompile Include="Maths\Matrix3.cpp" />
-    <ClCompile Include="Maths\Matrix4.cpp" />
-    <ClCompile Include="Maths\Vector2.cpp" />
-    <ClCompile Include="Maths\Vector3.cpp" />
-    <ClCompile Include="Maths\Vector4.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="Graphics\Renderer.cpp" />
     <ClCompile Include="Utility\Config.cpp" />
@@ -67,5 +58,6 @@
     <ClCompile Include="Graphics\Vulkan\VulkanGraphicsPipeline.cpp" />
     <ClCompile Include="Resources.cpp" />
     <ClCompile Include="Gameplay\Actors\Components\Rendering\LightComponent.cpp" />
+    <ClCompile Include="Gameplay\Actors\Components\Rendering\CameraComponent.cpp" />
   </ItemGroup>
 </Project>

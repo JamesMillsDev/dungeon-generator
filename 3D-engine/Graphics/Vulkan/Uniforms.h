@@ -2,15 +2,19 @@
 
 #include "Maths/Alias.h"
 #include "Maths/Color.h"
-#include "Maths/Matrix4.h"
-#include "Maths/Vector3.h"
 
-struct ProjectionViewUniform
+#include <glm/mat4x4.hpp>
+#include <glm/vec3.hpp>
+
+using glm::mat4;
+using glm::vec3;
+
+struct ProjectionViewModelUniform
 {
-	Matrix4 proj;
-	Matrix4 view;
-	Matrix4 model;
-	Vector3 cameraLocation;
+	mat4 proj;
+	mat4 view;
+	mat4 model;
+	vec3 cameraLocation;
 };
 
 struct MaterialUniform
@@ -28,8 +32,8 @@ struct MaterialUniform
 
 struct LightUniform
 {
-	Vector3 location;
-	Vector3 direction;
+	vec3 location;
+	vec3 direction;
 	Color color;
 	int32 type;
 };
