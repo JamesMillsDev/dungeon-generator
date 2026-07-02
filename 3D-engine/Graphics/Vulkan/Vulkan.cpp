@@ -236,6 +236,7 @@ Vulkan::Vulkan(Config* config, GLFWwindow* window)
 	m_engineName = config->Get<string>("Engine.Title");
 	m_engineVersion = new Version{ "Engine.Version", config };
 	m_clearColor = config->Get<Color>("Window.ClrColor");
+	m_clearColor.ToGamma();
 
 	Init(window);
 }
@@ -683,7 +684,7 @@ void Vulkan::Init(GLFWwindow* window)
 				swapChainCI.surface = m_surface;
 				swapChainCI.minImageCount = surfaceCaps.minImageCount;
 				swapChainCI.imageFormat = imageFormat;
-				swapChainCI.imageColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+				swapChainCI.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
 				swapChainCI.imageExtent = { .width = swapChainExtent.width, .height = swapChainExtent.height };
 				swapChainCI.imageArrayLayers = 1;
 				swapChainCI.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
@@ -1162,7 +1163,10 @@ VkCommandBuffer Vulkan::BeginFrame()
 	colorAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL;
 	colorAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	colorAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-	colorAttachmentInfo.clearValue = { .color = static_cast<VkClearColorValue>(m_clearColor) };  // NOLINT(clang-diagnostic-missing-braces)
+	colorAttachmentInfo.clearValue.color.float32[0] = m_clearColor.r / 255.f;  // NOLINT(clang-diagnostic-missing-braces)
+	colorAttachmentInfo.clearValue.color.float32[1] = m_clearColor.g / 255.f;  // NOLINT(clang-diagnostic-missing-braces)
+	colorAttachmentInfo.clearValue.color.float32[2] = m_clearColor.b / 255.f;  // NOLINT(clang-diagnostic-missing-braces)
+	colorAttachmentInfo.clearValue.color.float32[3] = m_clearColor.a / 255.f;  // NOLINT(clang-diagnostic-missing-braces)
 
 	VkRenderingAttachmentInfo depthAttachmentInfo{};
 	depthAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;

@@ -11,17 +11,13 @@ Actor::Actor()
 
 Actor::~Actor()
 {
-	for (Transform* child : m_transform->Children())
-	{
-		delete child->Owner();
-	}
-
 	delete m_transform;
 
 	for (IComponent* component : m_components)
 	{
 		DestroyComponent(component);
 	}
+	
 	ApplyComponentListChanges();
 }
 

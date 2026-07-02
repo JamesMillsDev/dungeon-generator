@@ -1,39 +1,34 @@
 #pragma once
 
 #include <functional>
-#include <vector>
 
-#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
-#include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 class Actor;
 
-using std::function;
-using std::pair;
-using std::vector;
-
-using TransformChildrenUpdate = function<void()>;
-
+using IterationFunc = std::function<void(class Transform*, int)>;
 using glm::mat4;
 using glm::quat;
 using glm::vec3;
 
 class Transform
 {
-	friend class Actor;
-	friend class World;
+	friend Actor;
+
+public:
+	vec3 location;
+	quat rotation;
+	vec3 scale;
+
+	Transform* parent;
+	Transform* nextSibling;
+	Transform* previousSibling;
+	Transform* lastChild;
 
 private:
 	Actor* m_owner;
-
-	mat4 m_transform;
-
-	Transform* m_parent;
-	vector<Transform*> m_children;
-
-	vector<TransformChildrenUpdate> m_childListUpdates;
 
 private:
 	Transform();
@@ -42,45 +37,21 @@ private:
 public:
 	[[nodiscard]] Actor* Owner() const;
 
-	[[nodiscard]] Transform* Parent() const;
-	[[nodiscard]] vector<Transform*> Children() const;
+	[[nodiscard]] mat4 LocalToWorld() const;
+	[[nodiscard]] mat4 WorldToLocal() const;
 
-	void SetParent(Transform* parent);
-	[[nodiscard]] mat4 GlobalTransform() const;
+	[[nodiscard]] vec3 Right() const;
+	[[nodiscard]] vec3 Up() const;
+	[[nodiscard]] vec3 Forward() const;
 
-	[[nodiscard]] vec3 Location() const;
-	[[nodiscard]] quat Rotation() const;
-	[[nodiscard]] vec3 EulerAngles() const;
-	[[nodiscard]] vec3 Scale() const;
-
-	[[nodiscard]] vec3 RelativeLocation() const;
-	[[nodiscard]] vec3 RelativeEulerAngles() const;
-	[[nodiscard]] vec3 RelativeScale() const;
-
-	void SetLocation(const vec3& location);
-	void SetRotation(const quat& rotation);
-	void SetEulerAngles(const vec3& euler);
-	void SetScale(const vec3& scale);
-
-	void SetRelativeLocation(const vec3& location);
-	void SetRelativeRotation(const quat& rotation);
-	void SetRelativeEulerAngles(const vec3& euler);
-	void SetRelativeScale(const vec3& scale);
-
-	void AddLocation(const vec3& location);
-	void AddRotation(const quat& rotation);
-	void AddEulerAngles(const vec3& euler);
-	void AddScale(const vec3& scale);
-
-	void AddRelativeLocation(const vec3& location);
-	void AddRelativeRotation(const quat& rotation);
-	void AddRelativeEulerAngles(const vec3& euler);
-	void AddRelativeScale(const vec3& scale);
+	void SetParent(Transform* newParent, Transform* before = nullptr);
+	void ForEachChild(const IterationFunc& iteration) const;
 
 private:
-	void ApplyChildListChanges();
+	[[nodiscard]] mat4 LocalToParent() const;
+	[[nodiscard]] mat4 ParentToLocal() const;
 
-	void DecomposeLocal(vec3& location, quat& rotation, vec3& scale, vec3& euler) const;
-	void DecomposeGlobal(vec3& location, quat& rotation, vec3& scale, vec3& euler) const;
+private:
+	void ValidatePointers() const;
 
 };

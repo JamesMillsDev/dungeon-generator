@@ -47,7 +47,6 @@ T* World::MakeActor(ARGS... args)
 	m_lifetimeChanges.emplace_back([this, actor]()
 		{
 			actor->GetTransform()->SetParent(m_root->GetTransform());
-			actor->GetTransform()->ApplyChildListChanges();
 
 			actor->BeginPlay();
 			actor->ApplyComponentListChanges();

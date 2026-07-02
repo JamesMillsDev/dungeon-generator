@@ -14,5 +14,5 @@ MeshComponent::MeshComponent(Mesh* mesh, Material* material)
 
 void MeshComponent::Render()
 {
-	Renderer::Instance()->Render(m_mesh, m_material, Owner()->GetTransform()->GlobalTransform());
+	Renderer::Instance()->Render(m_mesh, m_material, Owner()->GetTransform()->LocalToWorld());
 }

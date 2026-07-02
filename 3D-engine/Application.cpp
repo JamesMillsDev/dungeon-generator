@@ -8,6 +8,7 @@
 
 #include "GameTime.h"
 #include "Resources.h"
+#include "Gameplay/SimpleInput.h"
 
 #include "Gameplay/Actors/World.h"
 
@@ -74,6 +75,7 @@ EExitCode Application::Run() const
 		return EExitCode::RendererFailedToInit;
 	}
 
+	SimpleInput::Create();
 	Resources::Init(m_config);
 	GameTime::Init();
 
@@ -85,6 +87,7 @@ EExitCode Application::Run() const
 	{
 		GameTime::Tick();
 
+		SimpleInput::Instance()->ClearStatus();
 		glfwPollEvents();
 
 		m_game->Tick();
@@ -106,6 +109,7 @@ EExitCode Application::Run() const
 	// Shutdown the game instance and close the window
 	m_game->Shutdown();
 
+	SimpleInput::Destroy();
 	Resources::Shutdown();
 	Renderer::Destroy();
 

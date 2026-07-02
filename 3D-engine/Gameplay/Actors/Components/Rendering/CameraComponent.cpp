@@ -17,8 +17,8 @@ void CameraComponent::GetPvm(ProjectionViewModelUniform& pvm) const
 	const Transform* transform = Owner()->GetTransform();
 
 	pvm.proj = glm::perspective(Maths::Radians(fovY), m_window->Aspect(), nearPlane, farPlane);
-	pvm.view = transform->GlobalTransform();
-	pvm.cameraLocation = transform->Location();
+	pvm.view = transform->LocalToWorld();
+	pvm.cameraLocation = transform->location;
 }
 
 bool CameraComponent::IsCurrent() const

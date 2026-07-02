@@ -17,7 +17,6 @@ void World::DestroyActor(Actor* actor)
 	m_lifetimeChanges.emplace_back([this, actor]
 	{
 			actor->GetTransform()->SetParent(nullptr);
-			actor->GetTransform()->ApplyChildListChanges();
 
 			actor->EndPlay();
 			actor->ApplyComponentListChanges();
@@ -43,7 +42,6 @@ void World::Tick(Actor* actor)
 		m_lifetimeChanges.clear();
 	}
 
-	actor->m_transform->ApplyChildListChanges();
 	actor->ApplyComponentListChanges();
 
 	actor->Tick();
@@ -52,10 +50,10 @@ void World::Tick(Actor* actor)
 		component->Tick();
 	}
 
-	for (Transform* child : actor->GetTransform()->Children())
-	{
-		Tick(child->Owner());
-	}
+	actor->GetTransform()->ForEachChild([this](const Transform* child, int index)
+		{
+			Tick(child->Owner());
+		});
 }
 
 void World::Render(Actor* actor)
@@ -74,8 +72,8 @@ void World::Render(Actor* actor)
 		}
 	}
 
-	for (Transform* child : actor->GetTransform()->Children())
-	{
-		Render(child->Owner());
-	}
+	actor->GetTransform()->ForEachChild([this](const Transform* child, int index)
+		{
+			Render(child->Owner());
+		});
 }

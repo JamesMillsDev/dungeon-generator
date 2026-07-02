@@ -204,6 +204,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Gameplay\Actors\Actor.h" />
+    <ClInclude Include="Gameplay\Actors\Components\FlyMovement.h" />
     <ClInclude Include="Gameplay\Actors\Components\IComponent.h" />
     <ClInclude Include="Gameplay\Actors\Components\Rendering\CameraComponent.h" />
     <ClInclude Include="Gameplay\Actors\Components\Rendering\LightComponent.h" />
@@ -212,6 +213,7 @@
     <ClInclude Include="Gameplay\Actors\World.h" />
     <ClInclude Include="Application.h" />
     <ClInclude Include="Gameplay\GameInstance.h" />
+    <ClInclude Include="Gameplay\SimpleInput.h" />
     <ClInclude Include="GameTime.h" />
     <ClInclude Include="Graphics\Rendering\Material.h" />
     <ClInclude Include="Graphics\Rendering\Shader.h" />
@@ -236,6 +238,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Gameplay\Actors\Actor.cpp" />
+    <ClCompile Include="Gameplay\Actors\Components\FlyMovement.cpp" />
     <ClCompile Include="Gameplay\Actors\Components\Rendering\CameraComponent.cpp" />
     <ClCompile Include="Gameplay\Actors\Components\Rendering\LightComponent.cpp" />
     <ClCompile Include="Gameplay\Actors\Components\Rendering\MeshComponent.cpp" />
@@ -243,6 +246,7 @@
     <ClCompile Include="Gameplay\Actors\World.cpp" />
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Gameplay\GameInstance.cpp" />
+    <ClCompile Include="Gameplay\SimpleInput.cpp" />
     <ClCompile Include="GameTime.cpp" />
     <ClCompile Include="Graphics\Rendering\Material.cpp" />
     <ClCompile Include="Graphics\Rendering\Shader.cpp" />

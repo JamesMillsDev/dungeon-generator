@@ -359,7 +359,9 @@ Color::operator vec4() const
 
 Color::operator VkClearColorValue() const
 {
-	return { r / 255.f, g / 255.f, b / 255.f, a / 255.f };
+	Color gamma = Gamma();
+
+	return { { gamma.r / 255.f, gamma.g / 255.f, gamma.b / 255.f, gamma.a / 255.f } };
 }
 
 bool Color::operator==(const Color& rhs) const
