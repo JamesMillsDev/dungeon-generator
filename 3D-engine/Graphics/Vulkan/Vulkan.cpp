@@ -9,6 +9,8 @@
 #include "Application.h"
 #include "Uniforms.h"
 #include "VulkanBuffer.h"
+#include "VulkanDescriptorWriter.h"
+#include "VulkanDynamicDescriptorAllocator.h"
 #include "Window.h"
 #include "Gameplay/Actors/Components/Rendering/LightComponent.h"
 #include "Graphics/Rendering/Material.h"
@@ -22,6 +24,40 @@ using std::exception;
 constexpr uint32 MAX_TEXTURE_DESCRIPTORS = UINT16_MAX;
 constexpr int32 DEFAULT_RESOURCE_STACK_SIZE = 16;
 constexpr int32 UNIFORM_BUFFER_COUNT = 3;
+
+constexpr array UNIFORM_DATAS
+{
+	UniformBufferData
+	{
+		.count = 1,
+		.size = sizeof(ProjectionViewModelUniform),
+		.id = static_cast<uint16>(EUniformBufferIds::ProjectionView)
+	},
+	UniformBufferData
+	{
+		.count = 1,
+		.size = sizeof(SceneLightingData),
+		.id = static_cast<uint16>(EUniformBufferIds::SceneLighting)
+	},
+	UniformBufferData
+	{
+		.count = MAX_LIGHT_COUNT,
+		.size = sizeof(LightUniform),
+		.id = static_cast<uint16>(EUniformBufferIds::Lights)
+	},
+	UniformBufferData
+	{
+		.count = 1,
+		.size = sizeof(MaterialUniform),
+		.id = static_cast<uint16>(EUniformBufferIds::Material)
+	},
+	UniformBufferData
+	{
+		.count = 1,
+		.size = sizeof(PushConstantData),
+		.id = static_cast<uint16>(EUniformBufferIds::PushConstant)
+	},
+};
 
 namespace
 {
@@ -148,12 +184,12 @@ const VkDescriptorSetLayout& Vulkan::GetDescriptorSetLayout() const
 	return m_descriptorSetLayout;
 }
 
-const VkDescriptorSet& Vulkan::TextureDescriptorSets()
+const VkDescriptorSet& Vulkan::DescriptorSet()
 {
-	return m_instance->GetTextureDescriptorSets();
+	return m_instance->GetDescriptorSet();
 }
 
-const VkDescriptorSet& Vulkan::GetTextureDescriptorSets() const
+const VkDescriptorSet& Vulkan::GetDescriptorSet() const
 {
 	return m_descriptorSet;
 }
@@ -319,29 +355,14 @@ void Vulkan::EndOneTimeCommand(const VkCommandBuffer& buffer, const VkFence& fen
 	vkDestroyFence(m_device, fence, nullptr);
 }
 
-VulkanBuffer* Vulkan::GetUboBuffer() const
+VulkanBuffer* Vulkan::GetUniformBuffer(const uint16 id, const uint32 index) const
 {
-	return m_uboBuffers[m_frameIndex];
+	return m_shaderDataBuffers[m_frameIndex].at(id)[index];
 }
 
-VulkanBuffer* Vulkan::GetLightBuffer(int index) const
+VulkanBuffer* Vulkan::GetUniformBuffer(EUniformBufferIds id, const uint32 index) const
 {
-	return m_lightBuffers[m_frameIndex][index];
-}
-
-VulkanBuffer* Vulkan::GetSceneLightingBuffer() const
-{
-	return m_sceneLightingBuffers[m_frameIndex];
-}
-
-VulkanBuffer* Vulkan::GetMaterialBuffer() const
-{
-	return m_materialBuffers[m_frameIndex];
-}
-
-VulkanBuffer* Vulkan::GetPushConstantBuffer() const
-{
-	return m_pushConstantBuffers[m_frameIndex];
+	return GetUniformBuffer(static_cast<uint16>(id), index);
 }
 
 void Vulkan::AddTexture(Texture* texture)
@@ -370,26 +391,18 @@ void Vulkan::WriteTextureDescriptorSets()
 		return;
 	}
 
-	vector<VkDescriptorImageInfo> textureDescriptors(m_textures.size());
-	for (uint64 i = 0; i < m_textures.size(); ++i)
+	for (const auto& texture : m_textures)
 	{
-		textureDescriptors[i] = m_textures[i]->GetDescriptors();
+		auto [sampler, imageView, imageLayout] = texture->GetDescriptors();
+
+		m_descriptorWriter->Write(
+			3, imageView, sampler, imageLayout,
+			VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
+		);
 	}
 
-	const VkWriteDescriptorSet writeDescSet
-	{
-		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-		.pNext = nullptr,
-		.dstSet = m_descriptorSet,
-		.dstBinding = m_maxDescriptorBinding - 1,
-		.dstArrayElement = 0,
-		.descriptorCount = static_cast<uint32>(textureDescriptors.size()),
-		.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-		.pImageInfo = textureDescriptors.data(),
-		.pBufferInfo = nullptr,
-		.pTexelBufferView = nullptr
-	};
-	vkUpdateDescriptorSets(m_device, 1, &writeDescSet, 0, nullptr);
+	m_descriptorWriter->UpdateSet(m_descriptorSet, m_device);
+	m_descriptorWriter->Clear();
 
 	m_updateTextureDescriptors = false;
 }
@@ -778,25 +791,20 @@ void Vulkan::Init(GLFWwindow* window)
 				// We need a set of buffers for every frame in flight
 				for (uint32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 				{
-					vector<VulkanBuffer*> buffers;
+					unordered_map<uint16, vector<VulkanBuffer*>> buffers;
 
-					m_uboBuffers[i] = new VulkanBuffer{ sizeof(ProjectionViewModelUniform), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this };
-					buffers.emplace_back(m_uboBuffers[i]);
-
-					for (int l = 0; l < MAX_LIGHT_COUNT; ++l)
+					for (const UniformBufferData& uniformData : UNIFORM_DATAS)
 					{
-						m_lightBuffers[i][l] = new VulkanBuffer{ sizeof(LightUniform), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this };
-						buffers.emplace_back(m_lightBuffers[i][l]);
+						for (uint32 j = 0; j < uniformData.count; ++j)
+						{
+							buffers[uniformData.id].emplace_back(new VulkanBuffer
+								{
+									uniformData.size,
+									VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+									this
+								});
+						}
 					}
-
-					m_sceneLightingBuffers[i] = new VulkanBuffer{ sizeof(SceneLightingData), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this };
-					buffers.emplace_back(m_sceneLightingBuffers[i]);
-
-					m_materialBuffers[i] = new VulkanBuffer{ sizeof(MaterialUniform), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this };
-					buffers.emplace_back(m_materialBuffers[i]);
-
-					m_pushConstantBuffers[i] = new VulkanBuffer{ sizeof(PushConstantData), VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, this };
-					buffers.emplace_back(m_pushConstantBuffers[i]);
 
 					m_shaderDataBuffers[i] = buffers;
 				}
@@ -806,9 +814,12 @@ void Vulkan::Init(GLFWwindow* window)
 				for (uint32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 				{
 					// Delete each buffer for this frame in flight
-					for (const VulkanBuffer* buffer : m_shaderDataBuffers[i])
+					for (const vector<VulkanBuffer*>& buffers : m_shaderDataBuffers[i] | std::views::values)
 					{
-						delete buffer;
+						for (const VulkanBuffer* buffer : buffers)
+						{
+							delete buffer;
+						}
 					}
 
 					m_shaderDataBuffers[i].clear();
@@ -908,19 +919,48 @@ void Vulkan::Init(GLFWwindow* window)
 				array dslBindings =
 				{
 					VkDescriptorSetLayoutBinding
-					{
-						.binding = m_maxDescriptorBinding++,
-						.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-						.descriptorCount = MAX_TEXTURE_DESCRIPTORS,
-						.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-						.pImmutableSamplers = nullptr,
-					},
+						{
+							.binding = m_descriptorBindingIndex++,
+							.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+							.descriptorCount = 1,
+							.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+							.pImmutableSamplers = nullptr,
+						},
+						VkDescriptorSetLayoutBinding
+						{
+							.binding = m_descriptorBindingIndex++,
+							.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+							.descriptorCount = 1,
+							.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+							.pImmutableSamplers = nullptr,
+						},
+						VkDescriptorSetLayoutBinding
+						{
+							.binding = m_descriptorBindingIndex++,
+							.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+							.descriptorCount = MAX_LIGHT_COUNT,
+							.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+							.pImmutableSamplers = nullptr,
+						},
+						VkDescriptorSetLayoutBinding
+						{
+							.binding = m_descriptorBindingIndex++,
+							.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+							.descriptorCount = MAX_TEXTURE_DESCRIPTORS,
+							.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+							.pImmutableSamplers = nullptr,
+						},
 				};
 
 				array flags =
 				{
-					VkDescriptorBindingFlags{ VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT },
+					VkDescriptorBindingFlags{VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT},
+					VkDescriptorBindingFlags{VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT},
+					VkDescriptorBindingFlags{VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT},
+					VkDescriptorBindingFlags{VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT},
 				};
+
+				assert(dslBindings.size() == flags.size());
 
 				const VkDescriptorSetLayoutBindingFlagsCreateInfo dslFlagsCreateInfo
 				{
@@ -945,61 +985,52 @@ void Vulkan::Init(GLFWwindow* window)
 					"Failed to create Descriptor Set Layout!"
 				);
 
-				array poolSizes
+				array poolRatios
 				{
-					VkDescriptorPoolSize
+					VulkanDynamicDescriptorAllocator::PoolSizeRatio
+					{
+						.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+						.ratio = 1
+					},
+					VulkanDynamicDescriptorAllocator::PoolSizeRatio
+					{
+						.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+						.ratio = MAX_LIGHT_COUNT + 1
+					},
+					VulkanDynamicDescriptorAllocator::PoolSizeRatio
 					{
 						.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-						.descriptorCount = MAX_TEXTURE_DESCRIPTORS
-					}
-				};
-				const VkDescriptorPoolCreateInfo dpCreateInfo
-				{
-					.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-					.pNext = nullptr,
-					.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT,
-					.maxSets = 1,
-					.poolSizeCount = static_cast<uint32>(poolSizes.size()),
-					.pPoolSizes = poolSizes.data()
+						.ratio = MAX_TEXTURE_DESCRIPTORS
+					},
 				};
 
-				// Create the descriptor pool
-				Try(
-					vkCreateDescriptorPool(m_device, &dpCreateInfo, nullptr, &m_descriptorPool),
-					"Failed to create Descriptor Pool!"
-				);
-
-				// Allocate the descriptor sets
-				constexpr VkDescriptorSetVariableDescriptorCountAllocateInfo vdcAllocateInfo
+				m_descriptorAllocator = new VulkanDynamicDescriptorAllocator
 				{
-					.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO_EXT,
-					.pNext = nullptr,
-					.descriptorSetCount = 1,
-					.pDescriptorCounts = &MAX_TEXTURE_DESCRIPTORS
-				};
-				const VkDescriptorSetAllocateInfo dsAllocateInfo
-				{
-					.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-					.pNext = &vdcAllocateInfo,
-					.descriptorPool = m_descriptorPool,
-					.descriptorSetCount = 1,
-					.pSetLayouts = &m_descriptorSetLayout
+					16, poolRatios, this
 				};
 
-				Try(
-					vkAllocateDescriptorSets(m_device, &dsAllocateInfo, &m_descriptorSet),
-					"Failed to allocate Descriptor Sets!"
-				);
+				m_descriptorSet = m_descriptorAllocator->Allocate(m_descriptorSetLayout, nullptr, this);
+
+				m_descriptorWriter = new VulkanDescriptorWriter;
+				/*for (uint64 i = 1; i < m_descriptorSet.size(); ++i)
+				{
+					m_descriptorWriter->UpdateSet(m_descriptorSet[i], m_device);
+				}*/
 			},
 			[this]
 			{
 				vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout, nullptr);
-				vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
+
+				delete m_descriptorWriter;
+				m_descriptorWriter = nullptr;
+
+				delete m_descriptorAllocator;
+				m_descriptorAllocator = nullptr;
 			}
 		);
 
 		// Set the resize callback
-		glfwSetWindowSizeCallback(window, [](GLFWwindow* win, int w, int h)
+		glfwSetWindowSizeCallback(window, [](GLFWwindow* win, const int w, const int h)
 			{
 				Application::GetWindow()->SetWidth(w);
 				Application::GetWindow()->SetWidth(h);

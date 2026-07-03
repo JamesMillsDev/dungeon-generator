@@ -221,6 +221,7 @@
     <ClInclude Include="Graphics\Rendering\Shader.h" />
     <ClInclude Include="Graphics\Vulkan\Vulkan.h" />
     <ClInclude Include="Graphics\Vulkan\VulkanBuffer.h" />
+    <ClInclude Include="Graphics\Vulkan\VulkanDescriptorWriter.h" />
     <ClInclude Include="Graphics\Vulkan\VulkanGraphicsPipeline.h" />
     <ClInclude Include="Maths\Alias.h" />
     <ClInclude Include="Maths\Maths.h" />
@@ -236,6 +237,7 @@
     <ClInclude Include="Utility\EnumHelpers.h" />
     <ClInclude Include="Utility\ResourceStack.h" />
     <ClInclude Include="Utility\Version.h" />
+    <ClInclude Include="Graphics\Vulkan\VulkanDynamicDescriptorAllocator.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
@@ -255,6 +257,7 @@
     <ClCompile Include="Graphics\Rendering\Shader.cpp" />
     <ClCompile Include="Graphics\Vulkan\Vulkan.cpp" />
     <ClCompile Include="Graphics\Vulkan\VulkanBuffer.cpp" />
+    <ClCompile Include="Graphics\Vulkan\VulkanDescriptorWriter.cpp" />
     <ClCompile Include="Graphics\Vulkan\VulkanGraphicsPipeline.cpp" />
     <ClCompile Include="Maths\Maths.cpp" />
     <ClCompile Include="Maths\Color.cpp" />
@@ -272,6 +275,7 @@
     <ClCompile Include="Utility\Console.cpp" />
     <ClCompile Include="Utility\ResourceStack.cpp" />
     <ClCompile Include="Utility\Version.cpp" />
+    <ClCompile Include="Graphics\Vulkan\VulkanDynamicDescriptorAllocator.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

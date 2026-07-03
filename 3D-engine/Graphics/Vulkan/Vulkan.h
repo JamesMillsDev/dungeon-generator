@@ -4,27 +4,30 @@
 #include <functional>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include <vma/vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
 
-#include "Gameplay/Actors/Components/Rendering/LightComponent.h"
 #include "Maths/Color.h"
 #include "Utility/ResourceStack.h"
 
-class VulkanGraphicsPipeline;
-class Texture;
-class VulkanBuffer;
-struct GLFWwindow;
 class Config;
+struct GLFWwindow;
 class Renderer;
+class Texture;
 class Version;
+class VulkanBuffer;
+class VulkanDynamicDescriptorAllocator;
+class VulkanDescriptorWriter;
+class VulkanGraphicsPipeline;
 
 using InitFunction = std::function<void()>;
 
 using std::array;
 using std::runtime_error;
 using std::string;
+using std::unordered_map;
 using std::vector;
 
 constexpr int32 MAX_FRAMES_IN_FLIGHT = 2;
@@ -44,6 +47,24 @@ const vector VALIDATION_LAYERS =
 	[[nodiscard]] static const TYPE& ##NAME(); \
 	[[nodiscard]] const TYPE& Get##NAME() const; \
 
+struct UniformBufferData
+{
+	uint32 count;
+	VkDeviceSize size;
+	uint16 id;
+};
+
+enum class EUniformBufferIds : uint16
+{
+	ProjectionView = 0,
+	SceneLighting = 1,
+	Lights = 2,
+	Material = 3,
+	PushConstant = UINT16_MAX
+};
+
+using UniformBufferSet = unordered_map<uint16, vector<VulkanBuffer*>>;
+
 class Vulkan  // NOLINT(cppcoreguidelines-special-member-functions)
 {
 	friend Renderer;
@@ -57,7 +78,7 @@ public:
 	DEFINE_ACCESSOR(VkDevice, Device)
 	DEFINE_ACCESSOR(VmaAllocator, Allocator)
 	DEFINE_ACCESSOR(VkDescriptorSetLayout, DescriptorSetLayout)
-	DEFINE_ACCESSOR(VkDescriptorSet, TextureDescriptorSets)
+	DEFINE_ACCESSOR(VkDescriptorSet, DescriptorSet)
 
 	[[nodiscard]] static bool IsLoaded();
 	[[nodiscard]] static runtime_error VulkanError(const string& message, VkResult result);
@@ -98,7 +119,7 @@ private:
 	VmaAllocation m_depthImageAllocation;
 	VkImageView m_depthImageView;
 
-	array<vector<VulkanBuffer*>, MAX_FRAMES_IN_FLIGHT> m_shaderDataBuffers;
+	array<UniformBufferSet, MAX_FRAMES_IN_FLIGHT> m_shaderDataBuffers;
 
 	array<VkFence, MAX_FRAMES_IN_FLIGHT> m_fences;
 	array<VkSemaphore, MAX_FRAMES_IN_FLIGHT> m_imageAcquiredSemaphores;
@@ -107,13 +128,8 @@ private:
 	VkCommandPool m_commandPool;
 	array<VkCommandBuffer, MAX_FRAMES_IN_FLIGHT> m_commandBuffers;
 
-	array<VulkanBuffer*, MAX_FRAMES_IN_FLIGHT> m_uboBuffers;
-	array<array<VulkanBuffer*, MAX_LIGHT_COUNT>, MAX_FRAMES_IN_FLIGHT> m_lightBuffers;
-	array<VulkanBuffer*, MAX_FRAMES_IN_FLIGHT> m_sceneLightingBuffers;
-	array<VulkanBuffer*, MAX_FRAMES_IN_FLIGHT> m_materialBuffers;
-	array<VulkanBuffer*, MAX_FRAMES_IN_FLIGHT> m_pushConstantBuffers;
-
-	VkDescriptorPool m_descriptorPool;
+	VulkanDynamicDescriptorAllocator* m_descriptorAllocator;
+	VulkanDescriptorWriter* m_descriptorWriter;
 	VkDescriptorSetLayout m_descriptorSetLayout;
 	VkDescriptorSet m_descriptorSet;
 	vector<Texture*> m_textures;
@@ -122,7 +138,7 @@ private:
 	uint32 m_imageIndex;
 	bool m_recreateSwapChain;
 	bool m_updateTextureDescriptors;
-	uint32 m_maxDescriptorBinding;
+	uint32 m_descriptorBindingIndex = 0;
 
 private:
 	explicit Vulkan(Config* config, GLFWwindow* window);
@@ -132,11 +148,8 @@ public:
 	void BeginOneTimeCommand(VkCommandBuffer& buffer, VkFence& fence) const;
 	void EndOneTimeCommand(const VkCommandBuffer& buffer, const VkFence& fence) const;
 
-	[[nodiscard]] VulkanBuffer* GetUboBuffer() const;
-	[[nodiscard]] VulkanBuffer* GetLightBuffer(int index) const;
-	[[nodiscard]] VulkanBuffer* GetSceneLightingBuffer() const;
-	[[nodiscard]] VulkanBuffer* GetMaterialBuffer() const;
-	[[nodiscard]] VulkanBuffer* GetPushConstantBuffer() const;
+	[[nodiscard]] VulkanBuffer* GetUniformBuffer(uint16 id, uint32 index = 0) const;
+	[[nodiscard]] VulkanBuffer* GetUniformBuffer(EUniformBufferIds id, uint32 index = 0) const;
 
 	void AddTexture(Texture* texture);
 	void RemoveTexture(Texture* texture);

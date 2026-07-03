@@ -32,7 +32,7 @@ Material::~Material()
 void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform) const
 {
 	// Update the material uniform with this material's data
-	const VulkanBuffer* materialBuffer = Vulkan::Instance()->GetMaterialBuffer();
+	const VulkanBuffer* materialBuffer = Vulkan::Instance()->GetUniformBuffer(EUniformBufferIds::Material);
 	const MaterialUniform materialUniform
 	{
 		.color = color,
@@ -49,7 +49,7 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform) cons
 	materialBuffer->Fill(&materialUniform);
 
 	// Update the transform buffer with our object's transform
-	const VulkanBuffer* uboBuffer = Vulkan::Instance()->GetUboBuffer();
+	const VulkanBuffer* uboBuffer = Vulkan::Instance()->GetUniformBuffer(EUniformBufferIds::ProjectionView);
 	ProjectionViewModelUniform pvm;
 	Renderer::GetCurrentCamera()->GetPvm(pvm);
 
@@ -57,7 +57,7 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform) cons
 	uboBuffer->Fill(&pvm);
 
 	// TODO: Use more dynamic lighting. This is a test
-	const VulkanBuffer* light0Buffer = Vulkan::Instance()->GetLightBuffer(0);
+	const VulkanBuffer* light0Buffer = Vulkan::Instance()->GetUniformBuffer(EUniformBufferIds::Lights, 0);
 	LightUniform light0
 	{
 		.location = { 0.f, 0.f, 0.f },
@@ -67,7 +67,7 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform) cons
 	};
 	light0Buffer->Fill(&light0);
 
-	const VulkanBuffer* sceneLightBuffer = Vulkan::Instance()->GetSceneLightingBuffer();
+	const VulkanBuffer* sceneLightBuffer = Vulkan::Instance()->GetUniformBuffer(EUniformBufferIds::SceneLighting);
 	SceneLightingData sceneLighting
 	{
 		.ambientColor = Color::WHITE,
@@ -76,7 +76,7 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform) cons
 	sceneLightBuffer->Fill(&sceneLighting);
 
 	// Send off the push constant pointers
-	const VulkanBuffer* pushConstantBuffer = Vulkan::Instance()->GetPushConstantBuffer();
+	const VulkanBuffer* pushConstantBuffer = Vulkan::Instance()->GetUniformBuffer(EUniformBufferIds::PushConstant);
 	PushConstantData pushConstantData
 	{
 		.uboAddress = uboBuffer->GetAddress(),

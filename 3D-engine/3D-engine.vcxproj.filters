@@ -35,6 +35,8 @@
     <ClInclude Include="Graphics\Rendering\Camera.h" />
     <ClInclude Include="Graphics\Rendering\SceneCamera.h" />
     <ClInclude Include="Graphics\Rendering\SceneLightingData.h" />
+    <ClInclude Include="Graphics\Vulkan\VulkanDynamicDescriptorAllocator.h" />
+    <ClInclude Include="Graphics\Vulkan\VulkanDescriptorWriter.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
@@ -66,5 +68,7 @@
     <ClCompile Include="Gameplay\SimpleInput.cpp" />
     <ClCompile Include="Graphics\Rendering\Camera.cpp" />
     <ClCompile Include="Graphics\Rendering\SceneCamera.cpp" />
+    <ClCompile Include="Graphics\Vulkan\VulkanDynamicDescriptorAllocator.cpp" />
+    <ClCompile Include="Graphics\Vulkan\VulkanDescriptorWriter.cpp" />
   </ItemGroup>
 </Project>
