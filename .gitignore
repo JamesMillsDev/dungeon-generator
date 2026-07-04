@@ -9,3 +9,4 @@ Intermediate/
 */Resources/
 */.vscode/
 *.ktx2
+out/
