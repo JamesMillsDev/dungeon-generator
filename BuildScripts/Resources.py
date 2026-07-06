@@ -81,8 +81,3 @@ def copy(project_name : str, out_dir : str, copy_dir : Path, directories : json,
     output_dir = Path(out_dir) / Path(config_dir)
 
     shutil.copytree(input_dir, output_dir, dirs_exist_ok=True, ignore=ignore_content)
-
-    input_dir = Path(solution_dir) / Path(dlls_dir)
-    output_dir = Path(out_dir)
-
-    shutil.copytree(input_dir, output_dir, dirs_exist_ok=True, ignore=ignore_content)

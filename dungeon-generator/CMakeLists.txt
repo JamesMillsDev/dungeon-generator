@@ -38,6 +38,14 @@ FetchContent_Declare(
         GIT_TAG v4.4.2
 )
 
+SET(GLM_TEST_ENABLE OFF CACHE BOOL "GLM Build unit tests")
+
+set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries" FORCE)
+
+set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "Build shared libraries" FORCE)
+set(ASSIMP_BUILD_ZLIB ON CACHE INTERNAL "Build zlib" FORCE)
+set(ASSIMP_BUILD_TESTS OFF CACHE INTERNAL "Build tests" FORCE)
+
 FetchContent_MakeAvailable(glm)
 FetchContent_MakeAvailable(nlohmann_json)
 FetchContent_MakeAvailable(assimp)
@@ -45,19 +53,18 @@ FetchContent_MakeAvailable(vma)
 FetchContent_MakeAvailable(glfw)
 FetchContent_MakeAvailable(ktx)
 
+find_package(Python REQUIRED COMPONENTS Interpreter)
 find_package(Vulkan REQUIRED)
-SET(GLM_TEST_ENABLE OFF CACHE BOOL "GLM Build unit tests")
 
 target_link_libraries(dungeongenerator
-        PUBLIC glm
+        PUBLIC glm::glm
         PUBLIC nlohmann_json
         PUBLIC assimp
         PUBLIC glfw
-        PUBLIC Vulkan
+        PUBLIC Vulkan::Vulkan
+        PUBLIC GPUOpen::VulkanMemoryAllocator
         PUBLIC ktx
         PUBLIC 3Dengine
-
-        INTERFACE vma
 )
 
 target_precompile_headers(dungeongenerator PRIVATE
@@ -70,4 +77,12 @@ target_include_directories(dungeongenerator
         PUBLIC ${CMAKE_CURRENT_BINARY_DIR}
         PUBLIC ${Vulkan_INCLUDE_DIRS}
         PUBLIC ${vma_SOURCE_DIR}/include
+)
+
+add_custom_command(
+    TARGET dungeongenerator
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E echo "Running post-build script..."
+    COMMAND Python::Interpreter ${CMAKE_SOURCE_DIR}/BuildScripts/PostBuild.py $<TARGET_FILE_DIR:dungeongenerator>
+    VERBATIM
 )
