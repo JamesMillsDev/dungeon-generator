@@ -3,7 +3,7 @@
 #include "Maths/Maths.h"
 
 Transform::Transform()
-	: scale{ 1.f }, parent{ nullptr }, nextSibling{ nullptr },
+	: location{ 0.f }, rotation{ quat{} }, scale{ 1.f }, parent{ nullptr }, nextSibling{ nullptr },
 	previousSibling{ nullptr }, lastChild{ nullptr }, m_owner{ nullptr }
 {}
 

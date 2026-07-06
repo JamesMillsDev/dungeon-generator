@@ -130,6 +130,7 @@ private:
 
 	VulkanDynamicDescriptorAllocator* m_descriptorAllocator;
 	VulkanDescriptorWriter* m_descriptorWriter;
+	VkDescriptorPool m_descriptorPool;
 	VkDescriptorSetLayout m_descriptorSetLayout;
 	VkDescriptorSet m_descriptorSet;
 	vector<Texture*> m_textures;

@@ -16,8 +16,6 @@
 #include "Graphics/Rendering/Texture.h"
 #include "Graphics/Vulkan/Uniforms.h"
 #include "Graphics/Vulkan/VulkanBuffer.h"
-#include "Graphics/Vulkan/VulkanDescriptorWriter.h"
-#include "Graphics/Vulkan/VulkanDynamicDescriptorAllocator.h"
 
 #include "Utility/Config.h"
 #include "Utility/Console.h"
@@ -396,18 +394,26 @@ void Vulkan::WriteTextureDescriptorSets()
 		return;
 	}
 
-	for (const auto& texture : m_textures)
+	vector<VkDescriptorImageInfo> textureDescriptors(m_textures.size());
+	for (uint64 i = 0; i < m_textures.size(); ++i)
 	{
-		auto [sampler, imageView, imageLayout] = texture->GetDescriptors();
-
-		m_descriptorWriter->Write(
-			3, imageView, sampler, imageLayout,
-			VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
-		);
+		textureDescriptors[i] = m_textures[i]->GetDescriptors();
 	}
 
-	m_descriptorWriter->UpdateSet(m_descriptorSet, m_device);
-	m_descriptorWriter->Clear();
+	const VkWriteDescriptorSet writeDescSet
+	{
+		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.pNext = nullptr,
+		.dstSet = m_descriptorSet,
+		.dstBinding = 0,
+		.dstArrayElement = 0,
+		.descriptorCount = static_cast<uint32>(textureDescriptors.size()),
+		.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+		.pImageInfo = textureDescriptors.data(),
+		.pBufferInfo = nullptr,
+		.pTexelBufferView = nullptr
+	};
+	vkUpdateDescriptorSets(m_device, 1, &writeDescSet, 0, nullptr);
 
 	m_updateTextureDescriptors = false;
 }
@@ -924,48 +930,19 @@ void Vulkan::Init(GLFWwindow* window)
 				array dslBindings =
 				{
 					VkDescriptorSetLayoutBinding
-						{
-							.binding = m_descriptorBindingIndex++,
-							.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-							.descriptorCount = 1,
-							.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-							.pImmutableSamplers = nullptr,
-						},
-						VkDescriptorSetLayoutBinding
-						{
-							.binding = m_descriptorBindingIndex++,
-							.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-							.descriptorCount = 1,
-							.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-							.pImmutableSamplers = nullptr,
-						},
-						VkDescriptorSetLayoutBinding
-						{
-							.binding = m_descriptorBindingIndex++,
-							.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-							.descriptorCount = MAX_LIGHT_COUNT,
-							.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-							.pImmutableSamplers = nullptr,
-						},
-						VkDescriptorSetLayoutBinding
-						{
-							.binding = m_descriptorBindingIndex++,
-							.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-							.descriptorCount = MAX_TEXTURE_DESCRIPTORS,
-							.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-							.pImmutableSamplers = nullptr,
-						},
+					{
+						.binding = 0,
+						.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+						.descriptorCount = MAX_TEXTURE_DESCRIPTORS,
+						.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+						.pImmutableSamplers = nullptr,
+					},
 				};
 
 				array flags =
 				{
-					VkDescriptorBindingFlags{VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT},
-					VkDescriptorBindingFlags{VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT},
-					VkDescriptorBindingFlags{VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT},
-					VkDescriptorBindingFlags{VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT},
+					VkDescriptorBindingFlags{ VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT },
 				};
-
-				assert(dslBindings.size() == flags.size());
 
 				const VkDescriptorSetLayoutBindingFlagsCreateInfo dslFlagsCreateInfo
 				{
@@ -990,47 +967,56 @@ void Vulkan::Init(GLFWwindow* window)
 					"Failed to create Descriptor Set Layout!"
 				);
 
-				array poolRatios
+				array poolSizes
 				{
-					VulkanDynamicDescriptorAllocator::PoolSizeRatio
-					{
-						.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-						.ratio = 1
-					},
-					VulkanDynamicDescriptorAllocator::PoolSizeRatio
-					{
-						.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-						.ratio = MAX_LIGHT_COUNT + 1
-					},
-					VulkanDynamicDescriptorAllocator::PoolSizeRatio
+					VkDescriptorPoolSize
 					{
 						.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-						.ratio = MAX_TEXTURE_DESCRIPTORS
-					},
+						.descriptorCount = MAX_TEXTURE_DESCRIPTORS
+					}
+				};
+				const VkDescriptorPoolCreateInfo dpCreateInfo
+				{
+					.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+					.pNext = nullptr,
+					.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT,
+					.maxSets = 1,
+					.poolSizeCount = static_cast<uint32>(poolSizes.size()),
+					.pPoolSizes = poolSizes.data()
 				};
 
-				m_descriptorAllocator = new VulkanDynamicDescriptorAllocator
+				// Create the descriptor pool
+				Try(
+					vkCreateDescriptorPool(m_device, &dpCreateInfo, nullptr, &m_descriptorPool),
+					"Failed to create Descriptor Pool!"
+				);
+
+				// Allocate the descriptor sets
+				constexpr VkDescriptorSetVariableDescriptorCountAllocateInfo vdcAllocateInfo
 				{
-					16, poolRatios, this
+					.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO_EXT,
+					.pNext = nullptr,
+					.descriptorSetCount = 1,
+					.pDescriptorCounts = &MAX_TEXTURE_DESCRIPTORS
+				};
+				const VkDescriptorSetAllocateInfo dsAllocateInfo
+				{
+					.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+					.pNext = &vdcAllocateInfo,
+					.descriptorPool = m_descriptorPool,
+					.descriptorSetCount = 1,
+					.pSetLayouts = &m_descriptorSetLayout
 				};
 
-				m_descriptorSet = m_descriptorAllocator->Allocate(m_descriptorSetLayout, nullptr, this);
-
-				m_descriptorWriter = new VulkanDescriptorWriter;
-				/*for (uint64 i = 1; i < m_descriptorSet.size(); ++i)
-				{
-					m_descriptorWriter->UpdateSet(m_descriptorSet[i], m_device);
-				}*/
+				Try(
+					vkAllocateDescriptorSets(m_device, &dsAllocateInfo, &m_descriptorSet),
+					"Failed to allocate Descriptor Sets!"
+				);
 			},
 			[this]
 			{
 				vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout, nullptr);
-
-				delete m_descriptorWriter;
-				m_descriptorWriter = nullptr;
-
-				delete m_descriptorAllocator;
-				m_descriptorAllocator = nullptr;
+				vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
 			}
 		);
 
