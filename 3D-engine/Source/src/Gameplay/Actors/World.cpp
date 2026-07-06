@@ -4,7 +4,7 @@
 
 World::World()
 	: m_root{ new Actor }
-{ }
+{}
 
 World::~World()
 {
@@ -13,8 +13,8 @@ World::~World()
 
 void World::DestroyActor(Actor* actor)
 {
-	m_lifetimeChanges.emplace_back([this, actor]
-	{
+	m_lifetimeChanges.Add([this, actor]
+		{
 			actor->GetTransform()->SetParent(nullptr);
 
 			actor->EndPlay();
@@ -38,7 +38,7 @@ void World::Tick(Actor* actor)
 		{
 			change();
 		}
-		m_lifetimeChanges.clear();
+		m_lifetimeChanges.Clear();
 	}
 
 	actor->ApplyComponentListChanges();

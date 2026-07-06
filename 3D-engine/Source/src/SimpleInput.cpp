@@ -33,12 +33,12 @@ bool SimpleInput::WasKeyReleased(int inputKeyID) const
 		m_lastKeys[inputKeyID] == GLFW_PRESS;
 }
 
-const vector<int>& SimpleInput::GetPressedKeys() const
+const TArray<int>& SimpleInput::GetPressedKeys() const
 {
 	return m_pressedKeys;
 }
 
-const vector<unsigned int>& SimpleInput::GetPressedCharacters() const
+const TArray<unsigned int>& SimpleInput::GetPressedCharacters() const
 {
 	return m_pressedCharacters;
 }
@@ -118,27 +118,27 @@ float SimpleInput::GetMouseScroll() const
 
 void SimpleInput::AttachKeyObserver(const KeyCallback& callback)
 {
-	m_keyCallbacks.emplace_back(callback);
+	m_keyCallbacks.Add(callback);
 }
 
 void SimpleInput::AttachCharObserver(const CharCallback& callback)
 {
-	m_charCallbacks.emplace_back(callback);
+	m_charCallbacks.Add(callback);
 }
 
 void SimpleInput::AttachMouseButtonObserver(const MouseButtonCallback& callback)
 {
-	m_mouseButtonCallbacks.emplace_back(callback);
+	m_mouseButtonCallbacks.Add(callback);
 }
 
 void SimpleInput::AttachMouseMoveObserver(const MouseMoveCallback& callback)
 {
-	m_mouseMoveCallbacks.emplace_back(callback);
+	m_mouseMoveCallbacks.Add(callback);
 }
 
 void SimpleInput::AttachMouseScrollObserver(const MouseScrollCallback& callback)
 {
-	m_mouseScrollCallbacks.emplace_back(callback);
+	m_mouseScrollCallbacks.Add(callback);
 }
 
 void SimpleInput::Create()
@@ -153,11 +153,11 @@ void SimpleInput::Destroy()
 
 void SimpleInput::ClearStatus()
 {
-	m_pressedCharacters.clear();
+	m_pressedCharacters.Clear();
 
 	GLFWwindow* window = Application::GetWindow()->GlfwHandle();
 
-	m_pressedKeys.clear();
+	m_pressedKeys.Clear();
 
 	// Update keys
 	for (int i = GLFW_KEY_SPACE; i <= GLFW_KEY_LAST; ++i)
@@ -166,7 +166,7 @@ void SimpleInput::ClearStatus()
 
 		if ((m_currentKeys[i] = glfwGetKey(window, i)) == GLFW_PRESS)
 		{
-			m_pressedKeys.push_back(m_currentKeys[i]);
+			m_pressedKeys.Add(m_currentKeys[i]);
 		}
 	}
 
@@ -223,7 +223,7 @@ SimpleInput::SimpleInput()
 
 	auto CharacterInputCallback = [](GLFWwindow* window, unsigned int character)
 		{
-			Instance()->m_pressedCharacters.push_back(character);
+			Instance()->m_pressedCharacters.Add(character);
 
 			for (auto& f : m_instance->m_charCallbacks)
 			{

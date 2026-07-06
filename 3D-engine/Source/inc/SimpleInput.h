@@ -2,13 +2,12 @@
 
 #include <functional>
 #include <map>
-#include <vector>
 
 #include "Maths/Alias.h"
+#include "Utility/TArray.h"
 
 using std::function;
 using std::map;
-using std::vector;
 
 struct GLFWwindow;
 
@@ -170,8 +169,8 @@ public:
 	[[nodiscard]] bool WasKeyReleased(int inputKeyID) const;
 
 	// returns access to all keys that are currently pressed
-	[[nodiscard]] const vector<int>& GetPressedKeys() const;
-	[[nodiscard]] const vector<unsigned int>& GetPressedCharacters() const;
+	[[nodiscard]] const TArray<int>& GetPressedKeys() const;
+	[[nodiscard]] const TArray<unsigned int>& GetPressedCharacters() const;
 
 	// query the mouse button state
 	bool IsMouseButtonDown(int inputMouseID) const;
@@ -215,8 +214,8 @@ protected:
 	void ClearStatus();
 
 private:
-	vector<int> m_pressedKeys;
-	vector<unsigned int> m_pressedCharacters;
+	TArray<int> m_pressedKeys;
+	TArray<unsigned int> m_pressedCharacters;
 
 	float m_mouseX;
 	float m_mouseY;
@@ -228,11 +227,11 @@ private:
 
 	void OnMouseMove(int newXPos, int newYPos);
 
-	vector<KeyCallback> m_keyCallbacks;
-	vector<CharCallback> m_charCallbacks;
-	vector<MouseMoveCallback> m_mouseMoveCallbacks;
-	vector<MouseButtonCallback>	m_mouseButtonCallbacks;
-	vector<MouseScrollCallback>	m_mouseScrollCallbacks;
+	TArray<KeyCallback> m_keyCallbacks;
+	TArray<CharCallback> m_charCallbacks;
+	TArray<MouseMoveCallback> m_mouseMoveCallbacks;
+	TArray<MouseButtonCallback>	m_mouseButtonCallbacks;
+	TArray<MouseScrollCallback>	m_mouseScrollCallbacks;
 
 	// used to track down/up/released/pressed
 	int* m_lastKeys;

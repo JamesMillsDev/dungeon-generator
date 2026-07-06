@@ -1,21 +1,19 @@
 #pragma once
 
 #include <array>
-#include <vector>
 #include <vk_mem_alloc.h>
-
-#include <vulkan/vulkan.h>
-
-#include "Maths/Color.h"
-
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
+#include <vulkan/vulkan.h>
+
+#include "Maths/Color.h"
+#include "Utility/TArray.h"
 
 class VulkanBuffer;
 
 using std::array;
-using std::vector;
+
 using glm::vec2;
 using glm::vec3;
 using glm::vec4;
@@ -65,8 +63,8 @@ public:
 		friend Mesh;
 
 	public:
-		vector<Vertex> vertices;
-		vector<uint16> indices;
+		TArray<Vertex> vertices;
+		TArray<uint16> indices;
 
 	private:
 		VkDeviceSize m_vertexBufferSize;
@@ -75,7 +73,7 @@ public:
 		VulkanBuffer* m_vertexBuffer;
 
 	public:
-		SubMesh(const vector<Vertex>& vertices, const vector<uint16>& indices);
+		SubMesh(const TArray<Vertex>& vertices, const TArray<uint16>& indices);
 		~SubMesh();
 
 	private:
@@ -88,10 +86,10 @@ public:
 	static Mesh* MakeFromAssimp(const string& file);
 
 public:
-	vector<SubMesh*> subMeshes;
+	TArray<SubMesh*> subMeshes;
 
 public:
-	explicit Mesh(const vector<SubMesh*>& subMeshes);
+	explicit Mesh(const TArray<SubMesh*>& subMeshes);
 	~Mesh();
 
 private:

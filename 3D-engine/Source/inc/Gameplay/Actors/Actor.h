@@ -2,15 +2,14 @@
 
 #include <functional>
 #include <utility>
-#include <vector>
 
+#include "Utility/TArray.h"
 #include "Gameplay/Actors/Components/IComponent.h"
 
 class Transform;
 
 using std::function;
 using std::pair;
-using std::vector;
 
 using ComponentListChange = function<void()>;
 
@@ -21,8 +20,8 @@ class Actor
 private:
 	Transform* m_transform;
 
-	vector<IComponent*> m_components;
-	vector<ComponentListChange> m_componentListChanges;
+	TArray<IComponent*> m_components;
+	TArray<ComponentListChange> m_componentListChanges;
 
 private:
 	Actor();
@@ -54,10 +53,10 @@ T* Actor::MakeComponent(ARGS... args)
 	static_assert(std::is_base_of_v<IComponent, T>, "T must derive from IComponent");
 
 	T* newComp = new T{ args... };
-	m_componentListChanges.emplace_back([this, newComp]
+	m_componentListChanges.Add([this, newComp]
 		{
 			newComp->BeginPlay();
-			m_components.emplace_back(newComp);
+			m_components.Add(newComp);
 		});
 
 	newComp->m_owner = this;

@@ -5,12 +5,12 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include <vector>
 #include <vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
 
 #include "Maths/Color.h"
 #include "Utility/ResourceStack.h"
+#include "Utility/TArray.h"
 
 class Config;
 struct GLFWwindow;
@@ -28,7 +28,6 @@ using std::array;
 using std::runtime_error;
 using std::string;
 using std::unordered_map;
-using std::vector;
 
 constexpr int32 MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -38,7 +37,7 @@ constexpr bool ENABLE_VALIDATION_LAYERS = true;
 constexpr bool ENABLE_VALIDATION_LAYERS = false;
 #endif
 
-const vector VALIDATION_LAYERS =
+const TArray VALIDATION_LAYERS =
 {
 	"VK_LAYER_KHRONOS_validation"
 };
@@ -63,7 +62,7 @@ enum class EUniformBufferIds : uint16
 	PushConstant = UINT16_MAX
 };
 
-using UniformBufferSet = unordered_map<uint16, vector<VulkanBuffer*>>;
+using UniformBufferSet = unordered_map<uint16, TArray<VulkanBuffer*>>;
 
 class Vulkan  // NOLINT(cppcoreguidelines-special-member-functions)
 {
@@ -112,8 +111,8 @@ private:
 	VkSurfaceKHR m_surface;
 
 	VkSwapchainKHR m_swapChain;
-	vector<VkImage> m_swapChainImages;
-	vector<VkImageView> m_swapChainImageViews;
+	TArray<VkImage> m_swapChainImages;
+	TArray<VkImageView> m_swapChainImageViews;
 
 	VkImage m_depthImage;
 	VmaAllocation m_depthImageAllocation;
@@ -123,7 +122,7 @@ private:
 
 	array<VkFence, MAX_FRAMES_IN_FLIGHT> m_fences;
 	array<VkSemaphore, MAX_FRAMES_IN_FLIGHT> m_imageAcquiredSemaphores;
-	vector<VkSemaphore> m_renderCompleteSemaphores;
+	TArray<VkSemaphore> m_renderCompleteSemaphores;
 
 	VkCommandPool m_commandPool;
 	array<VkCommandBuffer, MAX_FRAMES_IN_FLIGHT> m_commandBuffers;
@@ -133,7 +132,7 @@ private:
 	VkDescriptorPool m_descriptorPool;
 	VkDescriptorSetLayout m_descriptorSetLayout;
 	VkDescriptorSet m_descriptorSet;
-	vector<Texture*> m_textures;
+	TArray<Texture*> m_textures;
 
 	uint32 m_frameIndex;
 	uint32 m_imageIndex;

@@ -186,7 +186,7 @@ void Texture::TransitionImage() const
 	vkCmdPipelineBarrier2(commandBuffer, &barrierTexInfo);
 
 	// Get the regions to copy and then copy them
-	vector<VkBufferImageCopy> copyRegions(m_texture->numLevels);
+	TArray<VkBufferImageCopy> copyRegions(m_texture->numLevels);
 	for (uint32 i = 0; i < m_texture->numLevels; ++i)
 	{
 		ktx_size_t mipOffset = 0;
@@ -204,7 +204,7 @@ void Texture::TransitionImage() const
 	}
 	vkCmdCopyBufferToImage(
 		commandBuffer, m_buffer->Get(), m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
-		static_cast<uint32>(copyRegions.size()), copyRegions.data()
+		static_cast<uint32>(copyRegions.size()), copyRegions.Data()
 	);
 
 	// Make the barrier readable

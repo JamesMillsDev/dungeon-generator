@@ -1,18 +1,18 @@
 #pragma once
 
 #include <string>
-#include <vector>
 #include <vulkan/vulkan.h>
 
+#include "Utility/TArray.h"
+
 using std::string;
-using std::vector;
 
 class Vulkan;
 
 class Shader
 {
 private:
-	static vector<char> ReadShaderFile(const string& fileName);
+	static TArray<char> ReadShaderFile(const string& fileName);
 
 private:
 	string m_path;

@@ -23,7 +23,7 @@ Actor::~Actor()
 	{
 		DestroyComponent(component);
 	}
-	
+
 	ApplyComponentListChanges();
 }
 
@@ -41,12 +41,9 @@ void Actor::EndPlay()
 
 void Actor::DestroyComponent(IComponent* component)
 {
-	m_componentListChanges.emplace_back([this, component]
-	{
-			std::erase_if(m_components, [component](const IComponent* comp)
-				{
-					return comp == component;
-				});
+	m_componentListChanges.Add([this, component]
+		{
+			m_components.Remove(component);
 			component->EndPlay();
 			delete component;
 		});
@@ -63,5 +60,5 @@ void Actor::ApplyComponentListChanges()
 	{
 		change();
 	}
-	m_componentListChanges.clear();
+	m_componentListChanges.Clear();
 }

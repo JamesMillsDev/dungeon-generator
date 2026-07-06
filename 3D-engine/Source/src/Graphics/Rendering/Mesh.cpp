@@ -53,7 +53,7 @@ array<VkVertexInputAttributeDescription, VertexAttributeCount> Vertex::GetAttrib
 	return attributeDescriptions;
 }
 
-Mesh::SubMesh::SubMesh(const vector<Vertex>& vertices, const vector<uint16>& indices)
+Mesh::SubMesh::SubMesh(const TArray<Vertex>& vertices, const TArray<uint16>& indices)
 	:vertices{ vertices }, indices{ indices }, m_vertexBufferSize{ sizeof(Vertex) * vertices.size() },
 	m_indexBufferSize{ sizeof(uint16) * indices.size() }, m_vertexBuffer{ VK_NULL_HANDLE }
 {
@@ -76,8 +76,8 @@ void Mesh::SubMesh::CreateBuffer()
 	};
 
 	// Copy the vertex and index information into the buffer
-	m_vertexBuffer->Fill(vertices.data(), m_vertexBufferSize);
-	m_vertexBuffer->Fill(indices.data(), m_indexBufferSize, m_vertexBufferSize);
+	m_vertexBuffer->Fill(vertices.Data(), m_vertexBufferSize);
+	m_vertexBuffer->Fill(indices.Data(), m_indexBufferSize, m_vertexBufferSize);
 }
 
 Mesh* Mesh::MakeQuad()
@@ -121,7 +121,7 @@ Mesh* Mesh::MakeQuad()
 						.color = { 1.f, 1.f, 1.f, 1.f }
 					}
 				},
-				vector<uint16>
+				TArray<uint16>
 				{
 					0, 1, 2, 2, 3, 0
 				}
@@ -140,14 +140,14 @@ Mesh* Mesh::MakeFromAssimp(const string& file)
 		aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_GlobalScale | aiProcess_FlipUVs
 	);
 
-	vector<SubMesh*> subMeshes(scene->mNumMeshes);
+	TArray<SubMesh*> subMeshes;
 
 	for (uint32 i = 0; i < scene->mNumMeshes; ++i)
 	{
 		const aiMesh* mesh = scene->mMeshes[i];
 
-		vector<Vertex> vertices;
-		vector<uint16> indices;
+		TArray<Vertex> vertices;
+		TArray<uint16> indices;
 
 		for (uint32 v = 0; v < mesh->mNumVertices; ++v)
 		{
@@ -190,34 +190,34 @@ Mesh* Mesh::MakeFromAssimp(const string& file)
 				vert.color = Color{ color0.r, color0.g, color0.b, color0.a };
 			}
 
-			vertices.emplace_back(vert);
+			vertices.Add(vert);
 		}
 
 		if (mesh->HasFaces())
 		{
 			for (uint32 f = 0; f < mesh->mNumFaces; ++f)
 			{
-				indices.emplace_back(mesh->mFaces[f].mIndices[1]);
-				indices.emplace_back(mesh->mFaces[f].mIndices[2]);
-				indices.emplace_back(mesh->mFaces[f].mIndices[0]);
+				indices.Add(static_cast<uint16>(mesh->mFaces[f].mIndices[1]));
+				indices.Add(static_cast<uint16>(mesh->mFaces[f].mIndices[2]));
+				indices.Add(static_cast<uint16>(mesh->mFaces[f].mIndices[0]));
 
 				// generate a second triangle for quads
 				if (mesh->mFaces[f].mNumIndices == 4)
 				{
-					indices.emplace_back(mesh->mFaces[f].mIndices[2]);
-					indices.emplace_back(mesh->mFaces[f].mIndices[3]);
-					indices.emplace_back(mesh->mFaces[f].mIndices[0]);
+					indices.Add(static_cast<uint16>(mesh->mFaces[f].mIndices[2]));
+					indices.Add(static_cast<uint16>(mesh->mFaces[f].mIndices[3]));
+					indices.Add(static_cast<uint16>(mesh->mFaces[f].mIndices[0]));
 				}
 			}
 		}
 
-		subMeshes[i] = new SubMesh{ vertices, indices };
+		subMeshes.Add(new SubMesh{ vertices, indices });
 	}
 
 	return new Mesh{ subMeshes };
 }
 
-Mesh::Mesh(const vector<SubMesh*>& subMeshes)
+Mesh::Mesh(const TArray<SubMesh*>& subMeshes)
 	: subMeshes{ subMeshes }
 {
 	CreateBuffers();
@@ -243,7 +243,7 @@ void Mesh::DestroyBuffers()
 		delete subMesh;
 	}
 
-	subMeshes.clear();
+	subMeshes.Clear();
 }
 
 void Mesh::Render(const VkCommandBuffer buffer, const uint32 instances, const uint32 firstInstance) const
@@ -256,7 +256,7 @@ void Mesh::Render(const VkCommandBuffer buffer, const uint32 instances, const ui
 		vkCmdBindIndexBuffer(buffer, subMesh->m_vertexBuffer->Get(), subMesh->m_vertexBufferSize, VK_INDEX_TYPE_UINT16);
 
 		vkCmdDrawIndexed(
-			buffer, static_cast<uint32>(subMesh->indices.size()), instances, 0, 0, firstInstance
+			buffer, static_cast<uint32>(subMesh->indices.Count()), instances, 0, 0, firstInstance
 		);
 	}
 }

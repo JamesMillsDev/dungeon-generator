@@ -1,19 +1,16 @@
 #pragma once
 
 #include <string>
-#include <vector>
+#include <glm/mat4x4.hpp>
 #include <vulkan/vulkan.h>
 
 #include "Maths/Color.h"
-
-#include <glm/mat4x4.hpp>
 
 class VulkanGraphicsPipeline;
 class Texture;
 
 using glm::mat4;
 using std::string;
-using std::vector;
 
 struct MaterialUniform
 {

@@ -63,7 +63,7 @@ void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 		.setLayoutCount = 1,
 		.pSetLayouts = &descriptorSetLayout,
 		.pushConstantRangeCount = static_cast<uint32>(pushConstants.size()),
-		.pPushConstantRanges = pushConstants.data()
+		.pPushConstantRanges = pushConstants.Data()
 	};
 
 	if (result = vkCreatePipelineLayout(vulkan->GetDevice(), &plCreateInfo, nullptr, &m_pipelineLayout);
@@ -73,7 +73,7 @@ void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 	}
 
 	Shader* shader = new Shader{ shaderConfigs.name };
-	vector<VkPipelineShaderStageCreateInfo> ssCreateInfos;
+	TArray<VkPipelineShaderStageCreateInfo> ssCreateInfos;
 	for (uint32 i = VK_SHADER_STAGE_VERTEX_BIT; i < VK_SHADER_STAGE_ALL_GRAPHICS; i <<= 1)
 	{
 		if (!m_config.ContainsStage(static_cast<VkShaderStageFlagBits>(i)))
@@ -88,7 +88,7 @@ void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 		ssCreateInfo.module = shader->GetShaderModule();
 		ssCreateInfo.pName = shaderConfigs.entryPoint.c_str();
 
-		ssCreateInfos.emplace_back(ssCreateInfo);
+		ssCreateInfos.Add(ssCreateInfo);
 	}
 
 	auto bindingDescription = Vertex::GetBindingDescription();
@@ -141,7 +141,7 @@ void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 		colorBlending.blendConstants[i] = blendState.blendConstants[i];
 	}
 
-	vector dynamicStates =
+	TArray dynamicStates =
 	{
 		VK_DYNAMIC_STATE_VIEWPORT,
 		VK_DYNAMIC_STATE_SCISSOR
@@ -149,7 +149,7 @@ void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 	VkPipelineDynamicStateCreateInfo dynamicState{};
 	dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 	dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
-	dynamicState.pDynamicStates = dynamicStates.data();
+	dynamicState.pDynamicStates = dynamicStates.Data();
 
 	VkPipelineDepthStencilStateCreateInfo depthStencilState{};
 	depthStencilState.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
@@ -168,7 +168,7 @@ void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 	pCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 	pCreateInfo.pNext = &renderingCreateInfo;
 	pCreateInfo.stageCount = static_cast<uint32_t>(ssCreateInfos.size());
-	pCreateInfo.pStages = ssCreateInfos.data();
+	pCreateInfo.pStages = ssCreateInfos.Data();
 	pCreateInfo.pVertexInputState = &vertexInputInfo;
 	pCreateInfo.pInputAssemblyState = &inputAssembly;
 	pCreateInfo.pViewportState = &viewportState;

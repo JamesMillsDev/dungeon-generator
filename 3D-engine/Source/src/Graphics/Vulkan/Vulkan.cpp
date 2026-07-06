@@ -370,19 +370,14 @@ VulkanBuffer* Vulkan::GetUniformBuffer(EUniformBufferIds id, const uint32 index)
 
 void Vulkan::AddTexture(Texture* texture)
 {
-	m_textures.emplace_back(texture);
+	m_textures.Add(texture);
 
 	m_updateTextureDescriptors = true;
 }
 
 void Vulkan::RemoveTexture(Texture* texture)
 {
-	std::erase_if(
-		m_textures, [texture](const Texture* t)
-		{
-			return texture == t;
-		}
-	);
+	m_textures.Remove(texture);
 
 	m_updateTextureDescriptors = true;
 }
@@ -394,8 +389,8 @@ void Vulkan::WriteTextureDescriptorSets()
 		return;
 	}
 
-	vector<VkDescriptorImageInfo> textureDescriptors(m_textures.size());
-	for (uint64 i = 0; i < m_textures.size(); ++i)
+	TArray<VkDescriptorImageInfo> textureDescriptors(m_textures.Count());
+	for (int64 i = 0; i < m_textures.Count(); ++i)
 	{
 		textureDescriptors[i] = m_textures[i]->GetDescriptors();
 	}
@@ -409,7 +404,7 @@ void Vulkan::WriteTextureDescriptorSets()
 		.dstArrayElement = 0,
 		.descriptorCount = static_cast<uint32>(textureDescriptors.size()),
 		.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-		.pImageInfo = textureDescriptors.data(),
+		.pImageInfo = textureDescriptors.Data(),
 		.pBufferInfo = nullptr,
 		.pTexelBufferView = nullptr
 	};
@@ -492,7 +487,7 @@ void Vulkan::Init(GLFWwindow* window)
 				{
 					// Add the layers into the create info if we requested it (Debug only)
 					instanceInfo.enabledLayerCount = static_cast<uint32>(VALIDATION_LAYERS.size());
-					instanceInfo.ppEnabledLayerNames = VALIDATION_LAYERS.data();
+					instanceInfo.ppEnabledLayerNames = VALIDATION_LAYERS.Data();
 
 					// Set the next create info to be the debug messenger
 					VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
@@ -737,14 +732,14 @@ void Vulkan::Init(GLFWwindow* window)
 					"Failed to count Swap Chain Images!"
 				);
 
-				m_swapChainImages.resize(scImageCount);
+				m_swapChainImages.Resize(scImageCount);
 				Try(
-					vkGetSwapchainImagesKHR(m_device, m_swapChain, &scImageCount, m_swapChainImages.data()),
+					vkGetSwapchainImagesKHR(m_device, m_swapChain, &scImageCount, m_swapChainImages.Data()),
 					"Failed to retrieve Swap Chain Images!"
 				);
 
 				// Resize the image view vector to match the image one
-				m_swapChainImageViews.resize(scImageCount);
+				m_swapChainImageViews.Resize(scImageCount);
 
 				// Create the new Swap Chain image views
 				for (uint32 i = 0; i < scImageCount; ++i)
@@ -768,7 +763,7 @@ void Vulkan::Init(GLFWwindow* window)
 				{
 					vkDestroyImageView(m_device, scImageView, nullptr);
 				}
-				m_swapChainImageViews.clear();
+				m_swapChainImageViews.Clear();
 
 				vkDestroySwapchainKHR(m_device, m_swapChain, nullptr);
 			}
@@ -802,13 +797,13 @@ void Vulkan::Init(GLFWwindow* window)
 				// We need a set of buffers for every frame in flight
 				for (uint32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 				{
-					unordered_map<uint16, vector<VulkanBuffer*>> buffers;
+					unordered_map<uint16, TArray<VulkanBuffer*>> buffers;
 
 					for (const UniformBufferData& uniformData : UNIFORM_DATAS)
 					{
 						for (uint32 j = 0; j < uniformData.count; ++j)
 						{
-							buffers[uniformData.id].emplace_back(new VulkanBuffer
+							buffers[uniformData.id].Add(new VulkanBuffer
 								{
 									uniformData.size,
 									VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
@@ -825,7 +820,7 @@ void Vulkan::Init(GLFWwindow* window)
 				for (uint32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 				{
 					// Delete each buffer for this frame in flight
-					for (const vector<VulkanBuffer*>& buffers : m_shaderDataBuffers[i] | std::views::values)
+					for (const TArray<VulkanBuffer*>& buffers : m_shaderDataBuffers[i] | std::views::values)
 					{
 						for (const VulkanBuffer* buffer : buffers)
 						{
@@ -865,7 +860,7 @@ void Vulkan::Init(GLFWwindow* window)
 				}
 
 				// Match the size of the render complete semaphores to the swap chain images
-				m_renderCompleteSemaphores.resize(m_swapChainImages.size());
+				m_renderCompleteSemaphores.Resize(m_swapChainImages.size());
 				for (VkSemaphore& semaphore : m_renderCompleteSemaphores)
 				{
 					Try(
@@ -881,7 +876,7 @@ void Vulkan::Init(GLFWwindow* window)
 					vkDestroySemaphore(m_device, semaphore, nullptr);
 				}
 
-				m_renderCompleteSemaphores.clear();
+				m_renderCompleteSemaphores.Clear();
 
 				for (uint32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 				{
@@ -1099,12 +1094,12 @@ void Vulkan::RecreateSwapChain()
 		vkGetSwapchainImagesKHR(m_device, m_swapChain, &imageCount, nullptr),
 		"Failed to get Swap Chain Image Count!"
 	);
-	m_swapChainImages.resize(imageCount);
+	m_swapChainImages.Resize(imageCount);
 	Try(
-		vkGetSwapchainImagesKHR(m_device, m_swapChain, &imageCount, m_swapChainImages.data()),
+		vkGetSwapchainImagesKHR(m_device, m_swapChain, &imageCount, m_swapChainImages.Data()),
 		"Failed to get Swap Chain Images!"
 	);
-	m_swapChainImageViews.resize(imageCount);
+	m_swapChainImageViews.Resize(imageCount);
 
 	// Create the new Swap Chain image views
 	for (uint32 i = 0; i < imageCount; ++i)
@@ -1131,7 +1126,7 @@ void Vulkan::RecreateSwapChain()
 	// Recreate semaphores
 	VkSemaphoreCreateInfo semaphoreCreateInfo{};
 	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-	m_renderCompleteSemaphores.resize(imageCount);
+	m_renderCompleteSemaphores.Resize(imageCount);
 	for (VkSemaphore& semaphore : m_renderCompleteSemaphores)
 	{
 		Try(

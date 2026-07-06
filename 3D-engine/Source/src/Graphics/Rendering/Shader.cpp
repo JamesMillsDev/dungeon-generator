@@ -11,7 +11,7 @@ using std::ifstream;
 using std::runtime_error;
 using std::streamsize;
 
-vector<char> Shader::ReadShaderFile(const string& fileName)
+TArray<char> Shader::ReadShaderFile(const string& fileName)
 {
 	ifstream file(fileName, std::ios::ate | std::ios::binary);
 
@@ -21,10 +21,10 @@ vector<char> Shader::ReadShaderFile(const string& fileName)
 	}
 
 	const streamsize fileSize = file.tellg();
-	vector<char> buffer(fileSize);
+	TArray<char> buffer(fileSize);
 
 	file.seekg(0);
-	file.read(buffer.data(), fileSize);
+	file.read(buffer.Data(), fileSize);
 
 	file.close();
 

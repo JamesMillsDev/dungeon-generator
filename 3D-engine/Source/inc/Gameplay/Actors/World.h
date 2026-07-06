@@ -2,13 +2,12 @@
 
 #include <functional>
 #include <utility>
-#include <vector>
 
 #include "Gameplay/Actors/Actor.h"
+#include "Utility/TArray.h"
 
 using std::function;
 using std::pair;
-using std::vector;
 
 using ActorLifetimeChange = function<void()>;
 
@@ -20,7 +19,7 @@ class World
 private:
 	Actor* m_root;
 
-	vector<ActorLifetimeChange> m_lifetimeChanges;
+	TArray<ActorLifetimeChange> m_lifetimeChanges;
 
 private:
 	World();
@@ -44,7 +43,7 @@ T* World::MakeActor(ARGS... args)
 	static_assert(std::is_base_of_v<Actor, T>, "T must derive from Actor");
 
 	T* actor = new T{ args... };
-	m_lifetimeChanges.emplace_back([this, actor]()
+	m_lifetimeChanges.Add([this, actor]()
 		{
 			actor->GetTransform()->SetParent(m_root->GetTransform());
 

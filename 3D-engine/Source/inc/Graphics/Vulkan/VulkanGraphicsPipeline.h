@@ -2,15 +2,13 @@
 
 #include <set>
 #include <string>
-#include <vector>
-
 #include "Uniforms.h"
+#include "Utility/TArray.h"
 
 class Vulkan;
 
 using std::set;
 using std::string;
-using std::vector;
 
 struct ShaderConfig
 {
@@ -74,7 +72,7 @@ public:
 	PrimitiveConfig primitive;
 	MultisamplerConfig multisampler;
 	VkDescriptorSetLayout descriptorSetLayout;
-	vector<VkPushConstantRange> pushConstantRanges =
+	TArray<VkPushConstantRange> pushConstantRanges =
 	{
 		{
 			.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
