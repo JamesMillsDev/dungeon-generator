@@ -21,7 +21,8 @@ TArray<char> Shader::ReadShaderFile(const string& fileName)
 	}
 
 	const streamsize fileSize = file.tellg();
-	TArray<char> buffer(fileSize);
+	TArray<char> buffer;
+	buffer.Resize(fileSize);
 
 	file.seekg(0);
 	file.read(buffer.Data(), fileSize);

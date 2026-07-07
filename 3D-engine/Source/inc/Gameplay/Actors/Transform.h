@@ -6,6 +6,8 @@
 #include <glm/vec3.hpp>
 #include <glm/gtc/quaternion.hpp>
 
+#include "Object.h"
+
 class Actor;
 
 using IterationFunc = std::function<void(class Transform*, int)>;
@@ -13,7 +15,7 @@ using glm::mat4;
 using glm::quat;
 using glm::vec3;
 
-class Transform
+class Transform : public Object
 {
 	friend Actor;
 
@@ -32,9 +34,11 @@ private:
 
 private:
 	Transform();
-	~Transform();
+	~Transform() override;
 
 public:
+	[[nodiscard]] uint64 GetHashCode() const override;
+
 	[[nodiscard]] Actor* Owner() const;
 
 	[[nodiscard]] mat4 LocalToWorld() const;
@@ -51,7 +55,6 @@ private:
 	[[nodiscard]] mat4 LocalToParent() const;
 	[[nodiscard]] mat4 ParentToLocal() const;
 
-private:
 	void ValidatePointers() const;
 
 };

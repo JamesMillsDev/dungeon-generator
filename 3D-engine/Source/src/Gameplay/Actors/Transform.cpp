@@ -2,6 +2,8 @@
 
 #include "Maths/Maths.h"
 
+#include "Utility/HashImpls.h"
+
 Transform::Transform()
 	: location{ 0.f }, rotation{ quat{} }, scale{ 1.f }, parent{ nullptr }, nextSibling{ nullptr },
 	previousSibling{ nullptr }, lastChild{ nullptr }, m_owner{ nullptr }
@@ -18,6 +20,11 @@ Transform::~Transform()
 	{
 		SetParent(nullptr);
 	}
+}
+
+uint64 Transform::GetHashCode() const
+{
+	return HashAll(location, rotation, scale);
 }
 
 Actor* Transform::Owner() const

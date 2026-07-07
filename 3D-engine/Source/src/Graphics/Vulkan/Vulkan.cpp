@@ -389,7 +389,8 @@ void Vulkan::WriteTextureDescriptorSets()
 		return;
 	}
 
-	TArray<VkDescriptorImageInfo> textureDescriptors(m_textures.Count());
+	TArray<VkDescriptorImageInfo> textureDescriptors;
+	textureDescriptors.Resize(m_textures.Count());
 	for (int64 i = 0; i < m_textures.Count(); ++i)
 	{
 		textureDescriptors[i] = m_textures[i]->GetDescriptors();

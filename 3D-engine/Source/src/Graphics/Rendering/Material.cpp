@@ -11,6 +11,8 @@
 #include "Graphics/Vulkan/VulkanBuffer.h"
 #include "Graphics/Vulkan/VulkanGraphicsPipeline.h"
 
+#include "Utility/HashImpls.h"
+
 Material::Material(const string& shaderPath)
 	: color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ 0 }, metallic{ 0 },
 	specularColor{ Color::WHITE }, specularStrength{ .5f }, baseColorMap{ nullptr },
@@ -27,6 +29,14 @@ Material::~Material()
 
 	delete m_pipeline;
 	m_pipeline = nullptr;
+}
+
+uint64 Material::GetHashCode() const
+{
+	return HashAll(
+		color, emissiveTint, roughness, metallic,
+		specularColor, specularStrength
+	);
 }
 
 void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform) const

@@ -6,6 +6,7 @@
 #include <vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
 
+#include "Object.h"
 #include "Maths/Alias.h"
 
 class VulkanBuffer;
@@ -13,7 +14,7 @@ class VulkanBuffer;
 using std::queue;
 using std::string;
 
-class Texture
+class Texture : public Object
 {
 	friend class Material;
 	friend class Renderer;
@@ -42,9 +43,11 @@ private:
 
 public:
 	explicit Texture(string file);
-	~Texture();
+	~Texture() override;
 
 public:
+	[[nodiscard]] uint64 GetHashCode() const override;
+
 	[[nodiscard]] const VkDescriptorImageInfo& GetDescriptors() const;
 	[[nodiscard]] uint32 GetId() const;
 

@@ -52,13 +52,13 @@ public:
 
 };
 
-class Mesh
+class Mesh : public Object
 {
 	friend class Renderer;
 	friend class Vulkan;
 
 public:
-	struct SubMesh
+	struct SubMesh : Object
 	{
 		friend Mesh;
 
@@ -74,7 +74,10 @@ public:
 
 	public:
 		SubMesh(const TArray<Vertex>& vertices, const TArray<uint16>& indices);
-		~SubMesh();
+		~SubMesh() override;
+
+	public:
+		[[nodiscard]] uint64 GetHashCode() const override;
 
 	private:
 		void CreateBuffer();
@@ -90,7 +93,10 @@ public:
 
 public:
 	explicit Mesh(const TArray<SubMesh*>& subMeshes);
-	~Mesh();
+	~Mesh() override;
+
+public:
+	[[nodiscard]] uint64 GetHashCode() const override;
 
 private:
 	void CreateBuffers();
@@ -99,3 +105,12 @@ private:
 	void Render(VkCommandBuffer buffer, uint32 instances = 1, uint32 firstInstance = 0) const;
 
 };
+
+namespace std
+{
+	template<>
+	struct hash<Vertex>
+	{
+		uint64 operator()(const Vertex& vertex) const noexcept;
+	};
+}

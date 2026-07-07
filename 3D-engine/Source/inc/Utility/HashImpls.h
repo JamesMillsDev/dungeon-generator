@@ -1,0 +1,73 @@
+#pragma once
+
+#include "Object.h"
+#include "Maths/Color.h"
+
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
+#include <glm/mat4x4.hpp>
+#include <glm/gtc/quaternion.hpp>
+
+using glm::vec2;
+using glm::vec3;
+using glm::vec4;
+using glm::mat4;
+using glm::quat;
+
+namespace std
+{
+	template<>
+	struct hash<Color>
+	{
+		uint64 operator()(const Color& color) const noexcept
+		{
+			return HashAll(color.r, color.g, color.b, color.a);
+		}
+	};
+
+	template<>
+	struct hash<vec2>
+	{
+		uint64 operator()(const vec2& vec) const noexcept
+		{
+			return HashAll(vec.x, vec.y);
+		}
+	};
+
+	template<>
+	struct hash<vec3>
+	{
+		uint64 operator()(const vec3& vec) const noexcept
+		{
+			return HashAll(vec.x, vec.y, vec.z);
+		}
+	};
+
+	template<>
+	struct hash<vec4>
+	{
+		uint64 operator()(const vec4& vec) const noexcept
+		{
+			return HashAll(vec.x, vec.y, vec.x, vec.w);
+		}
+	};
+
+	template<>
+	struct hash<quat>
+	{
+		uint64 operator()(const quat& quaternion) const noexcept
+		{
+			return HashAll(quaternion.x, quaternion.y, quaternion.x, quaternion.w);
+		}
+	};
+
+	template<>
+	struct hash<mat4>
+	{
+		uint64 operator()(const mat4& matrix) const noexcept
+		{
+			return HashAll(matrix[0], matrix[1], matrix[2], matrix[4]);
+		}
+	};
+}

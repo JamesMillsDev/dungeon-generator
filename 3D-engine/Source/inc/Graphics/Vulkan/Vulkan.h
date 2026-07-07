@@ -37,7 +37,7 @@ constexpr bool ENABLE_VALIDATION_LAYERS = true;
 constexpr bool ENABLE_VALIDATION_LAYERS = false;
 #endif
 
-const TArray VALIDATION_LAYERS =
+const TArray<const char*> VALIDATION_LAYERS =
 {
 	"VK_LAYER_KHRONOS_validation"
 };

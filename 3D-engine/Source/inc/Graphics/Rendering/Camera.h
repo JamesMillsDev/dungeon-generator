@@ -1,10 +1,11 @@
 #pragma once
 
+#include "Object.h"
 #include "Graphics/Vulkan/Uniforms.h"
 
 class Window;
 
-class Camera
+class Camera : public Object
 {
 	friend class Renderer;
 
@@ -21,11 +22,12 @@ private:
 
 public:
 	Camera(float fovY, float nearPlane, float farPlane);
-	virtual ~Camera() = default;
 
 public:
 	virtual void GetPvm(ProjectionViewModelUniform& pvm) const;
 
 	[[nodiscard]] bool IsCurrent() const;
+
+	[[nodiscard]] uint64 GetHashCode() const override;
 
 };

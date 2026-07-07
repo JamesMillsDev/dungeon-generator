@@ -8,6 +8,7 @@
 
 #include <vulkan/vulkan.h>
 
+#include "Object.h"
 #include "Maths/Alias.h"
 
 using std::ostream;
@@ -160,7 +161,6 @@ public:
 	/** @brief Copies the right hand side value into this one. */
 	Color(const Color& rhs);
 
-public:
 	/** @brief Gets the colour in linear space. */
 	[[nodiscard]] Color Linear() const;
 

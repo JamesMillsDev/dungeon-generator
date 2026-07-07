@@ -43,6 +43,11 @@ Texture::~Texture()
 	DestroyBuffer();
 }
 
+uint64 Texture::GetHashCode() const
+{
+	return HashValue(m_id);
+}
+
 const VkDescriptorImageInfo& Texture::GetDescriptors() const
 {
 	return m_textureDescriptors;
@@ -186,7 +191,9 @@ void Texture::TransitionImage() const
 	vkCmdPipelineBarrier2(commandBuffer, &barrierTexInfo);
 
 	// Get the regions to copy and then copy them
-	TArray<VkBufferImageCopy> copyRegions(m_texture->numLevels);
+	TArray<VkBufferImageCopy> copyRegions;
+	copyRegions.Resize(m_texture->numLevels);
+
 	for (uint32 i = 0; i < m_texture->numLevels; ++i)
 	{
 		ktx_size_t mipOffset = 0;

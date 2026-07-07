@@ -1,13 +1,14 @@
 #include "Graphics/Rendering/Camera.h"
 
+#include <bitset>
 #include <glm/ext/matrix_clip_space.hpp>
 
 #include "Application.h"
 #include "Window.h"
-
 #include "Graphics/Renderer.h"
-
 #include "Maths/Maths.h"
+
+using std::hash;
 
 Camera::Camera(const float fovY, const float nearPlane, const float farPlane)
 	: fovY{ fovY }, nearPlane{ nearPlane }, farPlane{ farPlane }, m_window{ Application::GetWindow() },
@@ -24,4 +25,9 @@ void Camera::GetPvm(ProjectionViewModelUniform& pvm) const
 bool Camera::IsCurrent() const
 {
 	return m_isCurrent;
+}
+
+uint64 Camera::GetHashCode() const
+{
+	return HashValue(fovY) + HashValue(nearPlane) + HashValue(farPlane);
 }

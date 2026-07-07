@@ -4,6 +4,7 @@
 #include <glm/mat4x4.hpp>
 #include <vulkan/vulkan.h>
 
+#include "Object.h"
 #include "Maths/Color.h"
 
 class VulkanGraphicsPipeline;
@@ -28,7 +29,7 @@ struct MaterialUniform
 	int32 emissiveMap;
 };
 
-class Material
+class Material : public Object
 {
 	friend class Renderer;
 		
@@ -51,7 +52,10 @@ private:
 
 public:
 	explicit Material(const string& shaderPath);
-	~Material();
+	~Material() override;
+
+public:
+	[[nodiscard]] uint64 GetHashCode() const override;
 
 private:
 	void Bind(VkCommandBuffer cmdBuffer, const mat4& transform) const;

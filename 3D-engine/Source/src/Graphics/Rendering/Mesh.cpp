@@ -2,6 +2,7 @@
 
 #include "Graphics/Rendering/Mesh.h"
 
+#include <format>
 #include <tuple>
 
 #include <assimp/Importer.hpp>
@@ -12,6 +13,8 @@
 
 #include "Graphics/Vulkan/Vulkan.h"
 #include "Graphics/Vulkan/VulkanBuffer.h"
+
+#include "Utility/HashImpls.h"
 
 using std::vector;
 using VertexAttribData = std::tuple<uint8, uint8, VkFormat, size_t>;
@@ -54,8 +57,8 @@ array<VkVertexInputAttributeDescription, VertexAttributeCount> Vertex::GetAttrib
 }
 
 Mesh::SubMesh::SubMesh(const TArray<Vertex>& vertices, const TArray<uint16>& indices)
-	:vertices{ vertices }, indices{ indices }, m_vertexBufferSize{ sizeof(Vertex) * vertices.size() },
-	m_indexBufferSize{ sizeof(uint16) * indices.size() }, m_vertexBuffer{ VK_NULL_HANDLE }
+	:vertices{ vertices }, indices{ indices }, m_vertexBufferSize{ sizeof(Vertex) * vertices.Count() },
+	m_indexBufferSize{ sizeof(uint16) * indices.Count() }, m_vertexBuffer{ VK_NULL_HANDLE }
 {
 
 }
@@ -64,6 +67,16 @@ Mesh::SubMesh::~SubMesh()
 {
 	delete m_vertexBuffer;
 	m_vertexBuffer = nullptr;
+}
+
+uint64 Mesh::SubMesh::GetHashCode() const
+{
+	uint64 seed = 0;
+	for (Vertex& vert : vertices)
+	{
+		seed = seed ^ HashAll(vert.location, vert.normal, vert.uv, vert.biTangent, vert.tangent, vert.color);
+	}
+	return seed;
 }
 
 void Mesh::SubMesh::CreateBuffer()
@@ -87,7 +100,9 @@ Mesh* Mesh::MakeQuad()
 		{
 			new SubMesh
 			{
+				TArray
 				{
+					Vertex
 					{
 						.location = { -.5f, -.5f, 0.f },
 						.normal = { 0.f, 0.f, 0.f, 0.f },
@@ -96,6 +111,7 @@ Mesh* Mesh::MakeQuad()
 						.uv = { 1.f, 0.f },
 						.color = { 1.f, 0.f, 0.f, 1.f }
 					},
+					Vertex
 					{
 						.location = { .5f, -.5f, 0.f },
 						.normal = { 0.f, 0.f, 0.f, 0.f },
@@ -104,6 +120,7 @@ Mesh* Mesh::MakeQuad()
 						.uv = { 0.f, 0.f },
 						.color = { 0.f, 1.f, 0.0f, 1.f }
 					},
+					Vertex
 					{
 						.location = { .5f, .5f, 0.f },
 						.normal = { 0.f, 0.f, 0.f, 0.f },
@@ -112,6 +129,7 @@ Mesh* Mesh::MakeQuad()
 						.uv = { 0.f, 1.f },
 						.color = { 0.f, 0.f, 1.f, 1.f }
 					},
+					Vertex
 					{
 						.location = { -.5f, .5f, 0.f },
 						.normal = { 0.f, 0.f, 0.f, 0.f },
@@ -147,6 +165,8 @@ Mesh* Mesh::MakeFromAssimp(const string& file)
 		const aiMesh* mesh = scene->mMeshes[i];
 
 		TArray<Vertex> vertices;
+		vertices.Resize(mesh->mNumVertices);
+
 		TArray<uint16> indices;
 
 		for (uint32 v = 0; v < mesh->mNumVertices; ++v)
@@ -190,7 +210,7 @@ Mesh* Mesh::MakeFromAssimp(const string& file)
 				vert.color = Color{ color0.r, color0.g, color0.b, color0.a };
 			}
 
-			vertices.Add(vert);
+			vertices[v] = vert;
 		}
 
 		if (mesh->HasFaces())
@@ -228,6 +248,16 @@ Mesh::~Mesh()
 	DestroyBuffers();
 }
 
+uint64 Mesh::GetHashCode() const
+{
+	uint64 seed = 0;
+	for (SubMesh*& subMesh : subMeshes)
+	{
+		seed = seed ^ subMesh->GetHashCode();
+	}
+	return seed;
+}
+
 void Mesh::CreateBuffers()
 {
 	for (SubMesh*& subMesh : subMeshes)
@@ -259,4 +289,9 @@ void Mesh::Render(const VkCommandBuffer buffer, const uint32 instances, const ui
 			buffer, static_cast<uint32>(subMesh->indices.Count()), instances, 0, 0, firstInstance
 		);
 	}
+}
+
+uint64 hash<Vertex>::operator()(const Vertex& vertex) const noexcept
+{
+	return HashAll(vertex.location, vertex.normal, vertex.tangent, vertex.biTangent, vertex.uv, vertex.color);
 }

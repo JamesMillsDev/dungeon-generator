@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cassert>
 #include <initializer_list>
 #include <iterator>
@@ -9,7 +10,7 @@
 
 using std::initializer_list;
 
-template<typename T>
+template<typename T, int64 GROWTH = 16>
 class TArray
 {
 public:
@@ -56,14 +57,13 @@ public:
 
 private:
 	int64 m_capacity;
-	int64 m_growth;
 	int64 m_count;
 
 	T* m_data;
 
 public:
-	TArray(int64 growth = 16);
-	TArray(const initializer_list<T>& initialData, int64 growth = 16);
+	TArray();
+	TArray(const initializer_list<T>& initialData);
 
 	TArray(const TArray& rhs);
 	TArray(TArray&& rhs) noexcept;
@@ -78,8 +78,8 @@ public:
 
 	void Clear();
 
-	bool Contains(T item);
-	bool IsEmpty() const;
+	[[nodiscard]] bool Contains(T item);
+	[[nodiscard]] bool IsEmpty() const;
 
 	[[nodiscard]] int64 Find(T item) const;
 	[[nodiscard]] int64 Capacity() const;
@@ -104,6 +104,9 @@ public:
 	[[nodiscard]] uint64 size() const;
 	[[nodiscard]] bool empty() const;
 
+private:
+	void Expand();
+
 public:
 	TArray& operator=(const TArray& rhs);
 	TArray& operator=(TArray&& rhs) noexcept;
@@ -115,96 +118,96 @@ public:
 
 };
 
-template <typename T>
-TArray<T>::Iterator::Iterator()
+template <typename T, int64 GROWTH>
+TArray<T, GROWTH>::Iterator::Iterator()
 	: m_ptr{ nullptr }
 {
-	
+
 }
 
-template <typename T>
-TArray<T>::Iterator::Iterator(pointer ptr)
+template <typename T, int64 GROWTH>
+TArray<T, GROWTH>::Iterator::Iterator(pointer ptr)
 	: m_ptr{ ptr }
 {
-	
+
 }
 
-template <typename T>
-TArray<T>::template Iterator::reference TArray<T>::Iterator::operator*() const
+template <typename T, int64 GROWTH>
+TArray<T, GROWTH>::template Iterator::reference TArray<T, GROWTH>::Iterator::operator*() const
 {
 	return *m_ptr;
 }
 
-template <typename T>
-TArray<T>::template Iterator::pointer TArray<T>::Iterator::operator->()
+template <typename T, int64 GROWTH>
+TArray<T, GROWTH>::template Iterator::pointer TArray<T, GROWTH>::Iterator::operator->()
 {
 	return m_ptr;
 }
 
-template <typename T>
-TArray<T>::template Iterator& TArray<T>::Iterator::operator++()
+template <typename T, int64 GROWTH>
+TArray<T, GROWTH>::template Iterator& TArray<T, GROWTH>::Iterator::operator++()
 {
 	++m_ptr;
 	return *this;
 }
 
-template <typename T>
-TArray<T>::template Iterator& TArray<T>::Iterator::operator--()
+template <typename T, int64 GROWTH>
+TArray<T, GROWTH>::template Iterator& TArray<T, GROWTH>::Iterator::operator--()
 {
 	--m_ptr;
 	return *this;
 }
 
-template <typename T>
-TArray<T>::template Iterator TArray<T>::Iterator::operator++(int)
+template <typename T, int64 GROWTH>
+TArray<T, GROWTH>::template Iterator TArray<T, GROWTH>::Iterator::operator++(int)
 {
 	Iterator tmp = *this;
 	++(*this);
 	return tmp;
 }
 
-template <typename T>
-TArray<T>::template Iterator TArray<T>::Iterator::operator--(int)
+template <typename T, int64 GROWTH>
+TArray<T, GROWTH>::template Iterator TArray<T, GROWTH>::Iterator::operator--(int)
 {
 	Iterator tmp = *this;
 	--(*this);
 	return tmp;
 }
 
-template <typename T>
-bool TArray<T>::Iterator::operator==(const Iterator& rhs) const
+template <typename T, int64 GROWTH>
+bool TArray<T, GROWTH>::Iterator::operator==(const Iterator& rhs) const
 {
 	return m_ptr == rhs.m_ptr;
 }
 
-template <typename T>
-bool TArray<T>::Iterator::operator!=(const Iterator& rhs) const
+template <typename T, int64 GROWTH>
+bool TArray<T, GROWTH>::Iterator::operator!=(const Iterator& rhs) const
 {
 	return m_ptr != rhs.m_ptr;
 }
 
-template <typename T>
-TArray<T>::template Iterator TArray<T>::View::begin() const
+template <typename T, int64 GROWTH>
+TArray<T, GROWTH>::template Iterator TArray<T, GROWTH>::View::begin() const
 {
 	return std::ranges::begin(value);
 }
 
-template <typename T>
-TArray<T>::template Iterator TArray<T>::View::end() const
+template <typename T, int64 GROWTH>
+TArray<T, GROWTH>::template Iterator TArray<T, GROWTH>::View::end() const
 {
 	return std::ranges::end(value);
 }
 
-template <typename T>
-TArray<T>::TArray(int64 growth)
-	: m_capacity{ growth }, m_growth{ growth }, m_count{ 0 }, m_data{ new T[m_capacity] }
+template <typename T, int64 GROWTH>
+TArray<T, GROWTH>::TArray()
+	: m_capacity{ GROWTH }, m_count{ 0 }, m_data{ new T[m_capacity]{} }
 {
 
 }
 
-template <typename T>
-TArray<T>::TArray(const initializer_list<T>& initialData, int64 growth)
-	: m_capacity{ growth }, m_growth{ growth }, m_count{ 0 }, m_data{ new T[m_capacity]{} }
+template <typename T, int64 GROWTH>
+TArray<T, GROWTH>::TArray(const initializer_list<T>& initialData)
+	: m_capacity{ GROWTH }, m_count{ 0 }, m_data{ new T[m_capacity]{} }
 {
 	for (uint64 i = 0; i < initialData.size(); ++i)
 	{
@@ -212,49 +215,47 @@ TArray<T>::TArray(const initializer_list<T>& initialData, int64 growth)
 	}
 }
 
-template <typename T>
-TArray<T>::TArray(const TArray& rhs)
-	: m_capacity{ rhs.m_capacity }, m_growth{ rhs.m_growth }, m_count{ rhs.m_count }, m_data{ new T[m_capacity]{} }
+template <typename T, int64 GROWTH>
+TArray<T, GROWTH>::TArray(const TArray& rhs)
+	: m_capacity{ rhs.m_capacity }, m_count{ rhs.m_count }, m_data{ new T[m_capacity]{} }
 {
-	memcpy_s(m_data, m_capacity * sizeof(T), rhs.m_data, rhs.m_capacity * sizeof(T));
+	std::copy(rhs.m_data, rhs.m_data + rhs.m_capacity, m_data);
 }
 
-template <typename T>
-TArray<T>::TArray(TArray&& rhs) noexcept
-	: m_capacity{ rhs.m_capacity }, m_growth{ rhs.m_growth }, m_count{ rhs.m_count }, m_data{ rhs.m_data }
+template <typename T, int64 GROWTH>
+TArray<T, GROWTH>::TArray(TArray&& rhs) noexcept
+	: m_capacity{ rhs.m_capacity }, m_count{ rhs.m_count }, m_data{ rhs.m_data }
 {
 	rhs.m_capacity = 0;
-	rhs.m_growth = 0;
 	rhs.m_count = 0;
 	rhs.m_data = nullptr;
 }
 
-template <typename T>
-TArray<T>::~TArray()
+template <typename T, int64 GROWTH>
+TArray<T, GROWTH>::~TArray()
 {
 	m_capacity = 0;
-	m_growth = 0;
 	m_count = 0;
 	delete[] m_data;
 }
 
-template <typename T>
-void TArray<T>::Add(T item)
+template <typename T, int64 GROWTH>
+void TArray<T, GROWTH>::Add(T item)
 {
 	if (m_count + 1 >= m_capacity)
 	{
-		Resize(m_capacity + m_growth);
+		Expand();
 	}
 
 	m_data[m_count++] = item;
 }
 
-template <typename T>
-void TArray<T>::Insert(T item, int64 index)
+template <typename T, int64 GROWTH>
+void TArray<T, GROWTH>::Insert(T item, int64 index)
 {
 	if (m_count + 1 >= m_capacity)
 	{
-		Resize(m_capacity + m_growth);
+		Expand();
 	}
 
 	memmove(&m_data[index + 1], &m_data[index], (m_capacity - index - 1) * sizeof(T));
@@ -262,8 +263,8 @@ void TArray<T>::Insert(T item, int64 index)
 	m_count++;
 }
 
-template <typename T>
-void TArray<T>::Remove(T item)
+template <typename T, int64 GROWTH>
+void TArray<T, GROWTH>::Remove(T item)
 {
 	int64 index = Find(item);
 	if (index == -1)
@@ -274,8 +275,8 @@ void TArray<T>::Remove(T item)
 	RemoveAt(index);
 }
 
-template <typename T>
-void TArray<T>::RemoveAt(int64 index)
+template <typename T, int64 GROWTH>
+void TArray<T, GROWTH>::RemoveAt(int64 index)
 {
 	if (m_count == 0)
 	{
@@ -286,26 +287,26 @@ void TArray<T>::RemoveAt(int64 index)
 	m_count--;
 }
 
-template <typename T>
-void TArray<T>::Clear()
+template <typename T, int64 GROWTH>
+void TArray<T, GROWTH>::Clear()
 {
 	m_count = 0;
 }
 
-template <typename T>
-bool TArray<T>::Contains(T item)
+template <typename T, int64 GROWTH>
+bool TArray<T, GROWTH>::Contains(T item)
 {
 	return Find(item) != -1;
 }
 
-template <typename T>
-bool TArray<T>::IsEmpty() const
+template <typename T, int64 GROWTH>
+bool TArray<T, GROWTH>::IsEmpty() const
 {
 	return m_count == 0;
 }
 
-template <typename T>
-int64 TArray<T>::Find(T item) const
+template <typename T, int64 GROWTH>
+int64 TArray<T, GROWTH>::Find(T item) const
 {
 	for (int64 i = 0; i < m_count; ++i)
 	{
@@ -318,109 +319,122 @@ int64 TArray<T>::Find(T item) const
 	return -1;
 }
 
-template <typename T>
-int64 TArray<T>::Capacity() const
+template <typename T, int64 GROWTH>
+int64 TArray<T, GROWTH>::Capacity() const
 {
 	return m_capacity;
 }
 
-template <typename T>
-int64 TArray<T>::Count() const
+template <typename T, int64 GROWTH>
+int64 TArray<T, GROWTH>::Count() const
 {
 	return m_count;
 }
 
-template <typename T>
-T TArray<T>::At(int64 index) const
+template <typename T, int64 GROWTH>
+T TArray<T, GROWTH>::At(int64 index) const
 {
 	return this->operator[](index);
 }
 
-template <typename T>
-T TArray<T>::Front() const
+template <typename T, int64 GROWTH>
+T TArray<T, GROWTH>::Front() const
 {
 	return At(0);
 }
 
-template <typename T>
-T TArray<T>::Back() const
+template <typename T, int64 GROWTH>
+T TArray<T, GROWTH>::Back() const
 {
 	return At(m_count - 1);
 }
 
-template <typename T>
-T* TArray<T>::Data() noexcept
+template <typename T, int64 GROWTH>
+T* TArray<T, GROWTH>::Data() noexcept
 {
 	return m_data;
 }
 
-template <typename T>
-const T* TArray<T>::Data() const noexcept
+template <typename T, int64 GROWTH>
+const T* TArray<T, GROWTH>::Data() const noexcept
 {
 	return m_data;
 }
 
-template <typename T>
-void TArray<T>::Resize(uint64 newSize)
+template <typename T, int64 GROWTH>
+void TArray<T, GROWTH>::Resize(uint64 newSize)
 {
-	T* data = static_cast<T*>(malloc(sizeof(T) * newSize));
-	memcpy_s(data, m_capacity * sizeof(T), m_data, m_capacity * sizeof(T));
+	uint64 copySize = newSize < m_capacity ? newSize : m_capacity;
+
+	T* newData = new T[newSize];
+	std::copy(m_data, m_data + copySize, newData);
 	delete[] m_data;
-	m_data = data;
+	m_data = newData;
 
 	m_capacity = newSize;
+	m_count = m_capacity;
 }
 
-template <typename T>
-TArray<T>::template Iterator TArray<T>::begin()
+template <typename T, int64 GROWTH>
+TArray<T, GROWTH>::template Iterator TArray<T, GROWTH>::begin()
 {
 	return Iterator{ &m_data[0] };
 }
 
-template <typename T>
-TArray<T>::template Iterator TArray<T>::end()
+template <typename T, int64 GROWTH>
+TArray<T, GROWTH>::template Iterator TArray<T, GROWTH>::end()
 {
 	return Iterator{ &m_data[m_count] };
 }
 
-template <typename T>
-uint64 TArray<T>::size()
+template <typename T, int64 GROWTH>
+uint64 TArray<T, GROWTH>::size()
 {
 	return m_count;
 }
 
-template <typename T>
-bool TArray<T>::empty()
+template <typename T, int64 GROWTH>
+bool TArray<T, GROWTH>::empty()
 {
 	return m_count == 0;
 }
 
-template <typename T>
-TArray<T>::template Iterator TArray<T>::begin() const
+template <typename T, int64 GROWTH>
+TArray<T, GROWTH>::template Iterator TArray<T, GROWTH>::begin() const
 {
 	return Iterator{ &m_data[0] };
 }
 
-template <typename T>
-TArray<T>::template Iterator TArray<T>::end() const
+template <typename T, int64 GROWTH>
+TArray<T, GROWTH>::template Iterator TArray<T, GROWTH>::end() const
 {
 	return Iterator{ &m_data[m_count] };
 }
 
-template <typename T>
-uint64 TArray<T>::size() const
+template <typename T, int64 GROWTH>
+uint64 TArray<T, GROWTH>::size() const
 {
 	return static_cast<uint64>(Count());
 }
 
-template <typename T>
-bool TArray<T>::empty() const
+template <typename T, int64 GROWTH>
+bool TArray<T, GROWTH>::empty() const
 {
 	return IsEmpty();
 }
 
-template <typename T>
-TArray<T>& TArray<T>::operator=(const TArray& rhs)
+template <typename T, int64 GROWTH>
+void TArray<T, GROWTH>::Expand()
+{
+	T* newData = new T[m_capacity + GROWTH];
+	std::copy(m_data, m_data + m_capacity, newData);
+	delete[] m_data;
+	m_data = newData;
+	m_capacity += GROWTH;
+}
+
+template <typename T, int64 GROWTH>
+TArray<T, GROWTH>& TArray<T, GROWTH>::operator=(const TArray& rhs)
 {
 	if (this == &rhs)
 	{
@@ -428,16 +442,15 @@ TArray<T>& TArray<T>::operator=(const TArray& rhs)
 	}
 
 	m_capacity = rhs.m_capacity;
-	m_growth = rhs.m_growth;
 	m_count = rhs.m_count;
 	m_data = new T[m_capacity];
-	memcpy_s(m_data, m_capacity * sizeof(T), rhs.m_data, rhs.m_capacity * sizeof(T));
+	std::copy(rhs.m_data, rhs.m_data + rhs.m_capacity, m_data);
 
 	return *this;
 }
 
-template <typename T>
-TArray<T>& TArray<T>::operator=(TArray&& rhs) noexcept
+template <typename T, int64 GROWTH>
+TArray<T, GROWTH>& TArray<T, GROWTH>::operator=(TArray&& rhs) noexcept
 {
 	if (this == &rhs)
 	{
@@ -445,27 +458,25 @@ TArray<T>& TArray<T>::operator=(TArray&& rhs) noexcept
 	}
 
 	m_capacity = rhs.m_capacity;
-	m_growth = rhs.m_growth;
 	m_count = rhs.m_count;
 	m_data = rhs.m_data;
 
 	rhs.m_capacity = 0;
-	rhs.m_growth = 0;
 	rhs.m_count = 0;
 	rhs.m_data = nullptr;
 
 	return *this;
 }
 
-template <typename T>
-T& TArray<T>::operator[](int64 index)
+template <typename T, int64 GROWTH>
+T& TArray<T, GROWTH>::operator[](int64 index)
 {
-	assert(index < m_count && index >= 0);
+	assert(index < m_capacity && index >= 0);
 	return m_data[index];
 }
 
-template <typename T>
-const T& TArray<T>::operator[](int64 index) const
+template <typename T, int64 GROWTH>
+const T& TArray<T, GROWTH>::operator[](int64 index) const
 {
 	assert(index < m_count && index >= 0);
 	return m_data[index];
