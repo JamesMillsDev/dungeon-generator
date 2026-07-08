@@ -13,8 +13,8 @@
 using std::ifstream;
 using std::vector;
 
-unordered_map<string, uint32> Resources::m_fileMappings;
-unordered_map<string, ResourceData> Resources::m_resources;
+TMap<string, uint32> Resources::m_fileMappings;
+TMap<string, ResourceData> Resources::m_resources;
 string Resources::m_resourceDir;
 string Resources::m_resourceFileName;
 
@@ -86,16 +86,16 @@ ResourceData& Resources::Find(string id)
 	std::ranges::replace(id, '/', '\\');
 
 	// Only mapped files can be loaded
-	assert(m_fileMappings.contains(id));
+	assert(m_fileMappings.ContainsKey(id));
 
 	// If the resource is already loaded, return the data
-	if (m_resources.contains(id))
+	if (m_resources.ContainsKey(id))
 	{
-		return m_resources[id];
+		return *m_resources[id];
 	}
 
 	// Attempt to open the correct binary file
-	const uint32 resourceFileIndex = m_fileMappings[id];
+	const uint32 resourceFileIndex = *m_fileMappings[id];
 	const string path = m_resourceDir + "/" + m_resourceFileName + std::to_string(resourceFileIndex) + ".res";
 	ifstream resourceFile(
 		path, 
@@ -115,12 +115,12 @@ ResourceData& Resources::Find(string id)
 	// If data was loaded successfully, store it
 	if (data.length != 0)
 	{
-		m_resources[id] = data;
+		m_resources.Add(id, data);
 	}
 
 	// Close the file and return the loaded data
 	resourceFile.close();
-	return m_resources[id];
+	return *m_resources[id];
 }
 
 void Resources::Init(Config* config)
@@ -166,7 +166,7 @@ void Resources::Init(Config* config)
 				ReplaceAll(path, "\\\\", "\\");
 
 				// Store the mapping
-				m_fileMappings[path] = index;
+				m_fileMappings.Add(path, index);
 			}
 		}
 	}
@@ -177,11 +177,14 @@ void Resources::Init(Config* config)
 void Resources::Shutdown()
 {
 	// Delete all loaded resources
-	for (ResourceData& res : m_resources | std::ranges::views::values)
+	for (TMapEntry<string, ResourceData>*& res : m_resources)
 	{
-		delete[] res.data;
+		if (res != nullptr)
+		{
+			delete[] res->Value().data;
+		}
 	}
 
-	m_resources.clear();
-	m_fileMappings.clear();
+	m_resources.Clear();
+	m_fileMappings.Clear();
 }

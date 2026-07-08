@@ -219,7 +219,10 @@ template <typename T, int64 GROWTH>
 TArray<T, GROWTH>::TArray(const TArray& rhs)
 	: m_capacity{ rhs.m_capacity }, m_count{ rhs.m_count }, m_data{ new T[m_capacity]{} }
 {
-	std::copy(rhs.m_data, rhs.m_data + rhs.m_capacity, m_data);
+	for (uint64 i = 0; i < m_capacity; ++i)
+	{
+		m_data[i] = rhs.m_data[i];
+	}
 }
 
 template <typename T, int64 GROWTH>
@@ -444,7 +447,10 @@ TArray<T, GROWTH>& TArray<T, GROWTH>::operator=(const TArray& rhs)
 	m_capacity = rhs.m_capacity;
 	m_count = rhs.m_count;
 	m_data = new T[m_capacity];
-	std::copy(rhs.m_data, rhs.m_data + rhs.m_capacity, m_data);
+	for (uint64 i = 0; i < m_capacity; ++i)
+	{
+		m_data[i] = rhs.m_data[i];
+	}
 
 	return *this;
 }

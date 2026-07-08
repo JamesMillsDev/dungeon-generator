@@ -4,13 +4,13 @@
 #include <functional>
 #include <stdexcept>
 #include <string>
-#include <unordered_map>
 #include <vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
 
 #include "Maths/Color.h"
 #include "Utility/ResourceStack.h"
 #include "Utility/TArray.h"
+#include "Utility/TMap.h"
 
 class Config;
 struct GLFWwindow;
@@ -27,7 +27,6 @@ using InitFunction = std::function<void()>;
 using std::array;
 using std::runtime_error;
 using std::string;
-using std::unordered_map;
 
 constexpr int32 MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -62,7 +61,7 @@ enum class EUniformBufferIds : uint16
 	PushConstant = UINT16_MAX
 };
 
-using UniformBufferSet = unordered_map<uint16, TArray<VulkanBuffer*>>;
+using UniformBufferSet = TMap<uint16, TArray<VulkanBuffer*>>;
 
 class Vulkan  // NOLINT(cppcoreguidelines-special-member-functions)
 {

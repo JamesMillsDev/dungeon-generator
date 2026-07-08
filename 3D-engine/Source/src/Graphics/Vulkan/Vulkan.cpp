@@ -360,7 +360,7 @@ void Vulkan::EndOneTimeCommand(const VkCommandBuffer& buffer, const VkFence& fen
 
 VulkanBuffer* Vulkan::GetUniformBuffer(const uint16 id, const uint32 index) const
 {
-	return m_shaderDataBuffers[m_frameIndex].at(id)[index];
+	return (*m_shaderDataBuffers[m_frameIndex][id])[index];
 }
 
 VulkanBuffer* Vulkan::GetUniformBuffer(EUniformBufferIds id, const uint32 index) const
@@ -798,19 +798,23 @@ void Vulkan::Init(GLFWwindow* window)
 				// We need a set of buffers for every frame in flight
 				for (uint32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 				{
-					unordered_map<uint16, TArray<VulkanBuffer*>> buffers;
+					TMap<uint16, TArray<VulkanBuffer*>> buffers;
 
 					for (const UniformBufferData& uniformData : UNIFORM_DATAS)
 					{
+						TArray<VulkanBuffer*> buffer;
+
 						for (uint32 j = 0; j < uniformData.count; ++j)
 						{
-							buffers[uniformData.id].Add(new VulkanBuffer
+							buffer.Add(new VulkanBuffer
 								{
 									uniformData.size,
 									VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
 									this
 								});
 						}
+
+						buffers.Add(uniformData.id, buffer);
 					}
 
 					m_shaderDataBuffers[i] = buffers;
@@ -821,15 +825,18 @@ void Vulkan::Init(GLFWwindow* window)
 				for (uint32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 				{
 					// Delete each buffer for this frame in flight
-					for (const TArray<VulkanBuffer*>& buffers : m_shaderDataBuffers[i] | std::views::values)
+					for (TMapEntry<unsigned short, TArray<VulkanBuffer*>>*& buffers : m_shaderDataBuffers[i])
 					{
-						for (const VulkanBuffer* buffer : buffers)
+						if (buffers != nullptr)
 						{
-							delete buffer;
+							for (const VulkanBuffer* buffer : buffers->Value())
+							{
+								delete buffer;
+							}
 						}
 					}
 
-					m_shaderDataBuffers[i].clear();
+					m_shaderDataBuffers[i].Clear();
 				}
 			}
 		);

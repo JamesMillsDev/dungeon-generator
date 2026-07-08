@@ -101,6 +101,7 @@ EExitCode Application::Open()
 	// If we are in a debug build, enable memory leak detection
 #if _DEBUG
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	_CrtSetBreakAlloc(939);
 #endif
 
 	// Create an instance of the game and application

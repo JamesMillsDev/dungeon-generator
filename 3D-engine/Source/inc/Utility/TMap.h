@@ -31,6 +31,7 @@ private:
 
 public:
 	TMapEntry(KEY key, VALUE value);
+	TMapEntry(const TMapEntry& rhs);
 
 public:
 	KEY Key() const;
@@ -40,6 +41,8 @@ public:
 public:
 	VALUE& operator*();
 	const VALUE& operator*() const;
+
+	TMapEntry& operator=(const TMapEntry& rhs);
 
 };
 
@@ -133,8 +136,10 @@ public:
 	[[nodiscard]] bool empty() const;
 
 private:
-	uint64 IndexFor(KEY key) const;
+	uint64 IndexFor(KEY key, uint64 overrideSize = UINT64_MAX) const;
 	uint64 Hash(KEY key) const;
+
+	void Copy(TMapEntry<KEY, VALUE>** data);
 
 public:
 	TMap& operator=(const TMap& rhs);
@@ -152,6 +157,17 @@ TMapEntry<KEY, VALUE>::TMapEntry(KEY key, VALUE value)
 	: next{ nullptr }, m_keyValuePair{ key, value }
 {
 
+}
+
+template <typename KEY, typename VALUE>
+TMapEntry<KEY, VALUE>::TMapEntry(const TMapEntry& rhs)
+	: next{ nullptr }, m_keyValuePair{ rhs.m_keyValuePair }
+{
+	if (rhs.next != nullptr)
+	{
+		next = new TMapEntry{ KEY{}, VALUE{} };
+		std::copy(next, next + sizeof(TMapEntry), rhs.next);
+	}
 }
 
 template <typename KEY, typename VALUE>
@@ -182,6 +198,24 @@ template <typename KEY, typename VALUE>
 const VALUE& TMapEntry<KEY, VALUE>::operator*() const
 {
 	return m_keyValuePair.value;
+}
+
+template <typename KEY, typename VALUE>
+TMapEntry<KEY, VALUE>& TMapEntry<KEY, VALUE>::operator=(const TMapEntry& rhs)
+{
+	if (this == &rhs)
+	{
+		return *this;
+	}
+
+	m_keyValuePair = rhs.m_keyValuePair;
+	if (rhs.next != nullptr)
+	{
+		next = new TMapEntry{ KEY{}, VALUE{} };
+		std::copy(next, next + sizeof(TMapEntry), rhs.next);
+	}
+
+	return *this;
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
@@ -293,7 +327,12 @@ TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::TMap(const TMap& rhs)
 	: m_capacity{ rhs.m_capacity }, m_count{ rhs.m_count }, m_totalEntryCount{ rhs.m_totalEntryCount },
 	m_data{ new TMapEntry<KEY, VALUE>[m_capacity] }
 {
-	memcpy_s(m_data, m_capacity * sizeof(TKeyValuePair<KEY, VALUE>*), rhs.m_data, rhs.m_capacity * sizeof(TKeyValuePair<KEY, VALUE>*));
+	for (uint64 i = 0; i < m_capacity; ++i)
+	{
+		m_data[i] = nullptr;
+	}
+
+	Copy(rhs.m_data);
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
@@ -511,7 +550,7 @@ void TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Resize(uint64 newSize)
 		{
 			// Get the next entry and the new hash index
 			TMapEntry<KEY, VALUE>* next = entry->next;
-			const uint64 index = IndexFor(entry->Key());
+			const uint64 index = IndexFor(entry->Key(), newSize);
 
 			// Set the entry for this index and the next entry
 			entry->next = newMap[index];
@@ -577,8 +616,13 @@ bool TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::empty() const
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
-uint64 TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::IndexFor(KEY key) const
+uint64 TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::IndexFor(KEY key, uint64 overrideSize) const
 {
+	if (overrideSize != UINT64_MAX)
+	{
+		return Hash(key) % overrideSize;
+	}
+
 	return Hash(key) % m_capacity;
 }
 
@@ -586,6 +630,29 @@ template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
 uint64 TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Hash(KEY key) const
 {
 	return hash<KEY>{}(key);
+}
+
+template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
+void TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Copy(TMapEntry<KEY, VALUE>** data)
+{
+	for (uint64 i = 0; i < m_capacity; ++i)
+	{
+		m_data[i] = nullptr;
+
+		TMapEntry<KEY, VALUE>* otherEntry = data[i];
+		TMapEntry<KEY, VALUE>** insertPoint = &m_data[i];
+
+		while (otherEntry != nullptr)
+		{
+			TMapEntry<KEY, VALUE>* newEntry =
+				new TMapEntry<KEY, VALUE>{ otherEntry->Key(), otherEntry->Value() };
+
+			*insertPoint = newEntry;
+			insertPoint = &newEntry->next;
+
+			otherEntry = otherEntry->next;
+		}
+	}
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
@@ -601,7 +668,7 @@ TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>& TMap<KEY, VALUE, GROWTH, LOAD_THRESHOL
 	m_totalEntryCount = rhs.m_totalEntryCount;
 
 	m_data = new TMapEntry<KEY, VALUE>* [m_capacity];
-	memcpy_s(m_data, m_capacity * sizeof(TKeyValuePair<KEY, VALUE>*), rhs.m_data, rhs.m_capacity * sizeof(TKeyValuePair<KEY, VALUE>*));
+	Copy(rhs.m_data);
 
 	return *this;
 }
@@ -631,17 +698,26 @@ template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
 TMapEntry<KEY, VALUE>& TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::operator[](KEY key)
 {
 	const uint64 index = IndexFor(key);
-	if (m_data[index] == nullptr)
+
+	TMapEntry<KEY, VALUE>* entry = m_data[index];
+	while (entry != nullptr && entry->Key() != key)
 	{
-		m_data[index] = new TMapEntry<KEY, VALUE>{ key, VALUE{} };
+		entry = entry->next;
 	}
 
-	return *m_data[index];
+	return *entry;
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
 const TMapEntry<KEY, VALUE>& TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::operator[](KEY key) const
 {
 	const uint64 index = IndexFor(key);
-	return *m_data[index];
+
+	TMapEntry<KEY, VALUE>* entry = m_data[index];
+	while (entry != nullptr && entry->Key() != key)
+	{
+		entry = entry->next;
+	}
+
+	return *entry;
 }

@@ -1,13 +1,11 @@
 #pragma once
 
 #include <string>
-#include <unordered_map>
 
 #include "Maths/Alias.h"
 #include "Utility/TMap.h"
 
 using std::string;
-using std::unordered_map;
 
 class Config;
 
@@ -30,8 +28,8 @@ class Resources
 	friend class Application;
 
 private:
-	static unordered_map<string, uint32> m_fileMappings; /**< The mappings of all resource paths to the correct resource files. */
-	static unordered_map<string, ResourceData> m_resources; /**< The loaded resource data. This prevents having to re-read the resource files. */
+	static TMap<string, uint32> m_fileMappings; /**< The mappings of all resource paths to the correct resource files. */
+	static TMap<string, ResourceData> m_resources; /**< The loaded resource data. This prevents having to re-read the resource files. */
 	static string m_resourceDir; /**< The directory that any resource files are stored in. */
 	static string m_resourceFileName; /**< The name of any resource / resource mapping files. */
 
