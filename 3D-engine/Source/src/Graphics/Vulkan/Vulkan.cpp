@@ -749,14 +749,11 @@ void Vulkan::Init(GLFWwindow* window)
 				for (uint32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 				{
 					// Delete each buffer for this frame in flight
-					for (TMapEntry<unsigned short, TList<VulkanBuffer*>>*& buffers : m_shaderDataBuffers[i])
+					for (TMapEntry<unsigned short, TList<VulkanBuffer*>>* buffers : m_shaderDataBuffers[i])
 					{
-						if (buffers != nullptr)
+						for (const VulkanBuffer* buffer : buffers->Value())
 						{
-							for (const VulkanBuffer* buffer : buffers->Value())
-							{
-								delete buffer;
-							}
+							delete buffer;
 						}
 					}
 

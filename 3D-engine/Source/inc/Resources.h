@@ -32,7 +32,6 @@ class Resources
 private:
 	static TMap<string, uint32> m_fileMappings; /**< The mappings of all resource paths to the correct resource files. */
 	static TMap<string, ResourceData> m_resources; /**< The loaded resource data. This prevents having to re-read the resource files. */
-	static TList<ResourceData*> m_loadedResourceMemory; /**< The memory of each loaded resource. This is used for memory cleanup. */
 	static string m_resourceDir; /**< The directory that any resource files are stored in. */
 	static string m_resourceFileName; /**< The name of any resource / resource mapping files. */
 

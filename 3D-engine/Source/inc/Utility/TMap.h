@@ -53,28 +53,32 @@ class TMap
 public:
 	struct Iterator
 	{
-		using iterator_category = std::bidirectional_iterator_tag;
+		using iterator_category = std::forward_iterator_tag;
 		using difference_type = std::ptrdiff_t;
 		using value_type = TMapEntry<KEY, VALUE>*;
 		using pointer = value_type*;
 		using reference = value_type&;
 
 	private:
-		pointer m_ptr;
+		TMapEntry<KEY, VALUE>** m_buckets;
+		uint64 m_capacity;
+		uint64 m_bucketIndex;
+		TMapEntry<KEY, VALUE>* m_current;
 
 	public:
 		Iterator();
-		Iterator(pointer ptr);
+		Iterator(TMapEntry<KEY, VALUE>** buckets, uint64 capacity, uint64 bucketIndex, TMapEntry<KEY, VALUE>* current);
+
+	private:
+		void SkipEmptyBuckets();
 
 	public:
-		reference operator*() const;
-		pointer operator->();
+		value_type operator*() const;
+		value_type operator->() const;
 
 		Iterator& operator++();
-		Iterator& operator--();
 
 		Iterator operator++(int);
-		Iterator operator--(int);
 
 		bool operator==(const Iterator& rhs) const;
 		bool operator!=(const Iterator& rhs) const;
@@ -149,8 +153,6 @@ public:
 	TMapEntry<KEY, VALUE>& operator[](KEY key);
 	const TMapEntry<KEY, VALUE>& operator[](KEY key) const;
 
-	static_assert(std::bidirectional_iterator<Iterator>);
-
 };
 
 template <typename KEY, typename VALUE>
@@ -211,39 +213,46 @@ TMapEntry<KEY, VALUE>& TMapEntry<KEY, VALUE>::operator=(TMapEntry rhs)
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
 TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Iterator::Iterator()
-	: m_ptr{ nullptr }
+	: m_buckets{ nullptr }, m_capacity{ 0 }, m_bucketIndex{ 0 }, m_current{ nullptr }
 {}
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
-TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Iterator::Iterator(pointer ptr)
-	: m_ptr{ ptr }
+TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Iterator::Iterator(TMapEntry<KEY, VALUE>** buckets, uint64 capacity, uint64 bucketIndex, TMapEntry<KEY, VALUE>* current)
+	: m_buckets{ buckets }, m_capacity{ capacity }, m_bucketIndex{ bucketIndex }, m_current{ current }
 {
-
+	SkipEmptyBuckets();
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
-TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::template Iterator::reference TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Iterator::operator*() const
+void TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Iterator::SkipEmptyBuckets()
 {
-	return *m_ptr;
+	while (m_current == nullptr && m_bucketIndex < m_capacity)
+	{
+		++m_bucketIndex;
+		if (m_bucketIndex < m_capacity)
+		{
+			m_current = m_buckets[m_bucketIndex];
+		}
+	}
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
-TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::template Iterator::pointer TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Iterator::operator->()
+TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::template Iterator::value_type TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Iterator::operator*() const
 {
-	return m_ptr;
+	return m_current;
+}
+
+template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
+TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::template Iterator::value_type TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Iterator::operator->() const
+{
+	return m_current;
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
 TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::template Iterator& TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Iterator::operator++()
 {
-	++m_ptr;
-	return *this;
-}
-
-template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
-TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::template Iterator& TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Iterator::operator--()
-{
-	--m_ptr;
+	m_current = m_current->next;
+	SkipEmptyBuckets();
 	return *this;
 }
 
@@ -256,23 +265,15 @@ TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::template Iterator TMap<KEY, VALUE, GRO
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
-TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::template Iterator TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Iterator::operator--(int)
-{
-	Iterator tmp = *this;
-	--(*this);
-	return tmp;
-}
-
-template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
 bool TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Iterator::operator==(const Iterator& rhs) const
 {
-	return m_ptr == rhs.m_ptr;
+	return m_current == rhs.m_current && m_bucketIndex == rhs.m_bucketIndex;
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
 bool TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Iterator::operator!=(const Iterator& rhs) const
 {
-	return m_ptr != rhs.m_ptr;
+	return m_current != rhs.m_current || m_bucketIndex != rhs.m_bucketIndex;
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
@@ -306,10 +307,9 @@ TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::TMap(const initializer_list<TKeyValueP
 		m_buckets[i] = nullptr;
 	}
 
-	for (uint64 i = 0; i < initialData.size(); ++i)
+	for (const TKeyValuePair<KEY, VALUE>& kvp : initialData)
 	{
-		Iterator iter = initialData.begin() + i;
-		Add(iter->key, iter->value);
+		Add(kvp.key, kvp.value);
 	}
 }
 
@@ -329,7 +329,7 @@ TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::TMap(const TMap& rhs)
 		m_buckets[i] = new TMapEntry<KEY, VALUE>{ rhs.m_buckets[i]->Key(), rhs.m_buckets[i]->Value() };
 
 		TMapEntry<KEY, VALUE>* currentNew = m_buckets[i];
-		TMapEntry<KEY, VALUE>* currentOld = rhs.m_buckets[i];
+		TMapEntry<KEY, VALUE>* currentOld = rhs.m_buckets[i]->next;
 
 		while (currentOld != nullptr)
 		{
@@ -575,13 +575,13 @@ void TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Resize(uint64 newSize)
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
 TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::template Iterator TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::begin()
 {
-	return Iterator{ &m_buckets[0] };
+	return Iterator{ m_buckets, m_capacity, 0, m_capacity > 0 ? m_buckets[0] : nullptr };
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
 TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::template Iterator TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::end()
 {
-	return Iterator{ &m_buckets[m_capacity] };
+	return Iterator{ m_buckets, m_capacity, m_capacity, nullptr };
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
@@ -599,13 +599,13 @@ bool TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::empty()
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
 TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::template Iterator TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::begin() const
 {
-	return Iterator{ m_buckets[0] };
+	return Iterator{ m_buckets, m_capacity, 0, m_capacity > 0 ? m_buckets[0] : nullptr };
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
 TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::template Iterator TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::end() const
 {
-	return Iterator{ m_buckets[m_capacity] };
+	return Iterator{ m_buckets, m_capacity, m_capacity, nullptr };
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
@@ -661,6 +661,7 @@ TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>& TMap<KEY, VALUE, GROWTH, LOAD_THRESHOL
 		return *this;
 	}
 
+	Clear();
 	m_capacity = rhs.m_capacity;
 	m_count = rhs.m_count;
 	m_totalEntryCount = rhs.m_totalEntryCount;

@@ -15,7 +15,6 @@ using std::vector;
 
 TMap<string, uint32> Resources::m_fileMappings;
 TMap<string, ResourceData> Resources::m_resources;
-TList<ResourceData*> Resources::m_loadedResourceMemory;
 string Resources::m_resourceDir;
 string Resources::m_resourceFileName;
 
@@ -117,7 +116,6 @@ ResourceData& Resources::Find(string id)
 	if (data.length != 0)
 	{
 		m_resources.Add(id, data);
-		m_loadedResourceMemory.Add(&*m_resources[id]);
 	}
 
 	// Close the file and return the loaded data
@@ -179,12 +177,11 @@ void Resources::Init(Config* config)
 void Resources::Shutdown()
 {
 	// Delete all loaded resources
-	for (ResourceData*& res : m_loadedResourceMemory)
+	for (TMapEntry<string, ResourceData>* res : m_resources)
 	{
-		delete[] res->data;
+		delete[] res->Value().data;
 	}
 
 	m_resources.Clear();
-	m_loadedResourceMemory.Clear();
 	m_fileMappings.Clear();
 }
