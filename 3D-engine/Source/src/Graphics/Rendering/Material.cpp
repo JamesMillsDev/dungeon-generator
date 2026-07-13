@@ -15,24 +15,23 @@
 
 Material::Material(const string& shaderPath) :
 	color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ 0 }, metallic{ 0 },
-	specularColor{ Color::WHITE }, specularStrength{ .5f }, baseColorMap{ nullptr },
-	normalMap{ nullptr }, ormMap{ nullptr }, emissiveMap{ nullptr }, m_pipelineConfig{ shaderPath },
+	specularColor{ Color::WHITE }, specularStrength{ .5f }, m_pipelineConfig{ shaderPath },
 	m_pipeline{ nullptr }, m_shouldUpdateDescriptors{ true }
 {}
 
 Material::Material(const ShaderConfig& shaderConfig) :
 	color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ 0 }, metallic{ 0 },
-	specularColor{ Color::WHITE }, specularStrength{ .5f }, baseColorMap{ nullptr },
-	normalMap{ nullptr }, ormMap{ nullptr }, emissiveMap{ nullptr }, m_pipelineConfig{ shaderConfig },
+	specularColor{ Color::WHITE }, specularStrength{ .5f }, m_pipelineConfig{ shaderConfig },
 	m_pipeline{ nullptr }, m_shouldUpdateDescriptors{ true }
 {}
 
 Material::~Material()
 {
-	delete baseColorMap;
-	delete normalMap;
-	delete ormMap;
-	delete emissiveMap;
+	for (Texture*& texture : m_textures)
+	{
+		delete texture;
+	}
+	m_textures.Clear();
 
 	delete m_pipeline;
 	m_pipeline = nullptr;
@@ -46,10 +45,29 @@ uint64 Material::GetHashCode() const
 	);
 }
 
+void Material::SetTexture(const string& id, Texture* texture)
+{
+	texture->SetTextureName(id);
+	texture->Apply();
+	m_textures.Add(texture);
+}
+
 void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 {
 	if (m_pipeline == nullptr)
 	{
+		for (int64 i = 0; i < m_textures.Count(); ++i)
+		{
+			m_pipelineConfig.shaderConfig.descriptors.Add(
+				{
+					.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+					.count = 1,
+					.stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+					.binding = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT
+				}
+			);
+		}
+
 		m_pipeline = new VulkanGraphicsPipeline{ m_pipelineConfig };
 	}
 
@@ -62,11 +80,7 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 		.specularColor = specularColor,
 		.roughness = roughness,
 		.metallic = metallic,
-		.specularStrength = specularStrength,
-		.baseColorMap = baseColorMap != nullptr ? static_cast<int32>(baseColorMap->GetId()) : -1,
-		.normalMap = normalMap != nullptr ? static_cast<int32>(normalMap->GetId()) : -1,
-		.ormMap = ormMap != nullptr ? static_cast<int32>(ormMap->GetId()) : -1,
-		.emissiveMap = emissiveMap != nullptr ? static_cast<int32>(emissiveMap->GetId()) : -1
+		.specularStrength = specularStrength
 	};
 	materialBuffer->Fill(&materialUniform);
 
@@ -116,19 +130,19 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 
 void Material::UpdateDescriptorSets(TList<VkWriteDescriptorSet>& writes) const
 {
-	if (TList<int32> textureBindings; m_pipeline->TryGetTextureBinding(textureBindings))
+	TList<int32> textureBindings;
+	if (m_pipeline->TryGetTextureBinding(textureBindings))
 	{
-		TArray textures = { baseColorMap, normalMap, ormMap, emissiveMap };
 		for (int64 i = 0; i < textureBindings.Count(); ++i)
 		{
-			TryInsertTextureDescriptor(writes, textures[i], textureBindings[i]);
+			InsertTextureWrite(writes, m_textures[i], textureBindings[i]);
 		}
 	}
 
 	vkUpdateDescriptorSets(Vulkan::Device(), static_cast<uint32>(writes.Count()), writes.Data(), 0, nullptr);
 }
 
-void Material::TryInsertTextureDescriptor(TList<VkWriteDescriptorSet>& writes, const Texture* texture, const uint32 binding) const
+void Material::InsertTextureWrite(TList<VkWriteDescriptorSet>& writes, const Texture* texture, const uint32 binding) const
 {
 	if (texture != nullptr)
 	{

@@ -29,11 +29,6 @@ struct MaterialUniform
 	float roughness;
 	float metallic;
 	float specularStrength;
-
-	int32 baseColorMap;
-	int32 normalMap;
-	int32 ormMap;
-	int32 emissiveMap;
 };
 
 class Material : public Object
@@ -49,15 +44,12 @@ public:
 	Color specularColor;
 	float specularStrength;
 
-	Texture* baseColorMap;
-	Texture* normalMap;
-	Texture* ormMap;
-	Texture* emissiveMap;
-
 private:
 	GraphicsPipelineConfig m_pipelineConfig;
 	VulkanGraphicsPipeline* m_pipeline;
 	bool m_shouldUpdateDescriptors;
+
+	TList<Texture*> m_textures;
 
 public:
 	explicit Material(const string& shaderPath);
@@ -67,11 +59,13 @@ public:
 public:
 	[[nodiscard]] uint64 GetHashCode() const override;
 
+	void SetTexture(const string& id, Texture* texture);
+
 private:
 	void Bind(VkCommandBuffer cmdBuffer, const mat4& transform);
 	void UpdateDescriptorSets(TList<VkWriteDescriptorSet>& writes) const;
 
-	void TryInsertTextureDescriptor(TList<VkWriteDescriptorSet>& writes, const Texture* texture, uint32 binding) const;
+	void InsertTextureWrite(TList<VkWriteDescriptorSet>& writes, const Texture* texture, uint32 binding) const;
 	void InsertUniformWrite(TList<VkWriteDescriptorSet>& writes, const VulkanBuffer* buffer, uint32 binding, uint32 arrayElem = 0) const;
 
 };

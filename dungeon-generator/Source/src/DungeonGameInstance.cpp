@@ -20,40 +20,11 @@ void DungeonGameInstance::Init()
 	m_camera = new FlyCamera{ 45.f, .1f, 100.f };
 	m_camera->location = vec3{ 0.f, 2.f, -10.f };
 
-	const ShaderConfig shaderConfig
-	{
-		.descriptors =
-		{
-			DescriptorConfig // Samplers
-			{
-				.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-				.count = 1,
-				.stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-				.binding = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT
-			},
-			DescriptorConfig // Samplers
-			{
-				.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-				.count = 1,
-				.stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-				.binding = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT
-			},
-			DescriptorConfig // Samplers
-			{
-				.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-				.count = 1,
-				.stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-				.binding = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT
-			}
-		},
-		.name = "Shaders/pbr", 
-	};
-
 	m_mesh = Mesh::MakeFromAssimp("Meshes/SM_Soulspear.fbx");
-	m_material = new Material{ shaderConfig };
-	m_material->baseColorMap = new Texture{ "Textures/T_Soulspear_B" }; 
-	m_material->normalMap = new Texture{ "Textures/T_Soulspear_N" };
-	m_material->ormMap = new Texture{ "Textures/T_Soulspear_ORM" };
+	m_material = new Material{ "Shaders/pbr" };
+	m_material->SetTexture("Textures/T_Soulspear_B", new Texture);
+	m_material->SetTexture("Textures/T_Soulspear_N", new Texture);
+	m_material->SetTexture("Textures/T_Soulspear_ORM", new Texture);
 
 	m_meshActor = GetWorld()->MakeActor<Actor>();
 	m_meshActor->MakeComponent<MeshComponent>(m_mesh, m_material);

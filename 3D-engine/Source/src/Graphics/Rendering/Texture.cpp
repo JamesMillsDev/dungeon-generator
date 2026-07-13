@@ -14,9 +14,10 @@ using std::runtime_error;
 uint32 Texture::m_nextId = 0;
 queue<uint32> Texture::m_freeIds;
 
-Texture::Texture(string file)
-	: m_file{ std::move(file) }, m_image{ VK_NULL_HANDLE }, m_imageAllocation{ VK_NULL_HANDLE },
-	m_imageView{ VK_NULL_HANDLE }, m_imageExtent{}, m_imageFormat{}, m_texture{ nullptr }
+Texture::Texture()
+	: m_image{ VK_NULL_HANDLE }, m_imageAllocation{ VK_NULL_HANDLE },
+	m_imageView{ VK_NULL_HANDLE }, m_sampler{ VK_NULL_HANDLE }, m_imageExtent{ }, m_imageFormat{ },
+	m_buffer{ VK_NULL_HANDLE }, m_texture{ nullptr }, m_textureDescriptors{ }
 {
 	// Get the next available ID (reusing old ones)
 	if (m_freeIds.empty())
@@ -28,8 +29,6 @@ Texture::Texture(string file)
 		m_id = m_freeIds.front();
 		m_freeIds.pop();
 	}
-
-	CreateBuffer();
 }
 
 Texture::~Texture()
@@ -54,6 +53,21 @@ uint32 Texture::GetId() const
 	return m_id;
 }
 
+void Texture::SetTextureName(string name)
+{
+	m_file = std::move(name);
+}
+
+void Texture::Apply()
+{
+	if (m_file.empty())
+	{
+		throw runtime_error("No file name added!");
+	}
+
+	CreateBuffer();
+}
+
 void Texture::CreateBuffer()
 {
 	// Attempt to load the texture from memory
@@ -66,7 +80,7 @@ void Texture::CreateBuffer()
 		throw runtime_error(std::format("Failed to load texture from file! Error Code: {}", static_cast<int32>(error)));
 	}
 
-	ktx_error_code_e error = ktxTexture2_TranscodeBasis(m_texture, KTX_TTF_BC7_RGBA, KTX_TF_HIGH_QUALITY);
+	ktxTexture2_TranscodeBasis(m_texture, KTX_TTF_BC7_RGBA, KTX_TF_HIGH_QUALITY);
 	// Get the format and extent from the texture
 	m_imageFormat = static_cast<VkFormat>(m_texture->vkFormat);
 	m_imageExtent.width = m_texture->baseWidth;
@@ -206,7 +220,7 @@ void Texture::TransitionImage() const
 		copy.imageExtent = { .width = m_texture->baseWidth >> i, .height = m_texture->baseHeight >> i, .depth = 1 };
 	}
 	vkCmdCopyBufferToImage(
-		commandBuffer, m_buffer->Get(), m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
+		commandBuffer, m_buffer->Get(), m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 		static_cast<uint32>(copyRegions.size()), copyRegions.Data()
 	);
 

@@ -43,7 +43,7 @@ public:
 	VALUE& operator*();
 	const VALUE& operator*() const;
 
-	TMapEntry& operator=(const TMapEntry& rhs);
+	TMapEntry& operator=(TMapEntry rhs);
 
 };
 
@@ -97,7 +97,7 @@ private:
 	uint64 m_count;
 	uint64 m_totalEntryCount;
 
-	TMapEntry<KEY, VALUE>** m_data;
+	TMapEntry<KEY, VALUE>** m_buckets;
 
 public:
 	TMap();
@@ -140,10 +140,10 @@ private:
 	uint64 IndexFor(KEY key, uint64 overrideSize = UINT64_MAX) const;
 	uint64 Hash(KEY key) const;
 
-	void Copy(TMapEntry<KEY, VALUE>** data);
+	void Swap(TMap& other) noexcept;
 
 public:
-	TMap& operator=(const TMap& rhs);
+	TMap& operator=(TMap rhs);
 	TMap& operator=(TMap&& rhs) noexcept;
 
 	TMapEntry<KEY, VALUE>& operator[](KEY key);
@@ -166,8 +166,7 @@ TMapEntry<KEY, VALUE>::TMapEntry(const TMapEntry& rhs)
 {
 	if (rhs.next != nullptr)
 	{
-		next = new TMapEntry{ KEY{}, VALUE{} };
-		std::copy(next, next + sizeof(TMapEntry), rhs.next);
+		next = new TMapEntry{ rhs.next->Key(), rhs.next->Value() };
 	}
 }
 
@@ -202,19 +201,10 @@ const VALUE& TMapEntry<KEY, VALUE>::operator*() const
 }
 
 template <typename KEY, typename VALUE>
-TMapEntry<KEY, VALUE>& TMapEntry<KEY, VALUE>::operator=(const TMapEntry& rhs)
+TMapEntry<KEY, VALUE>& TMapEntry<KEY, VALUE>::operator=(TMapEntry rhs)
 {
-	if (this == &rhs)
-	{
-		return *this;
-	}
-
-	m_keyValuePair = rhs.m_keyValuePair;
-	if (rhs.next != nullptr)
-	{
-		next = new TMapEntry{ KEY{}, VALUE{} };
-		std::copy(next, next + sizeof(TMapEntry), rhs.next);
-	}
+	std::swap(m_keyValuePair, rhs.m_keyValuePair);
+	std::swap(next, rhs.next);
 
 	return *this;
 }
@@ -299,21 +289,21 @@ TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::template Iterator TMap<KEY, VALUE, GRO
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
 TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::TMap()
-	: m_capacity{ GROWTH }, m_count{ 0 }, m_totalEntryCount{ 0 }, m_data{ new TMapEntry<KEY, VALUE>*[m_capacity] }
+	: m_capacity{ GROWTH }, m_count{ 0 }, m_totalEntryCount{ 0 }, m_buckets{ new TMapEntry<KEY, VALUE>*[m_capacity] }
 {
 	for (uint64 i = 0; i < m_capacity; ++i)
 	{
-		m_data[i] = nullptr;
+		m_buckets[i] = nullptr;
 	}
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
 TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::TMap(const initializer_list<TKeyValuePair<KEY, VALUE>>& initialData)
-	: m_capacity{ GROWTH }, m_count{ 0 }, m_totalEntryCount{ 0 }, m_data{ new TMapEntry<KEY, VALUE>*[m_capacity] }
+	: m_capacity{ GROWTH }, m_count{ 0 }, m_totalEntryCount{ 0 }, m_buckets{ new TMapEntry<KEY, VALUE>*[m_capacity] }
 {
 	for (uint64 i = 0; i < m_capacity; ++i)
 	{
-		m_data[i] = nullptr;
+		m_buckets[i] = nullptr;
 	}
 
 	for (uint64 i = 0; i < initialData.size(); ++i)
@@ -326,24 +316,38 @@ TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::TMap(const initializer_list<TKeyValueP
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
 TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::TMap(const TMap& rhs)
 	: m_capacity{ rhs.m_capacity }, m_count{ rhs.m_count }, m_totalEntryCount{ rhs.m_totalEntryCount },
-	m_data{ new TMapEntry<KEY, VALUE>[m_capacity] }
+	m_buckets{ new TMapEntry<KEY, VALUE>*[m_capacity] }
 {
 	for (uint64 i = 0; i < m_capacity; ++i)
 	{
-		m_data[i] = nullptr;
-	}
+		if (rhs.m_buckets[i] == nullptr)
+		{
+			m_buckets[i] = nullptr;
+			continue;
+		}
 
-	Copy(rhs.m_data);
+		m_buckets[i] = new TMapEntry<KEY, VALUE>{ rhs.m_buckets[i]->Key(), rhs.m_buckets[i]->Value() };
+
+		TMapEntry<KEY, VALUE>* currentNew = m_buckets[i];
+		TMapEntry<KEY, VALUE>* currentOld = rhs.m_buckets[i];
+
+		while (currentOld != nullptr)
+		{
+			currentNew->next = new TMapEntry<KEY, VALUE>{ currentOld->Key(), currentOld->Value() };
+			currentNew = currentNew->next;
+			currentOld = currentOld->next;
+		}
+	}
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
 TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::TMap(TMap&& rhs) noexcept
-	: m_capacity{ rhs.m_capacity }, m_count{ rhs.m_count }, m_totalEntryCount{ rhs.m_totalEntryCount }, m_data{ rhs.m_data }
+	: m_capacity{ rhs.m_capacity }, m_count{ rhs.m_count }, m_totalEntryCount{ rhs.m_totalEntryCount }, m_buckets{ rhs.m_buckets }
 {
 	rhs.m_capacity = 0;
 	rhs.m_count = 0;
 	rhs.m_totalEntryCount = 0;
-	rhs.m_data = nullptr;
+	rhs.m_buckets = nullptr;
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
@@ -354,7 +358,7 @@ TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::~TMap()
 	m_capacity = 0;
 	m_count = 0;
 	m_totalEntryCount = 0;
-	delete[] m_data;
+	delete[] m_buckets;
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
@@ -365,12 +369,12 @@ void TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Add(KEY key, VALUE value)
 	const int64 index = IndexFor(key);
 
 	// Add the entry into the array and assign the current entry to the next of the new ones
-	newEntry->next = m_data[index];
-	m_data[index] = newEntry;
+	newEntry->next = m_buckets[index];
+	m_buckets[index] = newEntry;
 	m_totalEntryCount++;
 
 	// Increment the count if this is the first item added
-	if (m_data[index]->next == nullptr)
+	if (m_buckets[index]->next == nullptr)
 	{
 		m_count++;
 	}
@@ -388,11 +392,11 @@ void TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::RemoveFirst(KEY key)
 	const int64 index = IndexFor(key);
 
 	// If there is a valid entry at this index
-	if (m_data[index] != nullptr)
+	if (m_buckets[index] != nullptr)
 	{
 		// Get the first and second item at this index
 		TMapEntry<KEY, VALUE>* previous = nullptr;
-		TMapEntry<KEY, VALUE>* current = m_data[index];
+		TMapEntry<KEY, VALUE>* current = m_buckets[index];
 		TMapEntry<KEY, VALUE>* next = current->next;
 
 		// Move to the next item whilst the current does not have the same key
@@ -412,14 +416,14 @@ void TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::RemoveFirst(KEY key)
 			}
 			else
 			{
-				m_data[index] = next;
+				m_buckets[index] = next;
 			}
 
 			// Delete the current entry and decrement the count
 			delete current;
 			m_totalEntryCount--;
 
-			if (m_data[index] == nullptr)
+			if (m_buckets[index] == nullptr)
 			{
 				m_count--;
 			}
@@ -433,19 +437,19 @@ void TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::RemoveAllFor(KEY key)
 	const int64 index = IndexFor(key);
 
 	// If there is a valid entry at this index
-	while (m_data[index] != nullptr)
+	while (m_buckets[index] != nullptr)
 	{
 		// Get the next entry at this index
-		TMapEntry<KEY, VALUE>* next = m_data[index]->next;
+		TMapEntry<KEY, VALUE>* next = m_buckets[index]->next;
 
 		// Delete the current entry and reassign it to the next one
-		delete m_data[index];
-		m_data[index] = next;
+		delete m_buckets[index];
+		m_buckets[index] = next;
 
 		// Decrement the entry count
 		m_totalEntryCount--;
 
-		if (m_data[index] == nullptr)
+		if (m_buckets[index] == nullptr)
 		{
 			m_count--;
 		}
@@ -458,19 +462,19 @@ void TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Clear()
 	for (uint64 i = 0; i < m_capacity; ++i)
 	{
 		// If there is a valid entry at this index
-		while (m_data[i] != nullptr)
+		while (m_buckets[i] != nullptr)
 		{
 			// Get the next entry at this index
-			TMapEntry<KEY, VALUE>* next = m_data[i]->next;
+			TMapEntry<KEY, VALUE>* next = m_buckets[i]->next;
 
 			// Delete the current entry and reassign it to the next one
-			delete m_data[i];
-			m_data[i] = next;
+			delete m_buckets[i];
+			m_buckets[i] = next;
 
 			// Decrement the entry count
 			m_totalEntryCount--;
 
-			if (m_data[i] == nullptr)
+			if (m_buckets[i] == nullptr)
 			{
 				m_count--;
 			}
@@ -483,7 +487,7 @@ bool TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::ContainsKey(KEY key)
 {
 	// Get the first entry for this index
 	const int64 index = IndexFor(key);
-	TMapEntry<KEY, VALUE>* entry = m_data[index];
+	TMapEntry<KEY, VALUE>* entry = m_buckets[index];
 
 	// While this entry isn't null and not the correct key, move to the next
 	while (entry != nullptr && entry->Key() != key)
@@ -521,13 +525,13 @@ float TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Load() const
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
 TMapEntry<KEY, VALUE>* TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Data() noexcept
 {
-	return m_data;
+	return m_buckets;
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
 const TMapEntry<KEY, VALUE>* TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Data() const noexcept
 {
-	return m_data;
+	return m_buckets;
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
@@ -546,7 +550,7 @@ void TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Resize(uint64 newSize)
 	for (uint64 i = 0; i < m_capacity; ++i)
 	{
 		// Iterate over every entry at this index
-		TMapEntry<KEY, VALUE>* entry = m_data[i];
+		TMapEntry<KEY, VALUE>* entry = m_buckets[i];
 		while (entry != nullptr)
 		{
 			// Get the next entry and the new hash index
@@ -563,21 +567,21 @@ void TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Resize(uint64 newSize)
 	}
 
 	// Delete old array and override with new one
-	delete[] m_data;
-	m_data = newMap;
+	delete[] m_buckets;
+	m_buckets = newMap;
 	m_capacity = newSize;
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
 TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::template Iterator TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::begin()
 {
-	return Iterator{ &m_data[0] };
+	return Iterator{ &m_buckets[0] };
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
 TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::template Iterator TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::end()
 {
-	return Iterator{ &m_data[m_capacity] };
+	return Iterator{ &m_buckets[m_capacity] };
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
@@ -595,13 +599,13 @@ bool TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::empty()
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
 TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::template Iterator TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::begin() const
 {
-	return Iterator{ m_data[0] };
+	return Iterator{ m_buckets[0] };
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
 TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::template Iterator TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::end() const
 {
-	return Iterator{ m_data[m_capacity] };
+	return Iterator{ m_buckets[m_capacity] };
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
@@ -634,43 +638,18 @@ uint64 TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Hash(KEY key) const
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
-void TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Copy(TMapEntry<KEY, VALUE>** data)
+void TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::Swap(TMap& other) noexcept
 {
-	for (uint64 i = 0; i < m_capacity; ++i)
-	{
-		m_data[i] = nullptr;
-
-		TMapEntry<KEY, VALUE>* otherEntry = data[i];
-		TMapEntry<KEY, VALUE>** insertPoint = &m_data[i];
-
-		while (otherEntry != nullptr)
-		{
-			TMapEntry<KEY, VALUE>* newEntry =
-				new TMapEntry<KEY, VALUE>{ otherEntry->Key(), otherEntry->Value() };
-
-			*insertPoint = newEntry;
-			insertPoint = &newEntry->next;
-
-			otherEntry = otherEntry->next;
-		}
-	}
+	std::swap(m_capacity, other.m_capacity);
+	std::swap(m_count, other.m_count);
+	std::swap(m_totalEntryCount, other.m_totalEntryCount);
+	std::swap(m_buckets, other.m_buckets);
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
-TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>& TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::operator=(const TMap& rhs)
+TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>& TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::operator=(TMap rhs)
 {
-	if (this == &rhs)
-	{
-		return *this;
-	}
-
-	m_capacity = rhs.m_capacity;
-	m_count = rhs.m_count;
-	m_totalEntryCount = rhs.m_totalEntryCount;
-
-	m_data = new TMapEntry<KEY, VALUE>* [m_capacity];
-	Copy(rhs.m_data);
-
+	Swap(rhs);
 	return *this;
 }
 
@@ -685,12 +664,12 @@ TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>& TMap<KEY, VALUE, GROWTH, LOAD_THRESHOL
 	m_capacity = rhs.m_capacity;
 	m_count = rhs.m_count;
 	m_totalEntryCount = rhs.m_totalEntryCount;
-	m_data = rhs.m_data;
+	m_buckets = rhs.m_buckets;
 
 	rhs.m_capacity = 0;
 	rhs.m_count = 0;
 	rhs.m_totalEntryCount = 0;
-	rhs.m_data = nullptr;
+	rhs.m_buckets = nullptr;
 
 	return *this;
 }
@@ -700,7 +679,7 @@ TMapEntry<KEY, VALUE>& TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::operator[](KEY 
 {
 	const uint64 index = IndexFor(key);
 
-	TMapEntry<KEY, VALUE>* entry = m_data[index];
+	TMapEntry<KEY, VALUE>* entry = m_buckets[index];
 	while (entry != nullptr && entry->Key() != key)
 	{
 		entry = entry->next;
@@ -714,7 +693,7 @@ const TMapEntry<KEY, VALUE>& TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::operator[
 {
 	const uint64 index = IndexFor(key);
 
-	TMapEntry<KEY, VALUE>* entry = m_data[index];
+	TMapEntry<KEY, VALUE>* entry = m_buckets[index];
 	while (entry != nullptr && entry->Key() != key)
 	{
 		entry = entry->next;

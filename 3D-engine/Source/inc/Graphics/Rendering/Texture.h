@@ -42,7 +42,7 @@ private:
 	uint32 m_id;
 
 public:
-	explicit Texture(string file);
+	Texture();
 	~Texture() override;
 
 public:
@@ -50,6 +50,10 @@ public:
 
 	[[nodiscard]] const VkDescriptorImageInfo& GetDescriptors() const;
 	[[nodiscard]] uint32 GetId() const;
+
+	void SetTextureName(string name);
+
+	void Apply();
 
 private:
 	void CreateBuffer();

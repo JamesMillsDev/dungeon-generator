@@ -109,7 +109,7 @@ private:
 	void Expand();
 
 public:
-	TList& operator=(const TList& rhs);
+	TList& operator=(TList rhs);
 	TList& operator=(TList&& rhs) noexcept;
 
 	T& operator[](int64 index);
@@ -438,20 +438,11 @@ void TList<T, GROWTH>::Expand()
 }
 
 template <typename T, int64 GROWTH>
-TList<T, GROWTH>& TList<T, GROWTH>::operator=(const TList& rhs)
+TList<T, GROWTH>& TList<T, GROWTH>::operator=(TList rhs)
 {
-	if (this == &rhs)
-	{
-		return *this;
-	}
-
-	m_capacity = rhs.m_capacity;
-	m_count = rhs.m_count;
-	m_data = new T[m_capacity];
-	for (int64 i = 0; i < m_capacity; ++i)
-	{
-		m_data[i] = rhs.m_data[i];
-	}
+	std::swap(m_capacity, rhs.m_capacity);
+	std::swap(m_count, rhs.m_count);
+	std::swap(m_data, rhs.m_data);
 
 	return *this;
 }
