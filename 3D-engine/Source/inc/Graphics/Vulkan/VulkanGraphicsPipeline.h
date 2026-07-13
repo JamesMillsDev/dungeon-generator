@@ -3,12 +3,21 @@
 #include <set>
 #include <string>
 #include "Uniforms.h"
+
 #include "Utility/TList.h"
 
 class Vulkan;
 
 using std::set;
 using std::string;
+
+struct DescriptorConfig
+{
+	VkDescriptorType type;
+	uint32 count;
+	VkShaderStageFlags stage;
+	VkDescriptorBindingFlags bindingFlags;
+};
 
 struct ShaderConfig
 {
@@ -19,9 +28,9 @@ struct ShaderConfig
 
 public:
 	set<VkShaderStageFlagBits, StageComp> stages = { VK_SHADER_STAGE_VERTEX_BIT, VK_SHADER_STAGE_FRAGMENT_BIT };
+	TList<DescriptorConfig> descriptors = {};
 	string name;
 	string entryPoint = "main";
-	uint8 textureCount = 0;
 	bool lit = true;
 
 };
@@ -66,6 +75,8 @@ struct MultisamplerConfig
 
 struct GraphicsPipelineConfig
 {
+	friend class VulkanGraphicsPipeline;
+
 public:
 	ShaderConfig shader;
 	RasterizerConfig rasterizer;
@@ -73,7 +84,6 @@ public:
 	ColorBlendStateConfig blendState;
 	PrimitiveConfig primitive;
 	MultisamplerConfig multisampler;
-	VkDescriptorSetLayout descriptorSetLayout;
 	TList<VkPushConstantRange> pushConstantRanges =
 	{
 		{
@@ -83,9 +93,16 @@ public:
 		}
 	};
 
+private:
+	VkDescriptorSetLayout m_descriptorSetLayout;
+	VkDescriptorPool m_descriptorPool;
+	VkDescriptorSet m_descriptorSet;
+	bool m_defaultLayout;
+
 public:
 	explicit GraphicsPipelineConfig(ShaderConfig shader);
 	explicit GraphicsPipelineConfig(const string& shaderName);
+	~GraphicsPipelineConfig();
 
 public:
 	[[nodiscard]] uint32 Size() const;
@@ -101,7 +118,7 @@ private:
 	VkPipeline m_pipeline;
 
 public:
-	explicit VulkanGraphicsPipeline(GraphicsPipelineConfig config);
+	explicit VulkanGraphicsPipeline(const GraphicsPipelineConfig& config);
 	~VulkanGraphicsPipeline();
 
 public:

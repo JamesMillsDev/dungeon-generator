@@ -10,12 +10,124 @@ bool ShaderConfig::StageComp::operator()(const VkShaderStageFlagBits& lhs, const
 }
 
 GraphicsPipelineConfig::GraphicsPipelineConfig(ShaderConfig shader) :
-	shader{ std::move(shader) }, descriptorSetLayout{ Vulkan::DescriptorSetLayout() }
-{}
+	shader{ std::move(shader) }, m_defaultLayout{ false }
+{
+	TList<VkDescriptorSetLayoutBinding> dslBindings;
+	TList<VkDescriptorBindingFlags> flags;
 
-GraphicsPipelineConfig::GraphicsPipelineConfig(const string& shaderName) :
-	shader{ .name = shaderName }, descriptorSetLayout{ Vulkan::DescriptorSetLayout() }
-{}
+	uint32 bindingIndex = 0;
+	for (DescriptorConfig& descriptor : this->shader.descriptors)
+	{
+		dslBindings.Add(
+			{
+				.binding = bindingIndex++,
+				.descriptorType = descriptor.type,
+				.descriptorCount = descriptor.count,
+				.stageFlags = descriptor.bindingFlags,
+				.pImmutableSamplers = nullptr
+			}
+		);
+
+		flags.Add(descriptor.bindingFlags);
+	}
+
+	if (dslBindings.IsEmpty())
+	{
+		m_descriptorSetLayout = Vulkan::DescriptorSetLayout();
+		m_defaultLayout = true;
+		return;
+	}
+
+	const VkDescriptorSetLayoutBindingFlagsCreateInfo dslFlagsCreateInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,
+		.pNext = nullptr,
+		.bindingCount = static_cast<uint32>(flags.Count()),
+		.pBindingFlags = flags.Data()
+	};
+
+	const VkDescriptorSetLayoutCreateInfo dslCreateInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+		.pNext = &dslFlagsCreateInfo,
+		.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT,
+		.bindingCount = static_cast<uint32>(dslBindings.size()),
+		.pBindings = dslBindings.Data()
+	};
+
+	VkResult result;
+	if (result = vkCreateDescriptorSetLayout(Vulkan::Device(), &dslCreateInfo, nullptr, &m_descriptorSetLayout);
+		result != VK_SUCCESS)
+	{
+		throw Vulkan::VulkanError("Failed to create Descriptor Set Layout!", result);
+	}
+
+	TArray poolSizes
+	{
+		VkDescriptorPoolSize
+		{
+			.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+			.descriptorCount = bindingIndex
+		}
+	};
+
+	const VkDescriptorPoolCreateInfo dpCreateInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT,
+		.maxSets = 1,
+		.poolSizeCount = static_cast<uint32>(poolSizes.size()),
+		.pPoolSizes = poolSizes.Data()
+	};
+
+	if (result = vkCreateDescriptorPool(Vulkan::Device(), &dpCreateInfo, nullptr, &m_descriptorPool);
+		result != VK_SUCCESS)
+	{
+		throw Vulkan::VulkanError("Failed to create Descriptor Pool!", result);
+	}
+
+	// Allocate the descriptor sets
+	const VkDescriptorSetVariableDescriptorCountAllocateInfo vdcAllocateInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO_EXT,
+		.pNext = nullptr,
+		.descriptorSetCount = 1,
+		.pDescriptorCounts = &bindingIndex
+	};
+
+	const VkDescriptorSetAllocateInfo dsAllocateInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+		.pNext = &vdcAllocateInfo,
+		.descriptorPool = m_descriptorPool,
+		.descriptorSetCount = 1,
+		.pSetLayouts = &m_descriptorSetLayout
+	};
+
+	if (result = vkAllocateDescriptorSets(Vulkan::Device(), &dsAllocateInfo, &m_descriptorSet);
+		result != VK_SUCCESS)
+	{
+		throw Vulkan::VulkanError("Failed to create Descriptor Pool!", result);
+	}
+}
+
+GraphicsPipelineConfig::GraphicsPipelineConfig(const string& shaderName)
+	: GraphicsPipelineConfig{ ShaderConfig{ .name = shaderName } }
+{
+	
+}
+
+GraphicsPipelineConfig::~GraphicsPipelineConfig()
+{
+	if (m_defaultLayout)
+	{
+		return;
+	}
+
+	vkDestroyDescriptorPool(Vulkan::Device(), m_descriptorPool, nullptr);
+	vkDestroyDescriptorSetLayout(Vulkan::Device(), m_descriptorSetLayout, nullptr);
+}
 
 uint32 GraphicsPipelineConfig::Size() const
 {
@@ -27,8 +139,8 @@ bool GraphicsPipelineConfig::ContainsStage(VkShaderStageFlagBits stage) const
 	return shader.stages.contains(stage);
 }
 
-VulkanGraphicsPipeline::VulkanGraphicsPipeline(GraphicsPipelineConfig config) :
-	m_config{ std::move(config) }
+VulkanGraphicsPipeline::VulkanGraphicsPipeline(const GraphicsPipelineConfig& config) :
+	m_config{ config }
 {
 	Init(Vulkan::Instance());
 }
@@ -51,8 +163,6 @@ const VkPipelineLayout& VulkanGraphicsPipeline::GetLayout() const
 void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 {
 	VkResult result;
-	auto& [shaderConfigs, rasterizer, colorAttachment, blendState,
-		primitive, multisampler, descriptorSetLayout, pushConstants] = m_config;
 
 	// Attempt to create the pipeline layout
 	const VkPipelineLayoutCreateInfo plCreateInfo
@@ -61,9 +171,9 @@ void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 		.pNext = nullptr,
 		.flags = 0,
 		.setLayoutCount = 1,
-		.pSetLayouts = &descriptorSetLayout,
-		.pushConstantRangeCount = static_cast<uint32>(pushConstants.size()),
-		.pPushConstantRanges = pushConstants.Data()
+		.pSetLayouts = &m_config.m_descriptorSetLayout,
+		.pushConstantRangeCount = static_cast<uint32>(m_config.pushConstantRanges.size()),
+		.pPushConstantRanges = m_config.pushConstantRanges.Data()
 	};
 
 	if (result = vkCreatePipelineLayout(vulkan->GetDevice(), &plCreateInfo, nullptr, &m_pipelineLayout);
@@ -72,7 +182,7 @@ void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 		throw Vulkan::VulkanError("Failed to create Pipeline Layout!", result);
 	}
 
-	Shader* shader = new Shader{ shaderConfigs.name };
+	Shader* shader = new Shader{ m_config.shader.name };
 	TList<VkPipelineShaderStageCreateInfo> ssCreateInfos;
 	for (uint32 i = VK_SHADER_STAGE_VERTEX_BIT; i < VK_SHADER_STAGE_ALL_GRAPHICS; i <<= 1)
 	{
@@ -86,7 +196,7 @@ void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 		ssCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		ssCreateInfo.stage = static_cast<VkShaderStageFlagBits>(i);
 		ssCreateInfo.module = shader->GetShaderModule();
-		ssCreateInfo.pName = shaderConfigs.entryPoint.c_str();
+		ssCreateInfo.pName = m_config.shader.entryPoint.c_str();
 
 		ssCreateInfos.Add(ssCreateInfo);
 	}
@@ -103,8 +213,8 @@ void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-	inputAssembly.topology = primitive.topology;
-	inputAssembly.primitiveRestartEnable = primitive.primitiveRestartEnabled;
+	inputAssembly.topology = m_config.primitive.topology;
+	inputAssembly.primitiveRestartEnable = m_config.primitive.primitiveRestartEnabled;
 
 	VkPipelineViewportStateCreateInfo viewportState{};
 	viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -113,32 +223,32 @@ void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 
 	VkPipelineRasterizationStateCreateInfo rasterizerInfo{};
 	rasterizerInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-	rasterizerInfo.depthClampEnable = rasterizer.depthClampEnabled;
-	rasterizerInfo.rasterizerDiscardEnable = rasterizer.rasterizerDiscardEnabled;
-	rasterizerInfo.polygonMode = rasterizer.polygonMode;
-	rasterizerInfo.lineWidth = rasterizer.lineWidth;
-	rasterizerInfo.cullMode = rasterizer.cullMode;
-	rasterizerInfo.frontFace = rasterizer.frontFace;
-	rasterizerInfo.depthBiasEnable = rasterizer.depthBiasEnabled;
+	rasterizerInfo.depthClampEnable = m_config.rasterizer.depthClampEnabled;
+	rasterizerInfo.rasterizerDiscardEnable = m_config.rasterizer.rasterizerDiscardEnabled;
+	rasterizerInfo.polygonMode = m_config.rasterizer.polygonMode;
+	rasterizerInfo.lineWidth = m_config.rasterizer.lineWidth;
+	rasterizerInfo.cullMode = m_config.rasterizer.cullMode;
+	rasterizerInfo.frontFace = m_config.rasterizer.frontFace;
+	rasterizerInfo.depthBiasEnable = m_config.rasterizer.depthBiasEnabled;
 
 	VkPipelineMultisampleStateCreateInfo multisampling{};
 	multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-	multisampling.sampleShadingEnable = multisampler.sampleShadingEnabled;
-	multisampling.rasterizationSamples = multisampler.samples;
+	multisampling.sampleShadingEnable = m_config.multisampler.sampleShadingEnabled;
+	multisampling.rasterizationSamples = m_config.multisampler.samples;
 
 	VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-	colorBlendAttachment.colorWriteMask = colorAttachment.colorWriteMask;
-	colorBlendAttachment.blendEnable = colorAttachment.blendEnabled;
+	colorBlendAttachment.colorWriteMask = m_config.colorAttachment.colorWriteMask;
+	colorBlendAttachment.blendEnable = m_config.colorAttachment.blendEnabled;
 
 	VkPipelineColorBlendStateCreateInfo colorBlending{};
 	colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-	colorBlending.logicOpEnable = blendState.logicOpEnabled;
-	colorBlending.logicOp = blendState.logicOp;
+	colorBlending.logicOpEnable = m_config.blendState.logicOpEnabled;
+	colorBlending.logicOp = m_config.blendState.logicOp;
 	colorBlending.attachmentCount = 1;
 	colorBlending.pAttachments = &colorBlendAttachment;
 	for (int i = 0; i < ColorBlendStateConfig::BLEND_CONSTANT_COUNT; ++i)
 	{
-		colorBlending.blendConstants[i] = blendState.blendConstants[i];
+		colorBlending.blendConstants[i] = m_config.blendState.blendConstants[i];
 	}
 
 	TList dynamicStates =
