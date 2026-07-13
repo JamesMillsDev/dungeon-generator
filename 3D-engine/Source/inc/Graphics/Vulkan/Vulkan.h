@@ -18,8 +18,6 @@ class Renderer;
 class Texture;
 class Version;
 class VulkanBuffer;
-class VulkanDynamicDescriptorAllocator;
-class VulkanDescriptorWriter;
 class VulkanGraphicsPipeline;
 
 using InitFunction = std::function<void()>;
@@ -126,8 +124,6 @@ private:
 	VkCommandPool m_commandPool;
 	array<VkCommandBuffer, MAX_FRAMES_IN_FLIGHT> m_commandBuffers;
 
-	VulkanDynamicDescriptorAllocator* m_descriptorAllocator;
-	VulkanDescriptorWriter* m_descriptorWriter;
 	VkDescriptorPool m_descriptorPool;
 	VkDescriptorSetLayout m_descriptorSetLayout;
 	VkDescriptorSet m_descriptorSet;
@@ -137,7 +133,6 @@ private:
 	uint32 m_imageIndex;
 	bool m_recreateSwapChain;
 	bool m_updateTextureDescriptors;
-	uint32 m_descriptorBindingIndex = 0;
 
 private:
 	explicit Vulkan(Config* config, GLFWwindow* window);

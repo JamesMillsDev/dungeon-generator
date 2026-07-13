@@ -21,6 +21,8 @@ public:
 	set<VkShaderStageFlagBits, StageComp> stages = { VK_SHADER_STAGE_VERTEX_BIT, VK_SHADER_STAGE_FRAGMENT_BIT };
 	string name;
 	string entryPoint = "main";
+	uint8 textureCount = 0;
+	bool lit = true;
 
 };
 
