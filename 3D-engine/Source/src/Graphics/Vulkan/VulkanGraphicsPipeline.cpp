@@ -110,42 +110,47 @@ void VulkanGraphicsPipeline::Destroy()
 void VulkanGraphicsPipeline::InitDescriptors(const Vulkan* vulkan)
 {
 	VkResult result;
+	TList<DescriptorConfig> descriptors;
 
 	if (m_config.shaderConfig.lit)
 	{
-		m_config.shaderConfig.descriptors.Insert(
+		descriptors.Add(
 			{
 				.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 				.count = 1,
 				.stage = VK_SHADER_STAGE_FRAGMENT_BIT
-			}, 0
+			}
 		);
-		m_config.shaderConfig.descriptors.Insert(
+		descriptors.Add(
 			{
 				.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 				.count = MAX_LIGHT_COUNT,
 				.stage = VK_SHADER_STAGE_FRAGMENT_BIT
-			}, 1
+			}
 		);
 	}
 
-	m_config.shaderConfig.descriptors.Insert(
+	descriptors.Add(
 		{
 			.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 			.count = 1,
 			.stage = VK_SHADER_STAGE_FRAGMENT_BIT
-		},
-		2 // Make it the second last item
+		}
 	);
+
+	for (const DescriptorConfig& descriptor : m_config.shaderConfig.descriptors)
+	{
+		descriptors.Add(descriptor);
+	}
 
 	TList<VkDescriptorSetLayoutBinding> dslBindings;
 	TList<VkDescriptorBindingFlags> flags;
 	TList<VkDescriptorPoolSize> poolSizes;
 
 	uint32 bindingIndex = 0;
-	for (int32 i = 0; i < static_cast<int32>(m_config.shaderConfig.descriptors.Count()); ++i)
+	for (int32 i = 0; i < static_cast<int32>(descriptors.Count()); ++i)
 	{
-		DescriptorConfig& descriptor = m_config.shaderConfig.descriptors[i];
+		const DescriptorConfig& descriptor = descriptors[i];
 
 		dslBindings.Add(
 			{
