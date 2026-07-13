@@ -38,7 +38,6 @@ class Material : public Object
 	friend class Renderer;
 
 private:
-	static void TryInsertTextureDescriptor(TList<VkDescriptorImageInfo>& descriptors, Texture* texture);
 		
 public:
 	Color color;
@@ -70,6 +69,7 @@ private:
 	void Bind(VkCommandBuffer cmdBuffer, const mat4& transform);
 	void UpdateDescriptorSets(TList<VkWriteDescriptorSet>& writes) const;
 
-	VkWriteDescriptorSet GetUniformWrite(VkDescriptorBufferInfo* buffer, uint32 binding, uint32 arrayElem = 0) const;
+	void TryInsertTextureDescriptor(TList<VkWriteDescriptorSet>& writes, const Texture* texture, uint32 binding) const;
+	void InsertUniformWrite(TList<VkWriteDescriptorSet>& writes, const VulkanBuffer* buffer, uint32 binding, uint32 arrayElem = 0) const;
 
 };

@@ -114,7 +114,7 @@ private:
 	VkDescriptorPool m_descriptorPool;
 	VkDescriptorSetLayout m_descriptorSetLayout;
 	VkDescriptorSet m_descriptorSets;
-	int32 m_samplerBinding;
+	TList<int32> m_samplerBindings;
 
 	VkPipelineLayout m_pipelineLayout;
 	VkPipeline m_pipeline;
@@ -133,7 +133,7 @@ public:
 	VkDescriptorSet GetDescriptorSet() const;
 	bool IsLit() const;
 
-	bool TryGetTextureBinding(int32& binding) const;
+	bool TryGetTextureBinding(TList<int32>& binding) const;
 
 private:
 	void Init(Vulkan* vulkan);

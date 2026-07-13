@@ -13,14 +13,6 @@
 
 #include "Utility/HashImpls.h"
 
-void Material::TryInsertTextureDescriptor(TList<VkDescriptorImageInfo>& descriptors, Texture* texture)
-{
-	if (texture != nullptr)
-	{
-		descriptors.Add(texture->GetDescriptors());
-	}
-}
-
 Material::Material(const string& shaderPath) :
 	color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ 0 }, metallic{ 0 },
 	specularColor{ Color::WHITE }, specularStrength{ .5f }, baseColorMap{ nullptr },
@@ -110,29 +102,9 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 	{
 		TList<VkWriteDescriptorSet> writes;
 
-		VkDescriptorBufferInfo materialDescriptor
-		{
-			.buffer = materialBuffer->Get(),
-			.offset = 0,
-			.range = materialBuffer->Size()
-		};
-		writes.Add(GetUniformWrite(&materialDescriptor, 2));
-
-		VkDescriptorBufferInfo lightDescriptor
-		{
-			.buffer = light0Buffer->Get(),
-			.offset = 0,
-			.range = light0Buffer->Size()
-		};
-		writes.Add(GetUniformWrite(&lightDescriptor, 1));
-
-		VkDescriptorBufferInfo sceneDescriptor
-		{
-			.buffer = sceneLightBuffer->Get(),
-			.offset = 0,
-			.range = sceneLightBuffer->Size()
-		};
-		writes.Add(GetUniformWrite(&sceneDescriptor, 0));
+		InsertUniformWrite(writes, sceneLightBuffer, 0);
+		InsertUniformWrite(writes, light0Buffer, 1);
+		InsertUniformWrite(writes, materialBuffer, 2);
 
 		UpdateDescriptorSets(writes);
 		m_shouldUpdateDescriptors = false;
@@ -141,46 +113,52 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 
 void Material::UpdateDescriptorSets(TList<VkWriteDescriptorSet>& writes) const
 {
-	TList<VkDescriptorImageInfo> textureDescriptors;
-	if (int32 textureBinding; m_pipeline->TryGetTextureBinding(textureBinding))
+	if (TList<int32> textureBindings; m_pipeline->TryGetTextureBinding(textureBindings))
 	{
-		TryInsertTextureDescriptor(textureDescriptors, baseColorMap);
-		TryInsertTextureDescriptor(textureDescriptors, normalMap);
-		TryInsertTextureDescriptor(textureDescriptors, ormMap);
-		TryInsertTextureDescriptor(textureDescriptors, emissiveMap);
-
-		writes.Add(
-			{
-				.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-				.pNext = nullptr,
-				.dstSet = m_pipeline->GetDescriptorSet(),
-				.dstBinding = static_cast<uint32>(textureBinding),
-				.dstArrayElement = 0,
-				.descriptorCount = static_cast<uint32>(textureDescriptors.size()),
-				.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-				.pImageInfo = textureDescriptors.Data(),
-				.pBufferInfo = nullptr,
-				.pTexelBufferView = nullptr
-			}
-		);
+		TArray textures = { baseColorMap, normalMap, ormMap, emissiveMap };
+		for (int64 i = 0; i < textureBindings.Count(); ++i)
+		{
+			TryInsertTextureDescriptor(writes, textures[i], textureBindings[i]);
+		}
 	}
 
 	vkUpdateDescriptorSets(Vulkan::Device(), static_cast<uint32>(writes.Count()), writes.Data(), 0, nullptr);
 }
 
-VkWriteDescriptorSet Material::GetUniformWrite(VkDescriptorBufferInfo* buffer, const uint32 binding, uint32 arrayElem) const
+void Material::TryInsertTextureDescriptor(TList<VkWriteDescriptorSet>& writes, const Texture* texture, const uint32 binding) const
 {
-	return
+	if (texture != nullptr)
 	{
-		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-		.pNext = nullptr,
-		.dstSet = m_pipeline->GetDescriptorSet(),
-		.dstBinding = binding,
-		.dstArrayElement = arrayElem,
-		.descriptorCount = 1,
-		.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-		.pImageInfo = nullptr, 
-		.pBufferInfo = buffer,
-		.pTexelBufferView = nullptr
-	};
+		writes.Add(
+			{
+				.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+				.pNext = nullptr,
+				.dstSet = m_pipeline->GetDescriptorSet(),
+				.dstBinding = binding,
+				.dstArrayElement = 0,
+				.descriptorCount = 1,
+				.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+				.pImageInfo = &texture->GetDescriptors(),
+				.pBufferInfo = nullptr,
+				.pTexelBufferView = nullptr
+			}
+		);
+	}
+}
+
+void Material::InsertUniformWrite(TList<VkWriteDescriptorSet>& writes, const VulkanBuffer* buffer, const uint32 binding, const uint32 arrayElem) const
+{
+	writes.Add(
+		{
+			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+			.pNext = nullptr,
+			.dstSet = m_pipeline->GetDescriptorSet(),
+			.dstBinding = binding,
+			.dstArrayElement = arrayElem,
+			.descriptorCount = 1,
+			.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+			.pImageInfo = nullptr,
+			.pBufferInfo = &buffer->GetBufferInfo(),
+			.pTexelBufferView = nullptr
+		});
 }

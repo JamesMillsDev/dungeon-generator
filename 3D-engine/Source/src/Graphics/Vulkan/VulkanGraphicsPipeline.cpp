@@ -34,7 +34,7 @@ bool GraphicsPipelineConfig::ContainsStage(VkShaderStageFlagBits stage) const
 }
 
 VulkanGraphicsPipeline::VulkanGraphicsPipeline(GraphicsPipelineConfig config) :
-	m_config{ std::move(config) }, m_samplerBinding{ -1 }, m_bindPoint{ VK_PIPELINE_BIND_POINT_GRAPHICS },
+	m_config{ std::move(config) }, m_bindPoint{ VK_PIPELINE_BIND_POINT_GRAPHICS },
 	m_pushConstantStage{ VK_SHADER_STAGE_ALL_GRAPHICS }
 {
 	Init(Vulkan::Instance());
@@ -78,14 +78,14 @@ bool VulkanGraphicsPipeline::IsLit() const
 	return m_config.shaderConfig.lit;
 }
 
-bool VulkanGraphicsPipeline::TryGetTextureBinding(int32& binding) const
+bool VulkanGraphicsPipeline::TryGetTextureBinding(TList<int32>& binding) const
 {
-	if (m_samplerBinding == -1)
+	if (m_samplerBindings.IsEmpty())
 	{
 		return false;
 	}
 
-	binding = m_samplerBinding;
+	binding = m_samplerBindings; 
 	return true;
 }
 
@@ -170,9 +170,9 @@ void VulkanGraphicsPipeline::InitDescriptors(const Vulkan* vulkan)
 			}
 		);
 
-		if (descriptor.type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER && m_samplerBinding == -1)
+		if (descriptor.type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
 		{
-			m_samplerBinding = i;
+			m_samplerBindings.Add(i);
 		}
 	}
 

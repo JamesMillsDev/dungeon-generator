@@ -25,6 +25,11 @@ const VkBuffer& VulkanBuffer::Get() const
 	return m_buffer;
 }
 
+const VkDescriptorBufferInfo& VulkanBuffer::GetBufferInfo() const
+{
+	return m_bufferInfo;
+}
+
 const VkDeviceAddress& VulkanBuffer::GetAddress() const
 {
 	return m_deviceAddress;
@@ -66,6 +71,13 @@ void VulkanBuffer::Create(const Vulkan* vulkan)
 		};
 		m_deviceAddress = vkGetBufferDeviceAddress(vulkan->GetDevice(), &deviceAddressInfo);
 	}
+
+	m_bufferInfo =
+	{
+		.buffer = m_buffer,
+		.offset = 0,
+		.range = m_size
+	};
 }
 
 void VulkanBuffer::Destroy()

@@ -19,7 +19,9 @@ struct MaterialUniform
 };
 
 [[vk::binding(2, 0)]] ConstantBuffer<MaterialUniform> material;
-[[vk::binding(3, 0)]] Sampler2D textures[3];
+[[vk::binding(3, 0)]] ConstantBuffer<Sampler2D> diffuseMap;
+[[vk::binding(4, 0)]] ConstantBuffer<Sampler2D> normalMap;
+[[vk::binding(5, 0)]] ConstantBuffer<Sampler2D> ormMap;
 
 struct VSOutput
 {
@@ -64,7 +66,7 @@ float4 main(VSOutput input, uniform ProjectionViewModelUniform *pushData) : SV_T
     float4 ambient = sceneLighting.ambientColor * sceneLighting.ambientStrength;
     float4 diffuse = lights[0].color * diff;
 
-    float4 textureColor = Sample(textures, 0, input.uv0);
+    float4 textureColor = diffuseMap.Sample(input.uv0);
 
     float4 result = (ambient + diff + specular) * textureColor;
 

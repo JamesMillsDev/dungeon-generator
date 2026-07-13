@@ -1,4 +1,4 @@
-float4 Sample(Sampler2D textures[], int32_t index, float2 uv, float4 defaultValue = float4(0, 0, 0, 0))
+float4 Sample(ConstantBuffer<Sampler2D> textures[], int32_t index, float2 uv, float4 defaultValue = float4(0, 0, 0, 0))
 {
     if (index == -1)
     {
