@@ -3,7 +3,7 @@
 #include <functional>
 #include <utility>
 
-#include "Utility/TArray.h"
+#include "Utility/TList.h"
 #include "Gameplay/Actors/Components/IComponent.h"
 
 class Transform;
@@ -20,8 +20,8 @@ class Actor
 private:
 	Transform* m_transform;
 
-	TArray<IComponent*> m_components;
-	TArray<ComponentListChange> m_componentListChanges;
+	TList<IComponent*> m_components;
+	TList<ComponentListChange> m_componentListChanges;
 
 private:
 	Actor();

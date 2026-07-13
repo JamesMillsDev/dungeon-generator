@@ -33,12 +33,12 @@ bool SimpleInput::WasKeyReleased(int inputKeyID) const
 		m_lastKeys[inputKeyID] == GLFW_PRESS;
 }
 
-const TArray<int>& SimpleInput::GetPressedKeys() const
+const TList<int>& SimpleInput::GetPressedKeys() const
 {
 	return m_pressedKeys;
 }
 
-const TArray<unsigned int>& SimpleInput::GetPressedCharacters() const
+const TList<unsigned int>& SimpleInput::GetPressedCharacters() const
 {
 	return m_pressedCharacters;
 }

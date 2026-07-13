@@ -1,6 +1,5 @@
 #pragma once
 
-#include <array>
 #include <vk_mem_alloc.h>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
@@ -9,10 +8,9 @@
 
 #include "Maths/Color.h"
 #include "Utility/TArray.h"
+#include "Utility/TList.h"
 
 class VulkanBuffer;
-
-using std::array;
 
 using glm::vec2;
 using glm::vec3;
@@ -33,7 +31,7 @@ struct Vertex
 {
 public:
 	static VkVertexInputBindingDescription GetBindingDescription();
-	static array<VkVertexInputAttributeDescription, VertexAttributeCount> GetAttributeDescriptions();
+	static TArray<VkVertexInputAttributeDescription, VertexAttributeCount> GetAttributeDescriptions();
 
 public:
 	/** @brief The location of the vertex in model space. */
@@ -63,8 +61,8 @@ public:
 		friend Mesh;
 
 	public:
-		TArray<Vertex> vertices;
-		TArray<uint16> indices;
+		TList<Vertex> vertices;
+		TList<uint16> indices;
 
 	private:
 		VkDeviceSize m_vertexBufferSize;
@@ -73,7 +71,7 @@ public:
 		VulkanBuffer* m_vertexBuffer;
 
 	public:
-		SubMesh(const TArray<Vertex>& vertices, const TArray<uint16>& indices);
+		SubMesh(const TList<Vertex>& vertices, const TList<uint16>& indices);
 		~SubMesh() override;
 
 	public:
@@ -89,10 +87,10 @@ public:
 	static Mesh* MakeFromAssimp(const string& file);
 
 public:
-	TArray<SubMesh*> subMeshes;
+	TList<SubMesh*> subMeshes;
 
 public:
-	explicit Mesh(const TArray<SubMesh*>& subMeshes);
+	explicit Mesh(const TList<SubMesh*>& subMeshes);
 	~Mesh() override;
 
 public:

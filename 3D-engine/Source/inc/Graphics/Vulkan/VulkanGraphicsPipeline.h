@@ -3,7 +3,7 @@
 #include <set>
 #include <string>
 #include "Uniforms.h"
-#include "Utility/TArray.h"
+#include "Utility/TList.h"
 
 class Vulkan;
 
@@ -74,7 +74,7 @@ public:
 	PrimitiveConfig primitive;
 	MultisamplerConfig multisampler;
 	VkDescriptorSetLayout descriptorSetLayout;
-	TArray<VkPushConstantRange> pushConstantRanges =
+	TList<VkPushConstantRange> pushConstantRanges =
 	{
 		{
 			.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,

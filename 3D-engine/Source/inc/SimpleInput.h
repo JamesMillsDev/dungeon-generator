@@ -4,7 +4,7 @@
 #include <map>
 
 #include "Maths/Alias.h"
-#include "Utility/TArray.h"
+#include "Utility/TList.h"
 
 using std::function;
 using std::map;
@@ -169,8 +169,8 @@ public:
 	[[nodiscard]] bool WasKeyReleased(int inputKeyID) const;
 
 	// returns access to all keys that are currently pressed
-	[[nodiscard]] const TArray<int>& GetPressedKeys() const;
-	[[nodiscard]] const TArray<unsigned int>& GetPressedCharacters() const;
+	[[nodiscard]] const TList<int>& GetPressedKeys() const;
+	[[nodiscard]] const TList<unsigned int>& GetPressedCharacters() const;
 
 	// query the mouse button state
 	bool IsMouseButtonDown(int inputMouseID) const;
@@ -214,8 +214,8 @@ protected:
 	void ClearStatus();
 
 private:
-	TArray<int> m_pressedKeys;
-	TArray<unsigned int> m_pressedCharacters;
+	TList<int> m_pressedKeys;
+	TList<unsigned int> m_pressedCharacters;
 
 	float m_mouseX;
 	float m_mouseY;
@@ -227,11 +227,11 @@ private:
 
 	void OnMouseMove(int newXPos, int newYPos);
 
-	TArray<KeyCallback> m_keyCallbacks;
-	TArray<CharCallback> m_charCallbacks;
-	TArray<MouseMoveCallback> m_mouseMoveCallbacks;
-	TArray<MouseButtonCallback>	m_mouseButtonCallbacks;
-	TArray<MouseScrollCallback>	m_mouseScrollCallbacks;
+	TList<KeyCallback> m_keyCallbacks;
+	TList<CharCallback> m_charCallbacks;
+	TList<MouseMoveCallback> m_mouseMoveCallbacks;
+	TList<MouseButtonCallback>	m_mouseButtonCallbacks;
+	TList<MouseScrollCallback>	m_mouseScrollCallbacks;
 
 	// used to track down/up/released/pressed
 	int* m_lastKeys;

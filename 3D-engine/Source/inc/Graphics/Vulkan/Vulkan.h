@@ -1,6 +1,5 @@
 #pragma once
 
-#include <array>
 #include <functional>
 #include <stdexcept>
 #include <string>
@@ -10,6 +9,7 @@
 #include "Maths/Color.h"
 #include "Utility/ResourceStack.h"
 #include "Utility/TArray.h"
+#include "Utility/TList.h"
 #include "Utility/TMap.h"
 
 class Config;
@@ -22,7 +22,6 @@ class VulkanGraphicsPipeline;
 
 using InitFunction = std::function<void()>;
 
-using std::array;
 using std::runtime_error;
 using std::string;
 
@@ -34,7 +33,7 @@ constexpr bool ENABLE_VALIDATION_LAYERS = true;
 constexpr bool ENABLE_VALIDATION_LAYERS = false;
 #endif
 
-const TArray<const char*> VALIDATION_LAYERS =
+const TList<const char*> VALIDATION_LAYERS =
 {
 	"VK_LAYER_KHRONOS_validation"
 };
@@ -59,7 +58,7 @@ enum class EUniformBufferIds : uint16
 	PushConstant = UINT16_MAX
 };
 
-using UniformBufferSet = TMap<uint16, TArray<VulkanBuffer*>>;
+using UniformBufferSet = TMap<uint16, TList<VulkanBuffer*>>;
 
 class Vulkan  // NOLINT(cppcoreguidelines-special-member-functions)
 {
@@ -108,26 +107,26 @@ private:
 	VkSurfaceKHR m_surface;
 
 	VkSwapchainKHR m_swapChain;
-	TArray<VkImage> m_swapChainImages;
-	TArray<VkImageView> m_swapChainImageViews;
+	TList<VkImage> m_swapChainImages;
+	TList<VkImageView> m_swapChainImageViews;
 
 	VkImage m_depthImage;
 	VmaAllocation m_depthImageAllocation;
 	VkImageView m_depthImageView;
 
-	array<UniformBufferSet, MAX_FRAMES_IN_FLIGHT> m_shaderDataBuffers;
+	TArray<UniformBufferSet, MAX_FRAMES_IN_FLIGHT> m_shaderDataBuffers;
 
-	array<VkFence, MAX_FRAMES_IN_FLIGHT> m_fences;
-	array<VkSemaphore, MAX_FRAMES_IN_FLIGHT> m_imageAcquiredSemaphores;
-	TArray<VkSemaphore> m_renderCompleteSemaphores;
+	TArray<VkFence, MAX_FRAMES_IN_FLIGHT> m_fences;
+	TArray<VkSemaphore, MAX_FRAMES_IN_FLIGHT> m_imageAcquiredSemaphores;
+	TList<VkSemaphore> m_renderCompleteSemaphores;
 
 	VkCommandPool m_commandPool;
-	array<VkCommandBuffer, MAX_FRAMES_IN_FLIGHT> m_commandBuffers;
+	TArray<VkCommandBuffer, MAX_FRAMES_IN_FLIGHT> m_commandBuffers;
 
 	VkDescriptorPool m_descriptorPool;
 	VkDescriptorSetLayout m_descriptorSetLayout;
 	VkDescriptorSet m_descriptorSet;
-	TArray<Texture*> m_textures;
+	TList<Texture*> m_textures;
 
 	uint32 m_frameIndex;
 	uint32 m_imageIndex;

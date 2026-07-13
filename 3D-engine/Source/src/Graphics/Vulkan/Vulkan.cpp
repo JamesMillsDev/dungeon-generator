@@ -28,7 +28,7 @@ constexpr uint32 MAX_TEXTURE_DESCRIPTORS = UINT16_MAX;
 constexpr int32 DEFAULT_RESOURCE_STACK_SIZE = 16;
 constexpr int32 UNIFORM_BUFFER_COUNT = 3;
 
-constexpr array UNIFORM_DATAS
+const TArray UNIFORM_DATAS
 {
 	UniformBufferData
 	{
@@ -389,7 +389,7 @@ void Vulkan::WriteTextureDescriptorSets()
 		return;
 	}
 
-	TArray<VkDescriptorImageInfo> textureDescriptors;
+	TList<VkDescriptorImageInfo> textureDescriptors;
 	textureDescriptors.Resize(m_textures.Count());
 	for (int64 i = 0; i < m_textures.Count(); ++i)
 	{
@@ -798,11 +798,11 @@ void Vulkan::Init(GLFWwindow* window)
 				// We need a set of buffers for every frame in flight
 				for (uint32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 				{
-					TMap<uint16, TArray<VulkanBuffer*>> buffers;
+					TMap<uint16, TList<VulkanBuffer*>> buffers;
 
 					for (const UniformBufferData& uniformData : UNIFORM_DATAS)
 					{
-						TArray<VulkanBuffer*> buffer;
+						TList<VulkanBuffer*> buffer;
 
 						for (uint32 j = 0; j < uniformData.count; ++j)
 						{
@@ -825,7 +825,7 @@ void Vulkan::Init(GLFWwindow* window)
 				for (uint32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 				{
 					// Delete each buffer for this frame in flight
-					for (TMapEntry<unsigned short, TArray<VulkanBuffer*>>*& buffers : m_shaderDataBuffers[i])
+					for (TMapEntry<unsigned short, TList<VulkanBuffer*>>*& buffers : m_shaderDataBuffers[i])
 					{
 						if (buffers != nullptr)
 						{
@@ -916,7 +916,7 @@ void Vulkan::Init(GLFWwindow* window)
 				cbAllocateInfo.commandPool = m_commandPool;
 
 				Try(
-					vkAllocateCommandBuffers(m_device, &cbAllocateInfo, m_commandBuffers.data()),
+					vkAllocateCommandBuffers(m_device, &cbAllocateInfo, m_commandBuffers.Data()),
 					"Failed to create Command Buffers!"
 				);
 			},
@@ -930,7 +930,7 @@ void Vulkan::Init(GLFWwindow* window)
 		InitAndPushResource(
 			[this]
 			{
-				array dslBindings =
+				TArray dslBindings =
 				{
 					VkDescriptorSetLayoutBinding
 					{
@@ -942,7 +942,7 @@ void Vulkan::Init(GLFWwindow* window)
 					},
 				};
 
-				array flags =
+				TArray flags =
 				{
 					VkDescriptorBindingFlags{ VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT },
 				};
@@ -952,7 +952,7 @@ void Vulkan::Init(GLFWwindow* window)
 					.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,
 					.pNext = nullptr,
 					.bindingCount = static_cast<uint32>(dslBindings.size()),
-					.pBindingFlags = flags.data()
+					.pBindingFlags = flags.Data()
 				};
 
 				const VkDescriptorSetLayoutCreateInfo dslCreateInfo
@@ -961,7 +961,7 @@ void Vulkan::Init(GLFWwindow* window)
 					.pNext = &dslFlagsCreateInfo,
 					.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT,
 					.bindingCount = static_cast<uint32>(dslBindings.size()),
-					.pBindings = dslBindings.data()
+					.pBindings = dslBindings.Data()
 				};
 
 				// Create the descriptor set layout
@@ -970,7 +970,7 @@ void Vulkan::Init(GLFWwindow* window)
 					"Failed to create Descriptor Set Layout!"
 				);
 
-				array poolSizes
+				TArray poolSizes
 				{
 					VkDescriptorPoolSize
 					{
@@ -985,7 +985,7 @@ void Vulkan::Init(GLFWwindow* window)
 					.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT,
 					.maxSets = 1,
 					.poolSizeCount = static_cast<uint32>(poolSizes.size()),
-					.pPoolSizes = poolSizes.data()
+					.pPoolSizes = poolSizes.Data()
 				};
 
 				// Create the descriptor pool
@@ -1322,7 +1322,7 @@ void Vulkan::EndFrame(VkCommandBuffer cmdBuffer)
 
 void Vulkan::TransitionFrameImages(const VkCommandBuffer cmdBuffer) const
 {
-	const array outputBarriers
+	const TArray outputBarriers
 	{
 		VkImageMemoryBarrier2
 		{
@@ -1372,7 +1372,7 @@ void Vulkan::TransitionFrameImages(const VkCommandBuffer cmdBuffer) const
 	VkDependencyInfo barrierDependencyInfo{};
 	barrierDependencyInfo.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
 	barrierDependencyInfo.imageMemoryBarrierCount = static_cast<uint32>(outputBarriers.size());
-	barrierDependencyInfo.pImageMemoryBarriers = outputBarriers.data();
+	barrierDependencyInfo.pImageMemoryBarriers = outputBarriers.Data();
 	vkCmdPipelineBarrier2(cmdBuffer, &barrierDependencyInfo);
 }
 

@@ -1,8 +1,6 @@
 #pragma once
 
-#include <array>
-
-using std::array;
+#include "Utility/TArray.h"
 
 /** @brief A collection of useful mathematical operations and types. */
 class Maths
@@ -294,7 +292,7 @@ requires(std::is_same_v<FIRST, ARGS> && ...)
 float Maths::Min(const int count, ARGS... values)
 {
 	float value = POSITIVE_INFINITY;
-	array<FIRST, sizeof...(ARGS)> arr{ std::forward<ARGS>(values)... };
+	TArray<FIRST, sizeof...(ARGS)> arr{ std::forward<ARGS>(values)... };
 
 	for (int i = 0; i < count; ++i)
 	{
@@ -309,7 +307,7 @@ requires(std::is_same_v<FIRST, ARGS> && ...)
 float Maths::Max(const int count, ARGS... values)
 {
 	float value = NEGATIVE_INFINITY;
-	array<FIRST, sizeof...(ARGS)> arr{ std::forward<ARGS>(values)... };
+	TArray<FIRST, sizeof...(ARGS)> arr{ std::forward<ARGS>(values)... };
 
 	for (int i = 0; i < count; ++i)
 	{

@@ -4,7 +4,7 @@
 #include <utility>
 
 #include "Gameplay/Actors/Actor.h"
-#include "Utility/TArray.h"
+#include "Utility/TList.h"
 
 using std::function;
 using std::pair;
@@ -19,7 +19,7 @@ class World
 private:
 	Actor* m_root;
 
-	TArray<ActorLifetimeChange> m_lifetimeChanges;
+	TList<ActorLifetimeChange> m_lifetimeChanges;
 
 private:
 	World();

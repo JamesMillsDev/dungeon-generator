@@ -3,7 +3,7 @@
 #include <string>
 #include <vulkan/vulkan.h>
 
-#include "Utility/TArray.h"
+#include "Utility/TList.h"
 
 using std::string;
 
@@ -12,7 +12,7 @@ class Vulkan;
 class Shader
 {
 private:
-	static TArray<char> ReadShaderFile(const string& fileName);
+	static TList<char> ReadShaderFile(const string& fileName);
 
 private:
 	string m_path;

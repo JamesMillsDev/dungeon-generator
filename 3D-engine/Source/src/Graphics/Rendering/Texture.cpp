@@ -191,7 +191,7 @@ void Texture::TransitionImage() const
 	vkCmdPipelineBarrier2(commandBuffer, &barrierTexInfo);
 
 	// Get the regions to copy and then copy them
-	TArray<VkBufferImageCopy> copyRegions;
+	TList<VkBufferImageCopy> copyRegions;
 	copyRegions.Resize(m_texture->numLevels);
 
 	for (uint32 i = 0; i < m_texture->numLevels; ++i)

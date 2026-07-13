@@ -11,7 +11,7 @@ using std::ifstream;
 using std::runtime_error;
 using std::streamsize;
 
-TArray<char> Shader::ReadShaderFile(const string& fileName)
+TList<char> Shader::ReadShaderFile(const string& fileName)
 {
 	ifstream file(fileName, std::ios::ate | std::ios::binary);
 
@@ -21,7 +21,7 @@ TArray<char> Shader::ReadShaderFile(const string& fileName)
 	}
 
 	const streamsize fileSize = file.tellg();
-	TArray<char> buffer;
+	TList<char> buffer;
 	buffer.Resize(fileSize);
 
 	file.seekg(0);

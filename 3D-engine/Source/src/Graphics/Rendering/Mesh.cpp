@@ -40,9 +40,9 @@ VkVertexInputBindingDescription Vertex::GetBindingDescription()
 	return bindingDescription;
 }
 
-array<VkVertexInputAttributeDescription, VertexAttributeCount> Vertex::GetAttributeDescriptions()
+TArray<VkVertexInputAttributeDescription, VertexAttributeCount> Vertex::GetAttributeDescriptions()
 {
-	array<VkVertexInputAttributeDescription, VertexAttributeCount> attributeDescriptions;
+	TArray<VkVertexInputAttributeDescription, VertexAttributeCount> attributeDescriptions;
 
 	// Iterate over each attribute definition and assign the descriptor
 	for (const auto& [index, binding, format, offset] : VERTEX_ATTRIBUTES)
@@ -56,7 +56,7 @@ array<VkVertexInputAttributeDescription, VertexAttributeCount> Vertex::GetAttrib
 	return attributeDescriptions;
 }
 
-Mesh::SubMesh::SubMesh(const TArray<Vertex>& vertices, const TArray<uint16>& indices)
+Mesh::SubMesh::SubMesh(const TList<Vertex>& vertices, const TList<uint16>& indices)
 	:vertices{ vertices }, indices{ indices }, m_vertexBufferSize{ sizeof(Vertex) * vertices.Count() },
 	m_indexBufferSize{ sizeof(uint16) * indices.Count() }, m_vertexBuffer{ VK_NULL_HANDLE }
 {
@@ -100,7 +100,7 @@ Mesh* Mesh::MakeQuad()
 		{
 			new SubMesh
 			{
-				TArray
+				TList<Vertex>
 				{
 					Vertex
 					{
@@ -139,7 +139,7 @@ Mesh* Mesh::MakeQuad()
 						.color = { 1.f, 1.f, 1.f, 1.f }
 					}
 				},
-				TArray<uint16>
+				TList<uint16>
 				{
 					0, 1, 2, 2, 3, 0
 				}
@@ -158,16 +158,16 @@ Mesh* Mesh::MakeFromAssimp(const string& file)
 		aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_GlobalScale | aiProcess_FlipUVs
 	);
 
-	TArray<SubMesh*> subMeshes;
+	TList<SubMesh*> subMeshes;
 
 	for (uint32 i = 0; i < scene->mNumMeshes; ++i)
 	{
 		const aiMesh* mesh = scene->mMeshes[i];
 
-		TArray<Vertex> vertices;
+		TList<Vertex> vertices;
 		vertices.Resize(mesh->mNumVertices);
 
-		TArray<uint16> indices;
+		TList<uint16> indices;
 
 		for (uint32 v = 0; v < mesh->mNumVertices; ++v)
 		{
@@ -237,7 +237,7 @@ Mesh* Mesh::MakeFromAssimp(const string& file)
 	return new Mesh{ subMeshes };
 }
 
-Mesh::Mesh(const TArray<SubMesh*>& subMeshes)
+Mesh::Mesh(const TList<SubMesh*>& subMeshes)
 	: subMeshes{ subMeshes }
 {
 	CreateBuffers();

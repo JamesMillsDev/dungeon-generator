@@ -73,7 +73,7 @@ void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 	}
 
 	Shader* shader = new Shader{ shaderConfigs.name };
-	TArray<VkPipelineShaderStageCreateInfo> ssCreateInfos;
+	TList<VkPipelineShaderStageCreateInfo> ssCreateInfos;
 	for (uint32 i = VK_SHADER_STAGE_VERTEX_BIT; i < VK_SHADER_STAGE_ALL_GRAPHICS; i <<= 1)
 	{
 		if (!m_config.ContainsStage(static_cast<VkShaderStageFlagBits>(i)))
@@ -99,7 +99,7 @@ void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 	vertexInputInfo.vertexBindingDescriptionCount = 1;
 	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescription.size());
 	vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
-	vertexInputInfo.pVertexAttributeDescriptions = attributeDescription.data();
+	vertexInputInfo.pVertexAttributeDescriptions = attributeDescription.Data();
 
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -141,7 +141,7 @@ void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 		colorBlending.blendConstants[i] = blendState.blendConstants[i];
 	}
 
-	TArray dynamicStates =
+	TList dynamicStates =
 	{
 		VK_DYNAMIC_STATE_VIEWPORT,
 		VK_DYNAMIC_STATE_SCISSOR

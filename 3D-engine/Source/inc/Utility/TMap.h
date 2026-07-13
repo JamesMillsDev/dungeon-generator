@@ -12,6 +12,7 @@
 using std::hash;
 using std::initializer_list;
 using std::runtime_error;
+using std::ranges::view_interface;
 
 template<typename KEY, typename VALUE>
 struct TKeyValuePair
@@ -80,7 +81,7 @@ public:
 
 	};
 
-	struct View : std::ranges::view_interface<View>
+	struct View : view_interface<View>
 	{
 	public:
 		TMapEntry<KEY, VALUE> value;
