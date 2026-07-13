@@ -46,6 +46,7 @@ struct UniformBufferData
 {
 	uint32 count;
 	VkDeviceSize size;
+	VkBufferUsageFlags bufferUsage;
 	uint16 id;
 };
 
@@ -72,8 +73,6 @@ public:
 	[[nodiscard]] static Vulkan* Instance();
 	DEFINE_ACCESSOR(VkDevice, Device)
 	DEFINE_ACCESSOR(VmaAllocator, Allocator)
-	DEFINE_ACCESSOR(VkDescriptorSetLayout, DescriptorSetLayout)
-	DEFINE_ACCESSOR(VkDescriptorSet, DescriptorSet)
 
 	[[nodiscard]] static bool IsLoaded();
 	[[nodiscard]] static runtime_error VulkanError(const string& message, VkResult result);
@@ -123,15 +122,9 @@ private:
 	VkCommandPool m_commandPool;
 	TArray<VkCommandBuffer, MAX_FRAMES_IN_FLIGHT> m_commandBuffers;
 
-	VkDescriptorPool m_descriptorPool;
-	VkDescriptorSetLayout m_descriptorSetLayout;
-	VkDescriptorSet m_descriptorSet;
-	TList<Texture*> m_textures;
-
 	uint32 m_frameIndex;
 	uint32 m_imageIndex;
 	bool m_recreateSwapChain;
-	bool m_updateTextureDescriptors;
 
 private:
 	explicit Vulkan(Config* config, GLFWwindow* window);
@@ -144,11 +137,6 @@ public:
 	[[nodiscard]] VulkanBuffer* GetUniformBuffer(uint16 id, uint32 index = 0) const;
 	[[nodiscard]] VulkanBuffer* GetUniformBuffer(EUniformBufferIds id, uint32 index = 0) const;
 
-	void AddTexture(Texture* texture);
-	void RemoveTexture(Texture* texture);
-
-	void WriteTextureDescriptorSets();
-	void BindTextureDescriptorSets(VkCommandBuffer cmdBuf, VkPipelineLayout layout) const;
 	VkFormat GetDepthFormat() const;
 
 private:

@@ -13,11 +13,28 @@
 
 #include "Utility/HashImpls.h"
 
-Material::Material(const string& shaderPath)
-	: color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ 0 }, metallic{ 0 },
+void Material::TryInsertTextureDescriptor(TList<VkDescriptorImageInfo>& descriptors, Texture* texture)
+{
+	if (texture != nullptr)
+	{
+		descriptors.Add(texture->GetDescriptors());
+	}
+}
+
+Material::Material(const string& shaderPath) :
+	color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ 0 }, metallic{ 0 },
 	specularColor{ Color::WHITE }, specularStrength{ .5f }, baseColorMap{ nullptr },
 	normalMap{ nullptr }, ormMap{ nullptr }, emissiveMap{ nullptr },
-	m_pipeline{ new VulkanGraphicsPipeline{ GraphicsPipelineConfig{ shaderPath } } }
+	m_pipeline{ new VulkanGraphicsPipeline{ GraphicsPipelineConfig{ shaderPath } } },
+	m_shouldUpdateDescriptors{ true }
+{}
+
+Material::Material(const ShaderConfig& shaderConfig) :
+	color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ 0 }, metallic{ 0 },
+	specularColor{ Color::WHITE }, specularStrength{ .5f }, baseColorMap{ nullptr },
+	normalMap{ nullptr }, ormMap{ nullptr }, emissiveMap{ nullptr },
+	m_pipeline{ new VulkanGraphicsPipeline{ GraphicsPipelineConfig{ shaderConfig } } },
+	m_shouldUpdateDescriptors{ true }
 {}
 
 Material::~Material()
@@ -39,7 +56,7 @@ uint64 Material::GetHashCode() const
 	);
 }
 
-void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform) const
+void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 {
 	// Update the material uniform with this material's data
 	const VulkanBuffer* materialBuffer = Vulkan::Instance()->GetUniformBuffer(EUniformBufferIds::Material);
@@ -85,26 +102,85 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform) cons
 	};
 	sceneLightBuffer->Fill(&sceneLighting);
 
-	// Send off the push constant pointers
-	const VulkanBuffer* pushConstantBuffer = Vulkan::Instance()->GetUniformBuffer(EUniformBufferIds::PushConstant);
-	PushConstantData pushConstantData
+	// Update the descriptor sets if needed
+	if (m_shouldUpdateDescriptors)
 	{
-		.uboAddress = uboBuffer->GetAddress(),
-		.materialAddress = materialBuffer->GetAddress(),
-		.sceneLightingAddress = sceneLightBuffer->GetAddress(),
-		.lightsAddress =
+		TList<VkWriteDescriptorSet> writes;
+
+		VkDescriptorBufferInfo materialDescriptor
 		{
-			light0Buffer->GetAddress(), 0, 0, 0, 0, 0, 0, 0
-		}
-	};
-	pushConstantBuffer->Fill(&pushConstantData);
+			.buffer = materialBuffer->Get(),
+			.offset = 0,
+			.range = materialBuffer->Size()
+		};
+		writes.Add(GetUniformWrite(&materialDescriptor, 2));
+
+		VkDescriptorBufferInfo lightDescriptor
+		{
+			.buffer = light0Buffer->Get(),
+			.offset = 0,
+			.range = light0Buffer->Size()
+		};
+		writes.Add(GetUniformWrite(&lightDescriptor, 1));
+
+		VkDescriptorBufferInfo sceneDescriptor
+		{
+			.buffer = sceneLightBuffer->Get(),
+			.offset = 0,
+			.range = sceneLightBuffer->Size()
+		};
+		writes.Add(GetUniformWrite(&sceneDescriptor, 0));
+
+		UpdateDescriptorSets(writes);
+		m_shouldUpdateDescriptors = false;
+	}
 
 	// Bind the pipeline and push the push constants to the command buffer
-	vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->Get());
-	Vulkan::Instance()->BindTextureDescriptorSets(cmdBuffer, m_pipeline->GetLayout());
+	m_pipeline->Bind(cmdBuffer, uboBuffer->GetAddress());
+}
 
-	vkCmdPushConstants(
-		cmdBuffer, m_pipeline->GetLayout(), VK_SHADER_STAGE_ALL_GRAPHICS, 0,
-		sizeof(PushConstantData), &pushConstantBuffer->GetAddress()
-	);
+void Material::UpdateDescriptorSets(TList<VkWriteDescriptorSet>& writes) const
+{
+	if (int32 textureBinding; m_pipeline->TryGetTextureBinding(textureBinding))
+	{
+		TList<VkDescriptorImageInfo> textureDescriptors;
+		TryInsertTextureDescriptor(textureDescriptors, baseColorMap);
+		TryInsertTextureDescriptor(textureDescriptors, normalMap);
+		TryInsertTextureDescriptor(textureDescriptors, ormMap);
+		TryInsertTextureDescriptor(textureDescriptors, emissiveMap);
+
+		writes.Add(
+			{
+				.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+				.pNext = nullptr,
+				.dstSet = m_pipeline->GetDescriptorSet(),
+				.dstBinding = static_cast<uint32>(textureBinding),
+				.dstArrayElement = 0,
+				.descriptorCount = static_cast<uint32>(textureDescriptors.size()),
+				.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+				.pImageInfo = textureDescriptors.Data(),
+				.pBufferInfo = nullptr,
+				.pTexelBufferView = nullptr
+			}
+		);
+	}
+
+	vkUpdateDescriptorSets(Vulkan::Device(), static_cast<uint32>(writes.Count()), writes.Data(), 0, nullptr);
+}
+
+VkWriteDescriptorSet Material::GetUniformWrite(VkDescriptorBufferInfo* buffer, const uint32 binding, uint32 arrayElem) const
+{
+	return
+	{
+		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.pNext = nullptr,
+		.dstSet = m_pipeline->GetDescriptorSet(),
+		.dstBinding = binding,
+		.dstArrayElement = arrayElem,
+		.descriptorCount = 1,
+		.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+		.pImageInfo = nullptr,
+		.pBufferInfo = buffer,
+		.pTexelBufferView = nullptr
+	};
 }

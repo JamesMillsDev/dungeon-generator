@@ -7,6 +7,10 @@
 #include "Object.h"
 #include "Maths/Color.h"
 
+#include "Utility/TList.h"
+
+class VulkanBuffer;
+struct ShaderConfig;
 class VulkanGraphicsPipeline;
 class Texture;
 
@@ -32,6 +36,9 @@ struct MaterialUniform
 class Material : public Object
 {
 	friend class Renderer;
+
+private:
+	static void TryInsertTextureDescriptor(TList<VkDescriptorImageInfo>& descriptors, Texture* texture);
 		
 public:
 	Color color;
@@ -49,15 +56,20 @@ public:
 
 private:
 	VulkanGraphicsPipeline* m_pipeline;
+	bool m_shouldUpdateDescriptors;
 
 public:
 	explicit Material(const string& shaderPath);
+	explicit Material(const ShaderConfig& shaderConfig);
 	~Material() override;
 
 public:
 	[[nodiscard]] uint64 GetHashCode() const override;
 
 private:
-	void Bind(VkCommandBuffer cmdBuffer, const mat4& transform) const;
+	void Bind(VkCommandBuffer cmdBuffer, const mat4& transform);
+	void UpdateDescriptorSets(TList<VkWriteDescriptorSet>& writes) const;
+
+	VkWriteDescriptorSet GetUniformWrite(VkDescriptorBufferInfo* buffer, uint32 binding, uint32 arrayElem = 0) const;
 
 };

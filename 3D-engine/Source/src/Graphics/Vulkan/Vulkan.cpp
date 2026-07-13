@@ -34,31 +34,29 @@ const TArray UNIFORM_DATAS
 	{
 		.count = 1,
 		.size = sizeof(ProjectionViewModelUniform),
+		.bufferUsage = VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT_KHR,
 		.id = static_cast<uint16>(EUniformBufferIds::ProjectionView)
 	},
 	UniformBufferData
 	{
 		.count = 1,
 		.size = sizeof(SceneLightingData),
+		.bufferUsage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		.id = static_cast<uint16>(EUniformBufferIds::SceneLighting)
 	},
 	UniformBufferData
 	{
 		.count = MAX_LIGHT_COUNT,
 		.size = sizeof(LightUniform),
+		.bufferUsage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		.id = static_cast<uint16>(EUniformBufferIds::Lights)
 	},
 	UniformBufferData
 	{
 		.count = 1,
 		.size = sizeof(MaterialUniform),
+		.bufferUsage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
 		.id = static_cast<uint16>(EUniformBufferIds::Material)
-	},
-	UniformBufferData
-	{
-		.count = 1,
-		.size = sizeof(PushConstantData),
-		.id = static_cast<uint16>(EUniformBufferIds::PushConstant)
 	},
 };
 
@@ -177,26 +175,6 @@ const VmaAllocator& Vulkan::GetAllocator() const
 	return m_vmaAllocator;
 }
 
-const VkDescriptorSetLayout& Vulkan::DescriptorSetLayout()
-{
-	return m_instance->GetDescriptorSetLayout();
-}
-
-const VkDescriptorSetLayout& Vulkan::GetDescriptorSetLayout() const
-{
-	return m_descriptorSetLayout;
-}
-
-const VkDescriptorSet& Vulkan::DescriptorSet()
-{
-	return m_instance->GetDescriptorSet();
-}
-
-const VkDescriptorSet& Vulkan::GetDescriptorSet() const
-{
-	return m_descriptorSet;
-}
-
 bool Vulkan::IsLoaded()
 {
 	return m_instance != nullptr && m_instance->m_loaded;
@@ -285,8 +263,6 @@ Vulkan::Vulkan(Config* config, GLFWwindow* window)
 
 Vulkan::~Vulkan()
 {
-	m_updateTextureDescriptors = true;
-
 	delete m_resourceStack;
 	delete m_appVersion;
 	delete m_engineVersion;
@@ -366,59 +342,6 @@ VulkanBuffer* Vulkan::GetUniformBuffer(const uint16 id, const uint32 index) cons
 VulkanBuffer* Vulkan::GetUniformBuffer(EUniformBufferIds id, const uint32 index) const
 {
 	return GetUniformBuffer(static_cast<uint16>(id), index);
-}
-
-void Vulkan::AddTexture(Texture* texture)
-{
-	m_textures.Add(texture);
-
-	m_updateTextureDescriptors = true;
-}
-
-void Vulkan::RemoveTexture(Texture* texture)
-{
-	m_textures.Remove(texture);
-
-	m_updateTextureDescriptors = true;
-}
-
-void Vulkan::WriteTextureDescriptorSets()
-{
-	if (!m_updateTextureDescriptors)
-	{
-		return;
-	}
-
-	TList<VkDescriptorImageInfo> textureDescriptors;
-	textureDescriptors.Resize(m_textures.Count());
-	for (int64 i = 0; i < m_textures.Count(); ++i)
-	{
-		textureDescriptors[i] = m_textures[i]->GetDescriptors();
-	}
-
-	const VkWriteDescriptorSet writeDescSet
-	{
-		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-		.pNext = nullptr,
-		.dstSet = m_descriptorSet,
-		.dstBinding = 0,
-		.dstArrayElement = 0,
-		.descriptorCount = static_cast<uint32>(textureDescriptors.size()),
-		.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-		.pImageInfo = textureDescriptors.Data(),
-		.pBufferInfo = nullptr,
-		.pTexelBufferView = nullptr
-	};
-	vkUpdateDescriptorSets(m_device, 1, &writeDescSet, 0, nullptr);
-
-	m_updateTextureDescriptors = false;
-}
-
-void Vulkan::BindTextureDescriptorSets(const VkCommandBuffer cmdBuf, const VkPipelineLayout layout) const
-{
-	vkCmdBindDescriptorSets(
-		cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &m_descriptorSet, 0, nullptr
-	);
 }
 
 VkFormat Vulkan::GetDepthFormat() const
@@ -809,7 +732,7 @@ void Vulkan::Init(GLFWwindow* window)
 							buffer.Add(new VulkanBuffer
 								{
 									uniformData.size,
-									VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+									uniformData.bufferUsage,
 									this
 								});
 						}
@@ -923,103 +846,6 @@ void Vulkan::Init(GLFWwindow* window)
 			[this]
 			{
 				vkDestroyCommandPool(m_device, m_commandPool, nullptr);
-			}
-		);
-
-		// Descriptors
-		InitAndPushResource(
-			[this]
-			{
-				TArray dslBindings =
-				{
-					VkDescriptorSetLayoutBinding
-					{
-						.binding = 0,
-						.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-						.descriptorCount = MAX_TEXTURE_DESCRIPTORS,
-						.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-						.pImmutableSamplers = nullptr,
-					},
-				};
-
-				TArray flags =
-				{
-					VkDescriptorBindingFlags{ VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT },
-				};
-
-				const VkDescriptorSetLayoutBindingFlagsCreateInfo dslFlagsCreateInfo
-				{
-					.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,
-					.pNext = nullptr,
-					.bindingCount = static_cast<uint32>(dslBindings.size()),
-					.pBindingFlags = flags.Data()
-				};
-
-				const VkDescriptorSetLayoutCreateInfo dslCreateInfo
-				{
-					.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-					.pNext = &dslFlagsCreateInfo,
-					.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT,
-					.bindingCount = static_cast<uint32>(dslBindings.size()),
-					.pBindings = dslBindings.Data()
-				};
-
-				// Create the descriptor set layout
-				Try(
-					vkCreateDescriptorSetLayout(m_device, &dslCreateInfo, nullptr, &m_descriptorSetLayout),
-					"Failed to create Descriptor Set Layout!"
-				);
-
-				TArray poolSizes
-				{
-					VkDescriptorPoolSize
-					{
-						.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-						.descriptorCount = MAX_TEXTURE_DESCRIPTORS
-					}
-				};
-				const VkDescriptorPoolCreateInfo dpCreateInfo
-				{
-					.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-					.pNext = nullptr,
-					.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT,
-					.maxSets = 1,
-					.poolSizeCount = static_cast<uint32>(poolSizes.size()),
-					.pPoolSizes = poolSizes.Data()
-				};
-
-				// Create the descriptor pool
-				Try(
-					vkCreateDescriptorPool(m_device, &dpCreateInfo, nullptr, &m_descriptorPool),
-					"Failed to create Descriptor Pool!"
-				);
-
-				// Allocate the descriptor sets
-				constexpr VkDescriptorSetVariableDescriptorCountAllocateInfo vdcAllocateInfo
-				{
-					.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO_EXT,
-					.pNext = nullptr,
-					.descriptorSetCount = 1,
-					.pDescriptorCounts = &MAX_TEXTURE_DESCRIPTORS
-				};
-				const VkDescriptorSetAllocateInfo dsAllocateInfo
-				{
-					.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-					.pNext = &vdcAllocateInfo,
-					.descriptorPool = m_descriptorPool,
-					.descriptorSetCount = 1,
-					.pSetLayouts = &m_descriptorSetLayout
-				};
-
-				Try(
-					vkAllocateDescriptorSets(m_device, &dsAllocateInfo, &m_descriptorSet),
-					"Failed to allocate Descriptor Sets!"
-				);
-			},
-			[this]
-			{
-				vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout, nullptr);
-				vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
 			}
 		);
 
@@ -1156,8 +982,6 @@ void Vulkan::RecreateSwapChain()
 
 VkCommandBuffer Vulkan::BeginFrame()
 {
-	WriteTextureDescriptorSets();
-
 	// Wait on and reset fences
 	Try(
 		vkWaitForFences(m_device, 1, &m_fences[m_frameIndex], true, UINT64_MAX),

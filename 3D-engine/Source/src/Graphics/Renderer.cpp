@@ -74,7 +74,7 @@ Renderer::~Renderer()
 	DestroyVulkan();
 }
 
-void Renderer::Render(const Mesh* mesh, const Material* material, const mat4& transform) const
+void Renderer::Render(const Mesh* mesh, Material* material, const mat4& transform) const
 {
 	material->Bind(m_frameCmdBuf, transform);
 

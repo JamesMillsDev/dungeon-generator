@@ -5,6 +5,9 @@
 #include <string>
 #include <vulkan/vulkan.h>
 
+#include "Rendering/Camera.h"
+#include "Rendering/Camera.h"
+
 class Camera;
 class Application;
 class Config;
@@ -49,7 +52,7 @@ private:
 	~Renderer();
 
 public:
-	void Render(const Mesh* mesh, const Material* material, const mat4& transform) const;
+	void Render(const Mesh* mesh, ::Material* material, const mat4& transform) const;
 	
 private:
 	void BeginFrame();

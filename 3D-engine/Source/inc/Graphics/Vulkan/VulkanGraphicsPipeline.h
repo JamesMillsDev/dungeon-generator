@@ -2,6 +2,9 @@
 
 #include <set>
 #include <string>
+
+#include <vulkan/vulkan.h>
+
 #include "Uniforms.h"
 
 #include "Utility/TList.h"
@@ -16,7 +19,6 @@ struct DescriptorConfig
 	VkDescriptorType type;
 	uint32 count;
 	VkShaderStageFlags stage;
-	VkDescriptorBindingFlags bindingFlags;
 };
 
 struct ShaderConfig
@@ -78,7 +80,7 @@ struct GraphicsPipelineConfig
 	friend class VulkanGraphicsPipeline;
 
 public:
-	ShaderConfig shader;
+	ShaderConfig shaderConfig;
 	RasterizerConfig rasterizer;
 	ColorAttachmentConfig colorAttachment;
 	ColorBlendStateConfig blendState;
@@ -89,20 +91,13 @@ public:
 		{
 			.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
 			.offset = 0,
-			.size = sizeof(PushConstantData)
+			.size = sizeof(ProjectionViewModelUniform)
 		}
 	};
-
-private:
-	VkDescriptorSetLayout m_descriptorSetLayout;
-	VkDescriptorPool m_descriptorPool;
-	VkDescriptorSet m_descriptorSet;
-	bool m_defaultLayout;
 
 public:
 	explicit GraphicsPipelineConfig(ShaderConfig shader);
 	explicit GraphicsPipelineConfig(const string& shaderName);
-	~GraphicsPipelineConfig();
 
 public:
 	[[nodiscard]] uint32 Size() const;
@@ -114,19 +109,36 @@ class VulkanGraphicsPipeline
 {
 private:
 	GraphicsPipelineConfig m_config;
+
+	VkDescriptorPool m_descriptorPool;
+	VkDescriptorSetLayout m_descriptorSetLayout;
+	VkDescriptorSet m_descriptorSets;
+	int32 m_samplerBinding;
+
 	VkPipelineLayout m_pipelineLayout;
 	VkPipeline m_pipeline;
+	VkPipelineBindPoint m_bindPoint;
+	VkShaderStageFlagBits m_pushConstantStage;
 
 public:
-	explicit VulkanGraphicsPipeline(const GraphicsPipelineConfig& config);
+	explicit VulkanGraphicsPipeline(GraphicsPipelineConfig config);
 	~VulkanGraphicsPipeline();
 
 public:
-	const VkPipeline& Get() const;
-	const VkPipelineLayout& GetLayout() const;
+	void Bind(VkCommandBuffer cmdBuffer, VkDeviceAddress pushConstantAddress) const;
+	void SetBindPoint(VkPipelineBindPoint bindPoint);
+	void SetPushConstantStage(VkShaderStageFlagBits stage);
+
+	VkDescriptorSet GetDescriptorSet() const;
+	bool IsLit() const;
+
+	bool TryGetTextureBinding(int32& binding) const;
 
 private:
 	void Init(Vulkan* vulkan);
 	void Destroy();
+
+	void InitDescriptors(const Vulkan* vulkan);
+	void InitPipeline(Vulkan* vulkan);
 
 };

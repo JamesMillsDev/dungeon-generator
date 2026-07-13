@@ -30,14 +30,10 @@ Texture::Texture(string file)
 	}
 
 	CreateBuffer();
-
-	Vulkan::Instance()->AddTexture(this);
 }
 
 Texture::~Texture()
 {
-	Vulkan::Instance()->RemoveTexture(this);
-
 	m_freeIds.push(m_id);
 
 	DestroyBuffer();

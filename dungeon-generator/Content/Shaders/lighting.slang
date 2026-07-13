@@ -13,13 +13,15 @@ struct SceneLightingUniform
 };
 
 const static int MAX_LIGHT_COUNT = 8;
+[[vk::binding(0, 0)]] ConstantBuffer<SceneLightingUniform> sceneLighting;
+[[vk::binding(1, 0)]] ConstantBuffer<LightUniform> lights[MAX_LIGHT_COUNT];
 
-float3 LightDirection(LightUniform* light, float3 location)
+float3 LightDirection(LightUniform light, float3 location)
 {
-    if (light->type == 0)
+    if (light.type == 0)
     {
-        return light->direction.xyz;
+        return light.direction.xyz;
 	}
 
-    return normalize(light->location.xyz - location);
+    return normalize(light.location.xyz - location);
 }

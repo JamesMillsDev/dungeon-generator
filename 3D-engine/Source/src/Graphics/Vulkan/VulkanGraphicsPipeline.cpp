@@ -1,5 +1,7 @@
 #include "Graphics/Vulkan/VulkanGraphicsPipeline.h"
 
+#include "Gameplay/Actors/Components/Rendering/LightComponent.h"
+
 #include "Graphics/Rendering/Mesh.h"
 #include "Graphics/Rendering/Shader.h"
 #include "Graphics/Vulkan/Vulkan.h"
@@ -9,33 +11,164 @@ bool ShaderConfig::StageComp::operator()(const VkShaderStageFlagBits& lhs, const
 	return lhs < rhs;
 }
 
-GraphicsPipelineConfig::GraphicsPipelineConfig(ShaderConfig shader) :
-	shader{ std::move(shader) }, m_defaultLayout{ false }
+GraphicsPipelineConfig::GraphicsPipelineConfig(ShaderConfig shader)
+	: shaderConfig{ std::move(shader) }
 {
+
+}
+
+GraphicsPipelineConfig::GraphicsPipelineConfig(const string& shaderName)
+	: GraphicsPipelineConfig{ ShaderConfig{.name = shaderName } }
+{
+
+}
+
+uint32 GraphicsPipelineConfig::Size() const
+{
+	return static_cast<uint32>(shaderConfig.stages.size());
+}
+
+bool GraphicsPipelineConfig::ContainsStage(VkShaderStageFlagBits stage) const
+{
+	return shaderConfig.stages.contains(stage);
+}
+
+VulkanGraphicsPipeline::VulkanGraphicsPipeline(GraphicsPipelineConfig config) :
+	m_config{ std::move(config) }, m_samplerBinding{ -1 }, m_bindPoint{ VK_PIPELINE_BIND_POINT_GRAPHICS },
+	m_pushConstantStage{ VK_SHADER_STAGE_ALL_GRAPHICS }
+{
+	Init(Vulkan::Instance());
+}
+
+VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
+{
+	Destroy();
+}
+
+void VulkanGraphicsPipeline::Bind(const VkCommandBuffer cmdBuffer, const VkDeviceAddress pushConstantAddress) const
+{
+	vkCmdBindDescriptorSets(
+		cmdBuffer, m_bindPoint, m_pipelineLayout, 0, 1, &m_descriptorSets, 0, nullptr
+	);
+
+	vkCmdBindPipeline(cmdBuffer, m_bindPoint, m_pipeline);
+
+	vkCmdPushConstants(
+		cmdBuffer, m_pipelineLayout, m_pushConstantStage, 0, sizeof(ProjectionViewModelUniform), &pushConstantAddress
+	);
+}
+
+void VulkanGraphicsPipeline::SetBindPoint(VkPipelineBindPoint bindPoint)
+{
+	m_bindPoint = bindPoint;
+}
+
+void VulkanGraphicsPipeline::SetPushConstantStage(VkShaderStageFlagBits stage)
+{
+	m_pushConstantStage = stage;
+}
+
+VkDescriptorSet VulkanGraphicsPipeline::GetDescriptorSet() const
+{
+	return m_descriptorSets;
+}
+
+bool VulkanGraphicsPipeline::IsLit() const
+{
+	return m_config.shaderConfig.lit;
+}
+
+bool VulkanGraphicsPipeline::TryGetTextureBinding(int32& binding) const
+{
+	if (m_samplerBinding == -1)
+	{
+		return false;
+	}
+
+	binding = m_samplerBinding;
+	return true;
+}
+
+void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
+{
+	InitDescriptors(vulkan);
+	InitPipeline(vulkan);
+}
+
+void VulkanGraphicsPipeline::Destroy()
+{
+	vkDestroyDescriptorPool(Vulkan::Device(), m_descriptorPool, nullptr);
+	vkDestroyDescriptorSetLayout(Vulkan::Device(), m_descriptorSetLayout, nullptr);
+
+	vkDestroyPipeline(Vulkan::Device(), m_pipeline, nullptr);
+	vkDestroyPipelineLayout(Vulkan::Device(), m_pipelineLayout, nullptr);
+
+	m_pipelineLayout = VK_NULL_HANDLE;
+	m_pipeline = VK_NULL_HANDLE;
+}
+
+void VulkanGraphicsPipeline::InitDescriptors(const Vulkan* vulkan)
+{
+	VkResult result;
+
+	if (m_config.shaderConfig.lit)
+	{
+		m_config.shaderConfig.descriptors.Insert(
+			{
+				.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+				.count = 1,
+				.stage = VK_SHADER_STAGE_FRAGMENT_BIT
+			}, 0
+		);
+		m_config.shaderConfig.descriptors.Insert(
+			{
+				.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+				.count = MAX_LIGHT_COUNT,
+				.stage = VK_SHADER_STAGE_FRAGMENT_BIT
+			}, 1
+		);
+	}
+
+	m_config.shaderConfig.descriptors.Insert(
+		{
+			.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+			.count = 1,
+			.stage = VK_SHADER_STAGE_FRAGMENT_BIT
+		},
+		2 // Make it the second last item
+	);
+
 	TList<VkDescriptorSetLayoutBinding> dslBindings;
 	TList<VkDescriptorBindingFlags> flags;
+	TList<VkDescriptorPoolSize> poolSizes;
 
 	uint32 bindingIndex = 0;
-	for (DescriptorConfig& descriptor : this->shader.descriptors)
+	for (int32 i = 0; i < static_cast<int32>(m_config.shaderConfig.descriptors.Count()); ++i)
 	{
+		DescriptorConfig& descriptor = m_config.shaderConfig.descriptors[i];
+
 		dslBindings.Add(
 			{
 				.binding = bindingIndex++,
 				.descriptorType = descriptor.type,
 				.descriptorCount = descriptor.count,
-				.stageFlags = descriptor.bindingFlags,
+				.stageFlags = descriptor.stage,
 				.pImmutableSamplers = nullptr
 			}
 		);
 
-		flags.Add(descriptor.bindingFlags);
-	}
+		flags.Add(VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT);
+		poolSizes.Add(
+			{
+				.type = descriptor.type,
+				.descriptorCount = descriptor.count
+			}
+		);
 
-	if (dslBindings.IsEmpty())
-	{
-		m_descriptorSetLayout = Vulkan::DescriptorSetLayout();
-		m_defaultLayout = true;
-		return;
+		if (descriptor.type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER && m_samplerBinding == -1)
+		{
+			m_samplerBinding = i;
+		}
 	}
 
 	const VkDescriptorSetLayoutBindingFlagsCreateInfo dslFlagsCreateInfo
@@ -51,25 +184,15 @@ GraphicsPipelineConfig::GraphicsPipelineConfig(ShaderConfig shader) :
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
 		.pNext = &dslFlagsCreateInfo,
 		.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT,
-		.bindingCount = static_cast<uint32>(dslBindings.size()),
+		.bindingCount = static_cast<uint32>(dslBindings.Count()),
 		.pBindings = dslBindings.Data()
 	};
 
-	VkResult result;
-	if (result = vkCreateDescriptorSetLayout(Vulkan::Device(), &dslCreateInfo, nullptr, &m_descriptorSetLayout);
+	if (result = vkCreateDescriptorSetLayout(vulkan->GetDevice(), &dslCreateInfo, nullptr, &m_descriptorSetLayout);
 		result != VK_SUCCESS)
 	{
 		throw Vulkan::VulkanError("Failed to create Descriptor Set Layout!", result);
 	}
-
-	TArray poolSizes
-	{
-		VkDescriptorPoolSize
-		{
-			.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-			.descriptorCount = bindingIndex
-		}
-	};
 
 	const VkDescriptorPoolCreateInfo dpCreateInfo
 	{
@@ -77,93 +200,35 @@ GraphicsPipelineConfig::GraphicsPipelineConfig(ShaderConfig shader) :
 		.pNext = nullptr,
 		.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT,
 		.maxSets = 1,
-		.poolSizeCount = static_cast<uint32>(poolSizes.size()),
+		.poolSizeCount = static_cast<uint32>(poolSizes.Count()),
 		.pPoolSizes = poolSizes.Data()
 	};
 
-	if (result = vkCreateDescriptorPool(Vulkan::Device(), &dpCreateInfo, nullptr, &m_descriptorPool);
+	if (result = vkCreateDescriptorPool(vulkan->GetDevice(), &dpCreateInfo, nullptr, &m_descriptorPool);
 		result != VK_SUCCESS)
 	{
 		throw Vulkan::VulkanError("Failed to create Descriptor Pool!", result);
 	}
 
-	// Allocate the descriptor sets
-	const VkDescriptorSetVariableDescriptorCountAllocateInfo vdcAllocateInfo
-	{
-		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO_EXT,
-		.pNext = nullptr,
-		.descriptorSetCount = 1,
-		.pDescriptorCounts = &bindingIndex
-	};
-
 	const VkDescriptorSetAllocateInfo dsAllocateInfo
 	{
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-		.pNext = &vdcAllocateInfo,
+		.pNext = nullptr,
 		.descriptorPool = m_descriptorPool,
 		.descriptorSetCount = 1,
 		.pSetLayouts = &m_descriptorSetLayout
 	};
 
-	if (result = vkAllocateDescriptorSets(Vulkan::Device(), &dsAllocateInfo, &m_descriptorSet);
+	if (result = vkAllocateDescriptorSets(vulkan->GetDevice(), &dsAllocateInfo, &m_descriptorSets);
 		result != VK_SUCCESS)
 	{
 		throw Vulkan::VulkanError("Failed to create Descriptor Pool!", result);
 	}
 }
 
-GraphicsPipelineConfig::GraphicsPipelineConfig(const string& shaderName)
-	: GraphicsPipelineConfig{ ShaderConfig{ .name = shaderName } }
-{
-	
-}
-
-GraphicsPipelineConfig::~GraphicsPipelineConfig()
-{
-	if (m_defaultLayout)
-	{
-		return;
-	}
-
-	vkDestroyDescriptorPool(Vulkan::Device(), m_descriptorPool, nullptr);
-	vkDestroyDescriptorSetLayout(Vulkan::Device(), m_descriptorSetLayout, nullptr);
-}
-
-uint32 GraphicsPipelineConfig::Size() const
-{
-	return static_cast<uint32>(shader.stages.size());
-}
-
-bool GraphicsPipelineConfig::ContainsStage(VkShaderStageFlagBits stage) const
-{
-	return shader.stages.contains(stage);
-}
-
-VulkanGraphicsPipeline::VulkanGraphicsPipeline(const GraphicsPipelineConfig& config) :
-	m_config{ config }
-{
-	Init(Vulkan::Instance());
-}
-
-VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
-{
-	Destroy();
-}
-
-const VkPipeline& VulkanGraphicsPipeline::Get() const
-{
-	return m_pipeline;
-}
-
-const VkPipelineLayout& VulkanGraphicsPipeline::GetLayout() const
-{
-	return m_pipelineLayout;
-}
-
-void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
+void VulkanGraphicsPipeline::InitPipeline(Vulkan* vulkan)
 {
 	VkResult result;
-
 	// Attempt to create the pipeline layout
 	const VkPipelineLayoutCreateInfo plCreateInfo
 	{
@@ -171,7 +236,7 @@ void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 		.pNext = nullptr,
 		.flags = 0,
 		.setLayoutCount = 1,
-		.pSetLayouts = &m_config.m_descriptorSetLayout,
+		.pSetLayouts = &m_descriptorSetLayout,
 		.pushConstantRangeCount = static_cast<uint32>(m_config.pushConstantRanges.size()),
 		.pPushConstantRanges = m_config.pushConstantRanges.Data()
 	};
@@ -182,9 +247,9 @@ void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 		throw Vulkan::VulkanError("Failed to create Pipeline Layout!", result);
 	}
 
-	Shader* shader = new Shader{ m_config.shader.name };
+	Shader* shader = new Shader{ m_config.shaderConfig.name };
 	TList<VkPipelineShaderStageCreateInfo> ssCreateInfos;
-	for (uint32 i = VK_SHADER_STAGE_VERTEX_BIT; i < VK_SHADER_STAGE_ALL_GRAPHICS; i <<= 1)
+	for (int32 i = VK_SHADER_STAGE_VERTEX_BIT; i < VK_SHADER_STAGE_ALL_GRAPHICS; i <<= 1)
 	{
 		if (!m_config.ContainsStage(static_cast<VkShaderStageFlagBits>(i)))
 		{
@@ -196,7 +261,7 @@ void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 		ssCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		ssCreateInfo.stage = static_cast<VkShaderStageFlagBits>(i);
 		ssCreateInfo.module = shader->GetShaderModule();
-		ssCreateInfo.pName = m_config.shader.entryPoint.c_str();
+		ssCreateInfo.pName = m_config.shaderConfig.entryPoint.c_str();
 
 		ssCreateInfos.Add(ssCreateInfo);
 	}
@@ -246,7 +311,7 @@ void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 	colorBlending.logicOp = m_config.blendState.logicOp;
 	colorBlending.attachmentCount = 1;
 	colorBlending.pAttachments = &colorBlendAttachment;
-	for (int i = 0; i < ColorBlendStateConfig::BLEND_CONSTANT_COUNT; ++i)
+	for (uint32 i = 0; i < ColorBlendStateConfig::BLEND_CONSTANT_COUNT; ++i)
 	{
 		colorBlending.blendConstants[i] = m_config.blendState.blendConstants[i];
 	}
@@ -297,13 +362,4 @@ void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
 	}
 
 	delete shader;
-}
-
-void VulkanGraphicsPipeline::Destroy()
-{
-	vkDestroyPipeline(Vulkan::Device(), m_pipeline, nullptr);
-	vkDestroyPipelineLayout(Vulkan::Device(), m_pipelineLayout, nullptr);
-
-	m_pipelineLayout = VK_NULL_HANDLE;
-	m_pipeline = VK_NULL_HANDLE;
 }

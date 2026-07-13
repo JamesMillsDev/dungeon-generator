@@ -100,7 +100,7 @@ public:
 	 */
 	template<typename FIRST, typename... ARGS>
 	requires(std::is_same_v<FIRST, ARGS> && ...)
-	static float Min(int count, ARGS... values);
+	static FIRST Min(int count, ARGS... values);
 
 	/** @brief A wrapper for the std::max function. */
 	static float Max(float a, float b);
@@ -119,7 +119,7 @@ public:
 	 */
 	template<typename FIRST, typename... ARGS>
 	requires(std::is_same_v<FIRST, ARGS> && ...)
-	static float Max(int count, ARGS... values);
+	static FIRST Max(int count, ARGS... values);
 
 	/**
 	 * @brief A wrapper for the std::pow function.
@@ -289,7 +289,7 @@ public:
 
 template <typename FIRST, typename... ARGS>
 requires(std::is_same_v<FIRST, ARGS> && ...)
-float Maths::Min(const int count, ARGS... values)
+FIRST Maths::Min(const int count, ARGS... values)
 {
 	float value = POSITIVE_INFINITY;
 	TArray<FIRST, sizeof...(ARGS)> arr{ std::forward<ARGS>(values)... };
@@ -304,7 +304,7 @@ float Maths::Min(const int count, ARGS... values)
 
 template <typename FIRST, typename... ARGS>
 requires(std::is_same_v<FIRST, ARGS> && ...)
-float Maths::Max(const int count, ARGS... values)
+FIRST Maths::Max(const int count, ARGS... values)
 {
 	float value = NEGATIVE_INFINITY;
 	TArray<FIRST, sizeof...(ARGS)> arr{ std::forward<ARGS>(values)... };
