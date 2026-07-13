@@ -11,7 +11,7 @@
 #include "Graphics/Vulkan/VulkanBuffer.h"
 #include "Graphics/Vulkan/VulkanGraphicsPipeline.h"
 
-#include "Utility/HashImpls.h"
+#include "Utility/Collections/HashImpls.h"
 
 Material::Material(const string& shaderPath) :
 	color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ 0 }, metallic{ 0 },

@@ -14,7 +14,7 @@
 #include "Graphics/Vulkan/Vulkan.h"
 #include "Graphics/Vulkan/VulkanBuffer.h"
 
-#include "Utility/HashImpls.h"
+#include "Utility/Collections/HashImpls.h"
 
 using std::vector;
 using VertexAttribData = std::tuple<uint8, uint8, VkFormat, size_t>;

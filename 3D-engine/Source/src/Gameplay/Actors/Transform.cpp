@@ -2,7 +2,7 @@
 
 #include "Maths/Maths.h"
 
-#include "Utility/HashImpls.h"
+#include "Utility/Collections/HashImpls.h"
 
 Transform::Transform()
 	: location{ 0.f }, rotation{ quat{} }, scale{ 1.f }, parent{ nullptr }, nextSibling{ nullptr },

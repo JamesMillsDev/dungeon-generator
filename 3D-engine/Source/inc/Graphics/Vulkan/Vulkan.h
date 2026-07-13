@@ -7,10 +7,10 @@
 #include <vulkan/vulkan.h>
 
 #include "Maths/Color.h"
-#include "Utility/ResourceStack.h"
-#include "Utility/TArray.h"
-#include "Utility/TList.h"
-#include "Utility/TMap.h"
+#include "Utility/Collections/ResourceStack.h"
+#include "Utility/Collections/TArray.h"
+#include "Utility/Collections/TList.h"
+#include "Utility/Collections/TMap.h"
 
 class Config;
 struct GLFWwindow;

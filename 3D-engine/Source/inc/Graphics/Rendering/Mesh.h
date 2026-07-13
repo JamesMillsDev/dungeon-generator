@@ -7,8 +7,8 @@
 #include <vulkan/vulkan.h>
 
 #include "Maths/Color.h"
-#include "Utility/TArray.h"
-#include "Utility/TList.h"
+#include "Utility/Collections/TArray.h"
+#include "Utility/Collections/TList.h"
 
 class VulkanBuffer;
 

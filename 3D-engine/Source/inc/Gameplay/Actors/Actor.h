@@ -3,7 +3,7 @@
 #include <functional>
 #include <utility>
 
-#include "Utility/TList.h"
+#include "Utility/Collections/TList.h"
 #include "Gameplay/Actors/Components/IComponent.h"
 
 class Transform;

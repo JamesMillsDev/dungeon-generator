@@ -4,8 +4,7 @@
 
 #include "Maths/Alias.h"
 
-#include "Utility/TList.h"
-#include "Utility/TMap.h"
+#include "Utility/Collections/TMap.h"
 
 using std::string;
 

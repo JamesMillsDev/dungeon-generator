@@ -4,7 +4,7 @@
 #include <utility>
 
 #include "Gameplay/Actors/Actor.h"
-#include "Utility/TList.h"
+#include "Utility/Collections/TList.h"
 
 using std::function;
 using std::pair;

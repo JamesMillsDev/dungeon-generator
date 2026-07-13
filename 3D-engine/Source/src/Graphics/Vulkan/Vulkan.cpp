@@ -19,13 +19,12 @@
 
 #include "Utility/Config.h"
 #include "Utility/Console.h"
-#include "Utility/ResourceStack.h"
 #include "Utility/Version.h"
+#include "Utility/Collections/ResourceStack.h"
 
 using std::exception;
 
 constexpr uint32 MAX_TEXTURE_DESCRIPTORS = UINT16_MAX;
-constexpr int32 DEFAULT_RESOURCE_STACK_SIZE = 16;
 constexpr int32 UNIFORM_BUFFER_COUNT = 3;
 
 const TArray UNIFORM_DATAS
@@ -248,7 +247,7 @@ void Vulkan::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT
 }
 
 Vulkan::Vulkan(Config* config, GLFWwindow* window)
-	: m_resourceStack{ new ResourceStack{ DEFAULT_RESOURCE_STACK_SIZE } }, m_loaded{ false }, m_frameIndex{ 0 },
+	: m_resourceStack{ new ResourceStack }, m_loaded{ false }, m_frameIndex{ 0 },
 	m_imageIndex{ 0 }, m_recreateSwapChain{ false }
 {
 	m_appName = config->Get<string>("Application.Title");
