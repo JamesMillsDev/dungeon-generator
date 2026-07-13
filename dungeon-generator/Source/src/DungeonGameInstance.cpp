@@ -24,20 +24,15 @@ void DungeonGameInstance::Init()
 	{
 		.descriptors =
 		{
-			//DescriptorConfig // Material
-			//{
-			//	.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-			//	.count = 1,
-			//	.stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-			//},
-			//DescriptorConfig // Samplers
-			//{
-			//	.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-			//	.count = 3,
-			//	.stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-			//}
+			DescriptorConfig // Samplers
+			{
+				.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+				.count = 3,
+				.stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+				.binding = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT
+			}
 		},
-		.name = "Shaders/simplelit", 
+		.name = "Shaders/pbr", 
 	};
 
 	m_mesh = Mesh::MakeFromAssimp("Meshes/SM_Soulspear.fbx");

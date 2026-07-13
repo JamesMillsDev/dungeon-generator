@@ -522,6 +522,7 @@ void Vulkan::Init(GLFWwindow* window)
 				enabledVk12Features.descriptorBindingVariableDescriptorCount = true;
 				enabledVk12Features.runtimeDescriptorArray = true;
 				enabledVk12Features.bufferDeviceAddress = true;
+				enabledVk12Features.descriptorBindingSampledImageUpdateAfterBind = true;
 
 				VkPhysicalDeviceVulkan13Features enabledVk13Features{};
 				enabledVk13Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;

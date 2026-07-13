@@ -19,6 +19,7 @@ struct DescriptorConfig
 	VkDescriptorType type;
 	uint32 count;
 	VkShaderStageFlags stage;
+	VkDescriptorBindingFlags binding = VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
 };
 
 struct ShaderConfig

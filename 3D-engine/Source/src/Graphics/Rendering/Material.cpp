@@ -102,6 +102,9 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 	};
 	sceneLightBuffer->Fill(&sceneLighting);
 
+	// Bind the pipeline and push the push constants to the command buffer
+	m_pipeline->Bind(cmdBuffer, uboBuffer->GetAddress());
+
 	// Update the descriptor sets if needed
 	if (m_shouldUpdateDescriptors)
 	{
@@ -134,16 +137,13 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 		UpdateDescriptorSets(writes);
 		m_shouldUpdateDescriptors = false;
 	}
-
-	// Bind the pipeline and push the push constants to the command buffer
-	m_pipeline->Bind(cmdBuffer, uboBuffer->GetAddress());
 }
 
 void Material::UpdateDescriptorSets(TList<VkWriteDescriptorSet>& writes) const
 {
+	TList<VkDescriptorImageInfo> textureDescriptors;
 	if (int32 textureBinding; m_pipeline->TryGetTextureBinding(textureBinding))
 	{
-		TList<VkDescriptorImageInfo> textureDescriptors;
 		TryInsertTextureDescriptor(textureDescriptors, baseColorMap);
 		TryInsertTextureDescriptor(textureDescriptors, normalMap);
 		TryInsertTextureDescriptor(textureDescriptors, ormMap);
@@ -179,7 +179,7 @@ VkWriteDescriptorSet Material::GetUniformWrite(VkDescriptorBufferInfo* buffer, c
 		.dstArrayElement = arrayElem,
 		.descriptorCount = 1,
 		.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-		.pImageInfo = nullptr,
+		.pImageInfo = nullptr, 
 		.pBufferInfo = buffer,
 		.pTexelBufferView = nullptr
 	};
