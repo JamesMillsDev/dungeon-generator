@@ -16,17 +16,15 @@
 Material::Material(const string& shaderPath) :
 	color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ 0 }, metallic{ 0 },
 	specularColor{ Color::WHITE }, specularStrength{ .5f }, baseColorMap{ nullptr },
-	normalMap{ nullptr }, ormMap{ nullptr }, emissiveMap{ nullptr },
-	m_pipeline{ new VulkanGraphicsPipeline{ GraphicsPipelineConfig{ shaderPath } } },
-	m_shouldUpdateDescriptors{ true }
+	normalMap{ nullptr }, ormMap{ nullptr }, emissiveMap{ nullptr }, m_pipelineConfig{ shaderPath },
+	m_pipeline{ nullptr }, m_shouldUpdateDescriptors{ true }
 {}
 
 Material::Material(const ShaderConfig& shaderConfig) :
 	color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ 0 }, metallic{ 0 },
 	specularColor{ Color::WHITE }, specularStrength{ .5f }, baseColorMap{ nullptr },
-	normalMap{ nullptr }, ormMap{ nullptr }, emissiveMap{ nullptr },
-	m_pipeline{ new VulkanGraphicsPipeline{ GraphicsPipelineConfig{ shaderConfig } } },
-	m_shouldUpdateDescriptors{ true }
+	normalMap{ nullptr }, ormMap{ nullptr }, emissiveMap{ nullptr }, m_pipelineConfig{ shaderConfig },
+	m_pipeline{ nullptr }, m_shouldUpdateDescriptors{ true }
 {}
 
 Material::~Material()
@@ -50,6 +48,11 @@ uint64 Material::GetHashCode() const
 
 void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 {
+	if (m_pipeline == nullptr)
+	{
+		m_pipeline = new VulkanGraphicsPipeline{ m_pipelineConfig };
+	}
+
 	// Update the material uniform with this material's data
 	const VulkanBuffer* materialBuffer = Vulkan::Instance()->GetUniformBuffer(EUniformBufferIds::Material);
 	const MaterialUniform materialUniform

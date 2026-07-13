@@ -5,6 +5,9 @@
 #include <vulkan/vulkan.h>
 
 #include "Object.h"
+
+#include "Graphics/Vulkan/VulkanGraphicsPipeline.h"
+
 #include "Maths/Color.h"
 
 #include "Utility/TList.h"
@@ -36,8 +39,6 @@ struct MaterialUniform
 class Material : public Object
 {
 	friend class Renderer;
-
-private:
 		
 public:
 	Color color;
@@ -54,6 +55,7 @@ public:
 	Texture* emissiveMap;
 
 private:
+	GraphicsPipelineConfig m_pipelineConfig;
 	VulkanGraphicsPipeline* m_pipeline;
 	bool m_shouldUpdateDescriptors;
 
