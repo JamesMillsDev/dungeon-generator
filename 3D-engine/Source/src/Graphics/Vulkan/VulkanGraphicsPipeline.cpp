@@ -18,19 +18,19 @@ GraphicsPipelineConfig::GraphicsPipelineConfig(ShaderConfig shader)
 }
 
 GraphicsPipelineConfig::GraphicsPipelineConfig(const string& shaderName)
-	: GraphicsPipelineConfig{ ShaderConfig{.name = shaderName } }
+	: GraphicsPipelineConfig{ ShaderConfig{ .name = shaderName } }
 {
 
 }
 
 uint32 GraphicsPipelineConfig::Size() const
 {
-	return static_cast<uint32>(shaderConfig.stages.size());
+	return shaderConfig.stages.Count();
 }
 
 bool GraphicsPipelineConfig::ContainsStage(VkShaderStageFlagBits stage) const
 {
-	return shaderConfig.stages.contains(stage);
+	return shaderConfig.stages.Contains(stage);
 }
 
 VulkanGraphicsPipeline::VulkanGraphicsPipeline(GraphicsPipelineConfig config) :
@@ -85,7 +85,7 @@ bool VulkanGraphicsPipeline::TryGetTextureBinding(TList<int32>& binding) const
 		return false;
 	}
 
-	binding = m_samplerBindings; 
+	binding = m_samplerBindings;
 	return true;
 }
 

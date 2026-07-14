@@ -1,6 +1,5 @@
 #pragma once
 
-#include <set>
 #include <string>
 
 #include <vulkan/vulkan.h>
@@ -8,10 +7,10 @@
 #include "Uniforms.h"
 
 #include "Utility/Collections/TList.h"
+#include "Utility/Collections/TSet.h"
 
 class Vulkan;
 
-using std::set;
 using std::string;
 
 struct DescriptorConfig
@@ -30,7 +29,7 @@ struct ShaderConfig
 	};
 
 public:
-	set<VkShaderStageFlagBits, StageComp> stages = { VK_SHADER_STAGE_VERTEX_BIT, VK_SHADER_STAGE_FRAGMENT_BIT };
+	TSet<VkShaderStageFlagBits, StageComp> stages = { VK_SHADER_STAGE_VERTEX_BIT, VK_SHADER_STAGE_FRAGMENT_BIT };
 	TList<DescriptorConfig> descriptors = {};
 	string name;
 	string entryPoint = "main";

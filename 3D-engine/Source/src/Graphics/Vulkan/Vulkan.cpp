@@ -20,7 +20,6 @@
 #include "Utility/Config.h"
 #include "Utility/Console.h"
 #include "Utility/Version.h"
-#include "Utility/Collections/ResourceStack.h"
 
 using std::exception;
 

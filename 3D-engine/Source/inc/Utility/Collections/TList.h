@@ -119,6 +119,9 @@ public:
 
 };
 
+template<typename T, typename... U>
+TList(T, U...) -> TList<T, 1 + sizeof...(U)>;
+
 template <typename T, int64 GROWTH>
 TList<T, GROWTH>::Iterator::Iterator()
 	: m_ptr{ nullptr }
