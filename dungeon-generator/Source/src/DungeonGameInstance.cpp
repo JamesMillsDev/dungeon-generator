@@ -9,7 +9,7 @@
 #include "Graphics/Rendering/Material.h"
 #include "Graphics/Rendering/Mesh.h"
 #include "Graphics/Rendering/Texture.h"
-#include "Graphics/Vulkan/VulkanGraphicsPipeline.h"
+#include "Graphics/Vulkan/GraphicsPipeline.h"
 
 #include "ImGui/imgui.h"
 

@@ -77,7 +77,7 @@ struct MultisamplerConfig
 
 struct GraphicsPipelineConfig
 {
-	friend class VulkanGraphicsPipeline;
+	friend class GraphicsPipeline;
 
 public:
 	ShaderConfig shaderConfig;
@@ -105,7 +105,7 @@ public:
 
 };
 
-class VulkanGraphicsPipeline
+class GraphicsPipeline
 {
 private:
 	GraphicsPipelineConfig m_config;
@@ -121,8 +121,8 @@ private:
 	VkShaderStageFlagBits m_pushConstantStage;
 
 public:
-	explicit VulkanGraphicsPipeline(GraphicsPipelineConfig config);
-	~VulkanGraphicsPipeline();
+	explicit GraphicsPipeline(GraphicsPipelineConfig config);
+	~GraphicsPipeline();
 
 public:
 	void Bind(VkCommandBuffer cmdBuffer, VkDeviceAddress pushConstantAddress) const;

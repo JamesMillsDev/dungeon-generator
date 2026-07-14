@@ -14,8 +14,9 @@
 #include "Graphics/Rendering/Material.h"
 #include "Graphics/Rendering/SceneLightingData.h"
 #include "Graphics/Rendering/Texture.h"
+#include "Graphics/Vulkan/Swapchain.h"
 #include "Graphics/Vulkan/Uniforms.h"
-#include "Graphics/Vulkan/VulkanBuffer.h"
+#include "Graphics/Vulkan/MemoryBuffer.h"
 
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_glfw.h"
@@ -29,9 +30,8 @@ using std::exception;
 
 constexpr uint32 MAX_TEXTURE_DESCRIPTORS = UINT16_MAX;
 constexpr int32 UNIFORM_BUFFER_COUNT = 3;
-constexpr VkFormat SWAPCHAIN_IMAGE_FORMAT = VK_FORMAT_B8G8R8A8_SRGB;
 
-const TArray UNIFORM_DATAS
+const TArray UNIFORM_DATA
 {
 	UniformBufferData
 	{
@@ -337,12 +337,12 @@ void Vulkan::EndOneTimeCommand(const VkCommandBuffer& buffer, const VkFence& fen
 	vkDestroyFence(m_device, fence, nullptr);
 }
 
-VulkanBuffer* Vulkan::GetUniformBuffer(const uint16 id, const uint32 index) const
+MemoryBuffer* Vulkan::GetUniformBuffer(const uint16 id, const uint32 index) const
 {
 	return (*m_shaderDataBuffers[m_frameIndex][id])[index];
 }
 
-VulkanBuffer* Vulkan::GetUniformBuffer(EUniformBufferIds id, const uint32 index) const
+MemoryBuffer* Vulkan::GetUniformBuffer(EUniformBufferIds id, const uint32 index) const
 {
 	return GetUniformBuffer(static_cast<uint16>(id), index);
 }
@@ -412,7 +412,7 @@ void Vulkan::Init(GLFWwindow* window)
 
 				if constexpr (ENABLE_VALIDATION_LAYERS)
 				{
-					// Add the layers into the create info if we requested it (Debug only)
+					// Add the layers into the creation info if we requested it (Debug only)
 					instanceInfo.enabledLayerCount = static_cast<uint32>(VALIDATION_LAYERS.size());
 					instanceInfo.ppEnabledLayerNames = VALIDATION_LAYERS.Data();
 
@@ -608,91 +608,14 @@ void Vulkan::Init(GLFWwindow* window)
 
 		// Swap chain / swap chain images
 		InitAndPushResource(
-			[this, window]
+			[this]
 			{
-				VkSurfaceCapabilitiesKHR surfaceCaps{};
-				Try(
-					vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice, m_surface, &surfaceCaps),
-					"Failed to retrieve surface capabilities"
-				);
-
-				// Verify the window size
-				VkExtent2D swapChainExtent = surfaceCaps.currentExtent;
-				if (surfaceCaps.currentExtent.width == 0xffffffff)
-				{
-					// Get the GLFW window size
-					int windowW, windowH;
-					glfwGetWindowSize(window, &windowW, &windowH);
-
-					// Use the glfw window size as the swap chain size
-					swapChainExtent =
-					{
-						.width = static_cast<uint32>(windowW),
-						.height = static_cast<uint32>(windowH)
-					};
-				}
-
-				// Generate the Swap Chain Create Information
-				VkSwapchainCreateInfoKHR swapChainCI{};
-				swapChainCI.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-				swapChainCI.surface = m_surface;
-				swapChainCI.minImageCount = surfaceCaps.minImageCount;
-				swapChainCI.imageFormat = SWAPCHAIN_IMAGE_FORMAT;
-				swapChainCI.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-				swapChainCI.imageExtent = { .width = swapChainExtent.width, .height = swapChainExtent.height };
-				swapChainCI.imageArrayLayers = 1;
-				swapChainCI.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-				swapChainCI.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-				swapChainCI.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-				swapChainCI.presentMode = VK_PRESENT_MODE_FIFO_KHR;
-
-				// Attempt to create the swap chain
-				Try(
-					vkCreateSwapchainKHR(m_device, &swapChainCI, nullptr, &m_swapChain),
-					"Failed to create Swap Chain!"
-				);
-
-				// Attempt to acquire the swap chain images from the swap chain
-				uint32 scImageCount = 0;
-				Try(
-					vkGetSwapchainImagesKHR(m_device, m_swapChain, &scImageCount, nullptr),
-					"Failed to count Swap Chain Images!"
-				);
-
-				m_swapChainImages.Resize(scImageCount);
-				Try(
-					vkGetSwapchainImagesKHR(m_device, m_swapChain, &scImageCount, m_swapChainImages.Data()),
-					"Failed to retrieve Swap Chain Images!"
-				);
-
-				// Resize the image view vector to match the image one
-				m_swapChainImageViews.Resize(scImageCount);
-
-				// Create the new Swap Chain image views
-				for (uint32 i = 0; i < scImageCount; ++i)
-				{
-					VkImageViewCreateInfo viewCreateInfo{};
-					viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-					viewCreateInfo.image = m_swapChainImages[i];
-					viewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-					viewCreateInfo.format = SWAPCHAIN_IMAGE_FORMAT;
-					viewCreateInfo.subresourceRange = { .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .levelCount = 1, .layerCount = 1 };  // NOLINT(clang-diagnostic-missing-designated-field-initializers)
-
-					Try(
-						vkCreateImageView(m_device, &viewCreateInfo, nullptr, &m_swapChainImageViews[i]),
-						std::format("Failed to create Swap Chain Image View for index: {}", i)
-					);
-				}
+				const Window* win = Application::GetWindow();
+				m_swapChain = new SwapChain{ win, m_physicalDevice, m_device, m_surface };
 			},
 			[this]
 			{
-				for (VkImageView& scImageView : m_swapChainImageViews)
-				{
-					vkDestroyImageView(m_device, scImageView, nullptr);
-				}
-				m_swapChainImageViews.Clear();
-
-				vkDestroySwapchainKHR(m_device, m_swapChain, nullptr);
+				delete m_swapChain;
 			}
 		);
 
@@ -724,15 +647,15 @@ void Vulkan::Init(GLFWwindow* window)
 				// We need a set of buffers for every frame in flight
 				for (uint32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 				{
-					TMap<uint16, TList<VulkanBuffer*>> buffers;
+					TMap<uint16, TList<MemoryBuffer*>> buffers;
 
-					for (const UniformBufferData& uniformData : UNIFORM_DATAS)
+					for (const UniformBufferData& uniformData : UNIFORM_DATA)
 					{
-						TList<VulkanBuffer*> buffer;
+						TList<MemoryBuffer*> buffer;
 
 						for (uint32 j = 0; j < uniformData.count; ++j)
 						{
-							buffer.Add(new VulkanBuffer
+							buffer.Add(new MemoryBuffer
 								{
 									uniformData.size,
 									uniformData.bufferUsage,
@@ -751,9 +674,9 @@ void Vulkan::Init(GLFWwindow* window)
 				for (uint32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 				{
 					// Delete each buffer for this frame in flight
-					for (TMapEntry<unsigned short, TList<VulkanBuffer*>>* buffers : m_shaderDataBuffers[i])
+					for (TMapEntry<unsigned short, TList<MemoryBuffer*>>* buffers : m_shaderDataBuffers[i])
 					{
-						for (const VulkanBuffer* buffer : buffers->Value())
+						for (const MemoryBuffer* buffer : buffers->Value())
 						{
 							delete buffer;
 						}
@@ -791,7 +714,7 @@ void Vulkan::Init(GLFWwindow* window)
 				}
 
 				// Match the size of the render complete semaphores to the swap chain images
-				m_renderCompleteSemaphores.Resize(m_swapChainImages.size());
+				m_renderCompleteSemaphores.Resize(m_swapChain->m_swapChainImages.Count());
 				for (VkSemaphore& semaphore : m_renderCompleteSemaphores)
 				{
 					Try(
@@ -901,9 +824,12 @@ void Vulkan::Init(GLFWwindow* window)
 				pipelineInfo.PipelineRenderingCreateInfo = 
 				{
 					.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
+					.pNext = nullptr,
+					.viewMask = VK_FORMAT_UNDEFINED,
 					.colorAttachmentCount = 1,
-					.pColorAttachmentFormats = &SWAPCHAIN_IMAGE_FORMAT,
-					.depthAttachmentFormat = GetDepthFormat()
+					.pColorAttachmentFormats = &m_swapChain->m_format,
+					.depthAttachmentFormat = GetDepthFormat(),
+					.stencilAttachmentFormat = VK_FORMAT_UNDEFINED
 				};
 				pipelineInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 
@@ -925,7 +851,7 @@ void Vulkan::Init(GLFWwindow* window)
 		glfwSetWindowSizeCallback(window, [](GLFWwindow* win, const int w, const int h)
 			{
 				Application::GetWindow()->SetWidth(w);
-				Application::GetWindow()->SetWidth(h);
+				Application::GetWindow()->SetHeight(h);
 
 				Instance()->m_recreateSwapChain = true;
 			});
@@ -944,105 +870,8 @@ void Vulkan::RecreateSwapChain()
 	vkDeviceWaitIdle(m_device);
 
 	const Window* window = Application::GetWindow();
-
-	// Try to get the device capabilities
-	VkSurfaceCapabilitiesKHR surfaceCaps;
-	Try(
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice, m_surface, &surfaceCaps),
-		"Failed to get the device capabilities!"
-	);
-
-	// Verify the window size
-	VkExtent2D swapChainExtent = surfaceCaps.currentExtent;
-	if (surfaceCaps.currentExtent.width == 0xffffffff)
-	{
-
-		// Use the glfw window size as the swap chain size
-		swapChainExtent =
-		{
-			.width = static_cast<uint32>(window->Width()),
-			.height = static_cast<uint32>(window->Height())
-		};
-	}
-
-	// Generate the Swap Chain Create Information
-	constexpr VkFormat imageFormat = VK_FORMAT_B8G8R8A8_SRGB;
-	VkSwapchainCreateInfoKHR swapChainCI{};
-	swapChainCI.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-	swapChainCI.surface = m_surface;
-	swapChainCI.minImageCount = surfaceCaps.minImageCount;
-	swapChainCI.imageFormat = imageFormat;
-	swapChainCI.imageColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
-	swapChainCI.imageExtent = { .width = swapChainExtent.width, .height = swapChainExtent.height };
-	swapChainCI.imageArrayLayers = 1;
-	swapChainCI.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-	swapChainCI.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-	swapChainCI.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-	swapChainCI.presentMode = VK_PRESENT_MODE_FIFO_KHR;
-	swapChainCI.oldSwapchain = m_swapChain;
-
-	// Create the new swap chain
-	Try(
-		vkCreateSwapchainKHR(m_device, &swapChainCI, nullptr, &m_swapChain),
-		"Failed to Recreate Swap Chain!"
-	);
-
-	// Destroy old swap chain images
-	uint32 imageCount = static_cast<uint32>(m_swapChainImages.size());
-	for (uint32 i = 0; i < imageCount; ++i)
-	{
-		vkDestroyImageView(m_device, m_swapChainImageViews[i], nullptr);
-	}
-
-	// Get the new Swap Chain Images
-	imageCount = 0;
-	Try(
-		vkGetSwapchainImagesKHR(m_device, m_swapChain, &imageCount, nullptr),
-		"Failed to get Swap Chain Image Count!"
-	);
-	m_swapChainImages.Resize(imageCount);
-	Try(
-		vkGetSwapchainImagesKHR(m_device, m_swapChain, &imageCount, m_swapChainImages.Data()),
-		"Failed to get Swap Chain Images!"
-	);
-	m_swapChainImageViews.Resize(imageCount);
-
-	// Create the new Swap Chain image views
-	for (uint32 i = 0; i < imageCount; ++i)
-	{
-		VkImageViewCreateInfo viewCreateInfo{};
-		viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		viewCreateInfo.image = m_swapChainImages[i];
-		viewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-		viewCreateInfo.format = imageFormat;
-		viewCreateInfo.subresourceRange = { .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .levelCount = 1, .layerCount = 1 };  // NOLINT(clang-diagnostic-missing-designated-field-initializers)
-
-		Try(
-			vkCreateImageView(m_device, &viewCreateInfo, nullptr, &m_swapChainImageViews[i]),
-			std::format("Failed to create Swap Chain Image View for index: {}", i)
-		);
-	}
-
-	// Destroy old semaphores
-	for (VkSemaphore& semaphore : m_renderCompleteSemaphores)
-	{
-		vkDestroySemaphore(m_device, semaphore, nullptr);
-	}
-
-	// Recreate semaphores
-	VkSemaphoreCreateInfo semaphoreCreateInfo{};
-	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-	m_renderCompleteSemaphores.Resize(imageCount);
-	for (VkSemaphore& semaphore : m_renderCompleteSemaphores)
-	{
-		Try(
-			vkCreateSemaphore(m_device, &semaphoreCreateInfo, nullptr, &semaphore),
-			"Failed to recreate semaphore!"
-		);
-	}
-
-	// Destroy the old swap chain and depth image / image view
-	vkDestroySwapchainKHR(m_device, swapChainCI.oldSwapchain, nullptr);
+	m_swapChain->Recreate(window, m_renderCompleteSemaphores);
+	
 	vmaDestroyImage(m_vmaAllocator, m_depthImage, m_depthImageAllocation);
 	vkDestroyImageView(m_device, m_depthImageView, nullptr);
 
@@ -1054,6 +883,13 @@ void Vulkan::RecreateSwapChain()
 
 VkCommandBuffer Vulkan::BeginFrame()
 {
+	// Recreate the Swap Chain if needed
+	if (m_recreateSwapChain)
+	{
+		m_recreateSwapChain = false;
+		RecreateSwapChain();
+	}
+
 	// Wait on and reset fences
 	Try(
 		vkWaitForFences(m_device, 1, &m_fences[m_frameIndex], true, UINT64_MAX),
@@ -1066,9 +902,7 @@ VkCommandBuffer Vulkan::BeginFrame()
 
 	// Try to get the swap chain image index for this frame
 	CheckSwapChain(
-		vkAcquireNextImageKHR(
-		m_device, m_swapChain, UINT64_MAX, m_imageAcquiredSemaphores[m_frameIndex], VK_NULL_HANDLE, &m_imageIndex
-	),
+		m_swapChain->AcquireNextImage(&m_imageIndex, m_imageAcquiredSemaphores[m_frameIndex]),
 		std::format("Failed to acquire Swap Chain Image index for frame: {}!", m_frameIndex)
 	);
 
@@ -1094,7 +928,7 @@ VkCommandBuffer Vulkan::BeginFrame()
 	// Begin rendering
 	VkRenderingAttachmentInfo colorAttachmentInfo{};
 	colorAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-	colorAttachmentInfo.imageView = m_swapChainImageViews[m_imageIndex];
+	colorAttachmentInfo.imageView = m_swapChain->GetImageView(m_imageIndex);
 	colorAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL;
 	colorAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	colorAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -1164,7 +998,7 @@ void Vulkan::EndFrame(VkCommandBuffer cmdBuffer)
 	barrierPresent.dstAccessMask = 0;
 	barrierPresent.oldLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL;
 	barrierPresent.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-	barrierPresent.image = m_swapChainImages[m_imageIndex];
+	barrierPresent.image = m_swapChain->GetImage(m_imageIndex);
 	barrierPresent.subresourceRange = { .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .levelCount = 1, .layerCount = 1 };  // NOLINT(clang-diagnostic-missing-designated-field-initializers)
 
 	VkDependencyInfo barrierPresentDependencyInfo{};
@@ -1207,7 +1041,7 @@ void Vulkan::EndFrame(VkCommandBuffer cmdBuffer)
 		.waitSemaphoreCount = 1,
 		.pWaitSemaphores = &m_renderCompleteSemaphores[m_imageIndex],
 		.swapchainCount = 1,
-		.pSwapchains = &m_swapChain,
+		.pSwapchains = m_swapChain->GetSwapChain(),
 		.pImageIndices = &m_imageIndex,
 		.pResults = nullptr
 	};
@@ -1215,13 +1049,6 @@ void Vulkan::EndFrame(VkCommandBuffer cmdBuffer)
 		vkQueuePresentKHR(m_queue, &presentInfo),
 		std::format("Failed to present queue for frame: {}!", m_frameIndex)
 	);
-
-	// Recreate the Swap Chain if needed
-	if (m_recreateSwapChain)
-	{
-		m_recreateSwapChain = false;
-		RecreateSwapChain();
-	}
 }
 
 void Vulkan::TransitionFrameImages(const VkCommandBuffer cmdBuffer) const
@@ -1240,7 +1067,7 @@ void Vulkan::TransitionFrameImages(const VkCommandBuffer cmdBuffer) const
 			.newLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
 			.srcQueueFamilyIndex = 0,
 			.dstQueueFamilyIndex = 0,
-			.image = m_swapChainImages[m_imageIndex],
+			.image = m_swapChain->GetImage(m_imageIndex),
 			.subresourceRange =
 			{
 				.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,

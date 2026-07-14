@@ -9,7 +9,7 @@
 #include "Object.h"
 #include "Maths/Alias.h"
 
-class VulkanBuffer;
+class MemoryBuffer;
 
 using std::queue;
 using std::string;
@@ -34,7 +34,7 @@ private:
 	VkExtent3D m_imageExtent;
 	VkFormat m_imageFormat;
 
-	VulkanBuffer* m_buffer;
+	MemoryBuffer* m_buffer;
 	ktxTexture2* m_texture;
 
 	VkDescriptorImageInfo m_textureDescriptors;

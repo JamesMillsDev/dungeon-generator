@@ -6,8 +6,8 @@
 
 #include "Resources.h"
 
+#include "Graphics/Vulkan/MemoryBuffer.h"
 #include "Graphics/Vulkan/Vulkan.h"
-#include "Graphics/Vulkan/VulkanBuffer.h"
 
 using std::runtime_error;
 
@@ -116,7 +116,7 @@ void Texture::CreateBuffer()
 	}
 
 	// Generate the buffer and transition
-	m_buffer = new VulkanBuffer{ m_texture->dataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, Vulkan::Instance() };
+	m_buffer = new MemoryBuffer{ m_texture->dataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, Vulkan::Instance() };
 	m_buffer->Fill(m_texture->pData);
 
 	TransitionImage();

@@ -15,10 +15,11 @@
 class Config;
 struct GLFWwindow;
 class Renderer;
+class SwapChain;
 class Texture;
 class Version;
-class VulkanBuffer;
-class VulkanGraphicsPipeline;
+class MemoryBuffer;
+class GraphicsPipeline;
 
 using InitFunction = std::function<void()>;
 
@@ -59,7 +60,7 @@ enum class EUniformBufferIds : uint16
 	PushConstant = UINT16_MAX
 };
 
-using UniformBufferSet = TMap<uint16, TList<VulkanBuffer*>>;
+using UniformBufferSet = TMap<uint16, TList<MemoryBuffer*>>;
 
 class Vulkan  // NOLINT(cppcoreguidelines-special-member-functions)
 {
@@ -105,9 +106,7 @@ private:
 
 	VkSurfaceKHR m_surface;
 
-	VkSwapchainKHR m_swapChain;
-	TList<VkImage> m_swapChainImages;
-	TList<VkImageView> m_swapChainImageViews;
+	SwapChain* m_swapChain;
 
 	VkImage m_depthImage;
 	VmaAllocation m_depthImageAllocation;
@@ -136,8 +135,8 @@ public:
 	void BeginOneTimeCommand(VkCommandBuffer& buffer, VkFence& fence) const;
 	void EndOneTimeCommand(const VkCommandBuffer& buffer, const VkFence& fence) const;
 
-	[[nodiscard]] VulkanBuffer* GetUniformBuffer(uint16 id, uint32 index = 0) const;
-	[[nodiscard]] VulkanBuffer* GetUniformBuffer(EUniformBufferIds id, uint32 index = 0) const;
+	[[nodiscard]] MemoryBuffer* GetUniformBuffer(uint16 id, uint32 index = 0) const;
+	[[nodiscard]] MemoryBuffer* GetUniformBuffer(EUniformBufferIds id, uint32 index = 0) const;
 
 	VkFormat GetDepthFormat() const;
 

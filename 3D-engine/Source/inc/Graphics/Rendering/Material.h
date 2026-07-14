@@ -6,15 +6,15 @@
 
 #include "Object.h"
 
-#include "Graphics/Vulkan/VulkanGraphicsPipeline.h"
+#include "Graphics/Vulkan/GraphicsPipeline.h"
 
 #include "Maths/Color.h"
 
 #include "Utility/Collections/TList.h"
 
-class VulkanBuffer;
+class MemoryBuffer;
 struct ShaderConfig;
-class VulkanGraphicsPipeline;
+class GraphicsPipeline;
 class Texture;
 
 using glm::mat4;
@@ -46,7 +46,7 @@ public:
 
 private:
 	GraphicsPipelineConfig m_pipelineConfig;
-	VulkanGraphicsPipeline* m_pipeline;
+	GraphicsPipeline* m_pipeline;
 	bool m_shouldUpdateDescriptors;
 
 	TList<Texture*> m_textures;
@@ -66,6 +66,6 @@ private:
 	void UpdateDescriptorSets(TList<VkWriteDescriptorSet>& writes) const;
 
 	void InsertTextureWrite(TList<VkWriteDescriptorSet>& writes, const Texture* texture, uint32 binding) const;
-	void InsertUniformWrite(TList<VkWriteDescriptorSet>& writes, const VulkanBuffer* buffer, uint32 binding, uint32 arrayElem = 0) const;
+	void InsertUniformWrite(TList<VkWriteDescriptorSet>& writes, const MemoryBuffer* buffer, uint32 binding, uint32 arrayElem = 0) const;
 
 };

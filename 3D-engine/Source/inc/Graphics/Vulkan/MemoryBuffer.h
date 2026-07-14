@@ -5,7 +5,7 @@
 
 class Vulkan;
 
-class VulkanBuffer
+class MemoryBuffer
 {
 private:
 	VkDeviceSize m_size;
@@ -18,8 +18,8 @@ private:
 	VkDescriptorBufferInfo m_bufferInfo;
 
 public:
-	explicit VulkanBuffer(VkDeviceSize size, VkBufferUsageFlags usage, Vulkan* vulkan);
-	~VulkanBuffer();
+	explicit MemoryBuffer(VkDeviceSize size, VkBufferUsageFlags usage, Vulkan* vulkan);
+	~MemoryBuffer();
 
 public:
 	void Fill(const void* data, VkDeviceSize size = 0, size_t offset = 0) const;

@@ -1,4 +1,4 @@
-#include "Graphics/Vulkan/VulkanGraphicsPipeline.h"
+#include "Graphics/Vulkan/GraphicsPipeline.h"
 
 #include "Gameplay/Actors/Components/Rendering/LightComponent.h"
 
@@ -33,19 +33,19 @@ bool GraphicsPipelineConfig::ContainsStage(VkShaderStageFlagBits stage) const
 	return shaderConfig.stages.Contains(stage);
 }
 
-VulkanGraphicsPipeline::VulkanGraphicsPipeline(GraphicsPipelineConfig config) :
+GraphicsPipeline::GraphicsPipeline(GraphicsPipelineConfig config) :
 	m_config{ std::move(config) }, m_bindPoint{ VK_PIPELINE_BIND_POINT_GRAPHICS },
 	m_pushConstantStage{ VK_SHADER_STAGE_ALL_GRAPHICS }
 {
 	Init(Vulkan::Instance());
 }
 
-VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
+GraphicsPipeline::~GraphicsPipeline()
 {
 	Destroy();
 }
 
-void VulkanGraphicsPipeline::Bind(const VkCommandBuffer cmdBuffer, const VkDeviceAddress pushConstantAddress) const
+void GraphicsPipeline::Bind(const VkCommandBuffer cmdBuffer, const VkDeviceAddress pushConstantAddress) const
 {
 	vkCmdBindDescriptorSets(
 		cmdBuffer, m_bindPoint, m_pipelineLayout, 0, 1, &m_descriptorSets, 0, nullptr
@@ -58,27 +58,27 @@ void VulkanGraphicsPipeline::Bind(const VkCommandBuffer cmdBuffer, const VkDevic
 	);
 }
 
-void VulkanGraphicsPipeline::SetBindPoint(VkPipelineBindPoint bindPoint)
+void GraphicsPipeline::SetBindPoint(VkPipelineBindPoint bindPoint)
 {
 	m_bindPoint = bindPoint;
 }
 
-void VulkanGraphicsPipeline::SetPushConstantStage(VkShaderStageFlagBits stage)
+void GraphicsPipeline::SetPushConstantStage(VkShaderStageFlagBits stage)
 {
 	m_pushConstantStage = stage;
 }
 
-VkDescriptorSet VulkanGraphicsPipeline::GetDescriptorSet() const
+VkDescriptorSet GraphicsPipeline::GetDescriptorSet() const
 {
 	return m_descriptorSets;
 }
 
-bool VulkanGraphicsPipeline::IsLit() const
+bool GraphicsPipeline::IsLit() const
 {
 	return m_config.shaderConfig.lit;
 }
 
-bool VulkanGraphicsPipeline::TryGetTextureBinding(TList<int32>& binding) const
+bool GraphicsPipeline::TryGetTextureBinding(TList<int32>& binding) const
 {
 	if (m_samplerBindings.IsEmpty())
 	{
@@ -89,13 +89,13 @@ bool VulkanGraphicsPipeline::TryGetTextureBinding(TList<int32>& binding) const
 	return true;
 }
 
-void VulkanGraphicsPipeline::Init(Vulkan* vulkan)
+void GraphicsPipeline::Init(Vulkan* vulkan)
 {
 	InitDescriptors(vulkan);
 	InitPipeline(vulkan);
 }
 
-void VulkanGraphicsPipeline::Destroy()
+void GraphicsPipeline::Destroy()
 {
 	vkDestroyDescriptorPool(Vulkan::Device(), m_descriptorPool, nullptr);
 	vkDestroyDescriptorSetLayout(Vulkan::Device(), m_descriptorSetLayout, nullptr);
@@ -107,7 +107,7 @@ void VulkanGraphicsPipeline::Destroy()
 	m_pipeline = VK_NULL_HANDLE;
 }
 
-void VulkanGraphicsPipeline::InitDescriptors(const Vulkan* vulkan)
+void GraphicsPipeline::InitDescriptors(const Vulkan* vulkan)
 {
 	VkResult result;
 	TList<DescriptorConfig> descriptors;
@@ -231,7 +231,7 @@ void VulkanGraphicsPipeline::InitDescriptors(const Vulkan* vulkan)
 	}
 }
 
-void VulkanGraphicsPipeline::InitPipeline(Vulkan* vulkan)
+void GraphicsPipeline::InitPipeline(Vulkan* vulkan)
 {
 	VkResult result;
 	// Attempt to create the pipeline layout

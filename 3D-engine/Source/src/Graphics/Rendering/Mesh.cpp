@@ -12,7 +12,7 @@
 #include "Resources.h"
 
 #include "Graphics/Vulkan/Vulkan.h"
-#include "Graphics/Vulkan/VulkanBuffer.h"
+#include "Graphics/Vulkan/MemoryBuffer.h"
 
 #include "Utility/Collections/HashImpls.h"
 
@@ -81,7 +81,7 @@ uint64 Mesh::SubMesh::GetHashCode() const
 
 void Mesh::SubMesh::CreateBuffer()
 {
-	m_vertexBuffer = new VulkanBuffer
+	m_vertexBuffer = new MemoryBuffer
 	{
 		m_vertexBufferSize + m_indexBufferSize,
 		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,

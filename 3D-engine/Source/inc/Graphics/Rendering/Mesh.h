@@ -10,7 +10,7 @@
 #include "Utility/Collections/TArray.h"
 #include "Utility/Collections/TList.h"
 
-class VulkanBuffer;
+class MemoryBuffer;
 
 using glm::vec2;
 using glm::vec3;
@@ -68,7 +68,7 @@ public:
 		VkDeviceSize m_vertexBufferSize;
 		VkDeviceSize m_indexBufferSize;
 
-		VulkanBuffer* m_vertexBuffer;
+		MemoryBuffer* m_vertexBuffer;
 
 	public:
 		SubMesh(const TList<Vertex>& vertices, const TList<uint16>& indices);

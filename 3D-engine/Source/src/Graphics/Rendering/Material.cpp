@@ -8,8 +8,8 @@
 #include "Graphics/Rendering/Texture.h"
 #include "Graphics/Vulkan/Uniforms.h"
 #include "Graphics/Vulkan/Vulkan.h"
-#include "Graphics/Vulkan/VulkanBuffer.h"
-#include "Graphics/Vulkan/VulkanGraphicsPipeline.h"
+#include "Graphics/Vulkan/MemoryBuffer.h"
+#include "Graphics/Vulkan/GraphicsPipeline.h"
 
 #include "Utility/Collections/HashImpls.h"
 
@@ -66,11 +66,11 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 			);
 		}
 
-		m_pipeline = new VulkanGraphicsPipeline{ m_pipelineConfig };
+		m_pipeline = new GraphicsPipeline{ m_pipelineConfig };
 	}
 
 	// Update the material uniform with this material's data
-	const VulkanBuffer* materialBuffer = Vulkan::Instance()->GetUniformBuffer(EUniformBufferIds::Material);
+	const MemoryBuffer* materialBuffer = Vulkan::Instance()->GetUniformBuffer(EUniformBufferIds::Material);
 	const MaterialUniform materialUniform
 	{
 		.color = color,
@@ -83,7 +83,7 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 	materialBuffer->Fill(&materialUniform);
 
 	// Update the transform buffer with our object's transform
-	const VulkanBuffer* uboBuffer = Vulkan::Instance()->GetUniformBuffer(EUniformBufferIds::ProjectionView);
+	const MemoryBuffer* uboBuffer = Vulkan::Instance()->GetUniformBuffer(EUniformBufferIds::ProjectionView);
 	ProjectionViewModelUniform pvm;
 	Renderer::GetCurrentCamera()->GetPvm(pvm);
 
@@ -91,7 +91,7 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 	uboBuffer->Fill(&pvm);
 
 	// TODO: Use more dynamic lighting. This is a test
-	const VulkanBuffer* light0Buffer = Vulkan::Instance()->GetUniformBuffer(EUniformBufferIds::Lights, 0);
+	const MemoryBuffer* light0Buffer = Vulkan::Instance()->GetUniformBuffer(EUniformBufferIds::Lights, 0);
 	LightUniform light0
 	{
 		.location = { 0.f, 0.f, 0.f },
@@ -101,7 +101,7 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 	};
 	light0Buffer->Fill(&light0);
 
-	const VulkanBuffer* sceneLightBuffer = Vulkan::Instance()->GetUniformBuffer(EUniformBufferIds::SceneLighting);
+	const MemoryBuffer* sceneLightBuffer = Vulkan::Instance()->GetUniformBuffer(EUniformBufferIds::SceneLighting);
 	SceneLightingData sceneLighting
 	{
 		.ambientColor = Color::WHITE,
@@ -161,7 +161,7 @@ void Material::InsertTextureWrite(TList<VkWriteDescriptorSet>& writes, const Tex
 	}
 }
 
-void Material::InsertUniformWrite(TList<VkWriteDescriptorSet>& writes, const VulkanBuffer* buffer, const uint32 binding, const uint32 arrayElem) const
+void Material::InsertUniformWrite(TList<VkWriteDescriptorSet>& writes, const MemoryBuffer* buffer, const uint32 binding, const uint32 arrayElem) const
 {
 	writes.Add(
 		{

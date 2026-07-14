@@ -1,46 +1,46 @@
-#include "Graphics/Vulkan/VulkanBuffer.h"
+#include "Graphics/Vulkan/MemoryBuffer.h"
 
 #include "Graphics/Vulkan/Vulkan.h"
 
-VulkanBuffer::VulkanBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage, Vulkan* vulkan)
+MemoryBuffer::MemoryBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage, Vulkan* vulkan)
 	: m_size{ size }, m_buffer{ VK_NULL_HANDLE }, m_allocation{ VK_NULL_HANDLE },
 	m_usage{ usage }, m_deviceAddress{ 0 }
 {
 	Create(vulkan);
 }
 
-VulkanBuffer::~VulkanBuffer()
+MemoryBuffer::~MemoryBuffer()
 {
 	Destroy();
 }
 
-void VulkanBuffer::Fill(const void* data, VkDeviceSize size, const size_t offset) const
+void MemoryBuffer::Fill(const void* data, VkDeviceSize size, const size_t offset) const
 {
 	size = size == 0 ? m_size : size;
 	memcpy(static_cast<char*>(m_allocationInfo.pMappedData) + offset, data, size);
 }
 
-const VkBuffer& VulkanBuffer::Get() const
+const VkBuffer& MemoryBuffer::Get() const
 {
 	return m_buffer;
 }
 
-const VkDescriptorBufferInfo& VulkanBuffer::GetBufferInfo() const
+const VkDescriptorBufferInfo& MemoryBuffer::GetBufferInfo() const
 {
 	return m_bufferInfo;
 }
 
-const VkDeviceAddress& VulkanBuffer::GetAddress() const
+const VkDeviceAddress& MemoryBuffer::GetAddress() const
 {
 	return m_deviceAddress;
 }
 
-const VkDeviceSize& VulkanBuffer::Size() const
+const VkDeviceSize& MemoryBuffer::Size() const
 {
 	return m_size;
 }
 
-void VulkanBuffer::Create(const Vulkan* vulkan)
+void MemoryBuffer::Create(const Vulkan* vulkan)
 {
 	VkBufferCreateInfo bufferCreateInfo{};
 	bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -80,7 +80,7 @@ void VulkanBuffer::Create(const Vulkan* vulkan)
 	};
 }
 
-void VulkanBuffer::Destroy()
+void MemoryBuffer::Destroy()
 {
 	vmaDestroyBuffer(Vulkan::Allocator(), m_buffer, m_allocation);
 
