@@ -252,7 +252,8 @@ void VulkanGraphicsPipeline::InitPipeline(Vulkan* vulkan)
 		throw Vulkan::VulkanError("Failed to create Pipeline Layout!", result);
 	}
 
-	Shader* shader = new Shader{ m_config.shaderConfig.name };
+	const ShaderConfig& shaderConfig = m_config.shaderConfig;
+	Shader* shader = new Shader{ shaderConfig.name };
 	TList<VkPipelineShaderStageCreateInfo> ssCreateInfos;
 	for (int32 i = VK_SHADER_STAGE_VERTEX_BIT; i < VK_SHADER_STAGE_ALL_GRAPHICS; i <<= 1)
 	{
@@ -266,7 +267,7 @@ void VulkanGraphicsPipeline::InitPipeline(Vulkan* vulkan)
 		ssCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		ssCreateInfo.stage = static_cast<VkShaderStageFlagBits>(i);
 		ssCreateInfo.module = shader->GetShaderModule();
-		ssCreateInfo.pName = m_config.shaderConfig.entryPoint.c_str();
+		ssCreateInfo.pName = shaderConfig.entryPoint.c_str();
 
 		ssCreateInfos.Add(ssCreateInfo);
 	}
@@ -281,44 +282,50 @@ void VulkanGraphicsPipeline::InitPipeline(Vulkan* vulkan)
 	vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
 	vertexInputInfo.pVertexAttributeDescriptions = attributeDescription.Data();
 
+	const auto& [topology, primitiveRestartEnabled] = m_config.primitive;
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-	inputAssembly.topology = m_config.primitive.topology;
-	inputAssembly.primitiveRestartEnable = m_config.primitive.primitiveRestartEnabled;
+	inputAssembly.topology = topology;
+	inputAssembly.primitiveRestartEnable = primitiveRestartEnabled;
 
 	VkPipelineViewportStateCreateInfo viewportState{};
 	viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
 	viewportState.viewportCount = 1;
 	viewportState.scissorCount = 1;
 
+	const auto& [frontFace, cullMode, polygonMode, depthBiasEnabled, 
+		depthClampEnabled, rasterizerDiscardEnabled, lineWidth] = m_config.rasterizer;
 	VkPipelineRasterizationStateCreateInfo rasterizerInfo{};
 	rasterizerInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-	rasterizerInfo.depthClampEnable = m_config.rasterizer.depthClampEnabled;
-	rasterizerInfo.rasterizerDiscardEnable = m_config.rasterizer.rasterizerDiscardEnabled;
-	rasterizerInfo.polygonMode = m_config.rasterizer.polygonMode;
-	rasterizerInfo.lineWidth = m_config.rasterizer.lineWidth;
-	rasterizerInfo.cullMode = m_config.rasterizer.cullMode;
-	rasterizerInfo.frontFace = m_config.rasterizer.frontFace;
-	rasterizerInfo.depthBiasEnable = m_config.rasterizer.depthBiasEnabled;
+	rasterizerInfo.depthClampEnable = depthClampEnabled;
+	rasterizerInfo.rasterizerDiscardEnable = rasterizerDiscardEnabled;
+	rasterizerInfo.polygonMode = polygonMode;
+	rasterizerInfo.lineWidth = lineWidth;
+	rasterizerInfo.cullMode = cullMode;
+	rasterizerInfo.frontFace = frontFace;
+	rasterizerInfo.depthBiasEnable = depthBiasEnabled;
 
+	const auto& [samples, sampleShadingEnabled] = m_config.multisampler;
 	VkPipelineMultisampleStateCreateInfo multisampling{};
 	multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-	multisampling.sampleShadingEnable = m_config.multisampler.sampleShadingEnabled;
-	multisampling.rasterizationSamples = m_config.multisampler.samples;
+	multisampling.sampleShadingEnable = sampleShadingEnabled;
+	multisampling.rasterizationSamples = samples;
 
+	const auto& [colorWriteMask, blendEnabled] = m_config.colorAttachment;
 	VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-	colorBlendAttachment.colorWriteMask = m_config.colorAttachment.colorWriteMask;
-	colorBlendAttachment.blendEnable = m_config.colorAttachment.blendEnabled;
+	colorBlendAttachment.colorWriteMask = colorWriteMask;
+	colorBlendAttachment.blendEnable = blendEnabled;
 
+	const auto& [logicOpEnabled, logicOp, blendConstants] = m_config.blendState;
 	VkPipelineColorBlendStateCreateInfo colorBlending{};
 	colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-	colorBlending.logicOpEnable = m_config.blendState.logicOpEnabled;
-	colorBlending.logicOp = m_config.blendState.logicOp;
+	colorBlending.logicOpEnable = logicOpEnabled;
+	colorBlending.logicOp = logicOp;
 	colorBlending.attachmentCount = 1;
 	colorBlending.pAttachments = &colorBlendAttachment;
 	for (uint32 i = 0; i < ColorBlendStateConfig::BLEND_CONSTANT_COUNT; ++i)
 	{
-		colorBlending.blendConstants[i] = m_config.blendState.blendConstants[i];
+		colorBlending.blendConstants[i] = blendConstants[i];
 	}
 
 	TList dynamicStates =
