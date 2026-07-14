@@ -60,21 +60,25 @@ int Maths::Abs(const int v)
 	return std::abs(v);
 }
 
+template<>
 float Maths::Min(const float a, const float b)
 {
 	return std::min(a, b);
 }
 
+template<>
 int Maths::Min(const int a, const int b)
 {
 	return std::min(a, b);
 }
 
+template<>
 float Maths::Max(const float a, const float b)
 {
 	return std::max(a, b);
 }
 
+template<>
 int Maths::Max(const int a, const int b)
 {
 	return std::max(a, b);

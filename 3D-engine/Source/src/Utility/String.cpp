@@ -2,6 +2,11 @@
 
 #include <cassert>
 #include <string>
+#include <utility>
+
+#include "Maths/Maths.h"
+
+#include "Utility/Collections/TList.h"
 
 using std::string;
 
@@ -69,44 +74,192 @@ const char* String::CStr() const
 
 int64 String::Find(const String& str) const
 {
-	return 0;
+	for (int64 i = 0; std::cmp_less(i, m_length); ++i)
+	{
+		if (m_contents[i] == str[0])
+		{
+			bool found = true;
+			for (int64 j = 0; std::cmp_less(j, str.Length()) || std::cmp_less(i + j, m_length); ++j)
+			{
+				if (m_contents[i + j] != str[j])
+				{
+					found = false;
+					break;
+				}
+			}
+
+			if (found)
+			{
+				return i;
+			}
+		}
+	}
+
+	return -1;
 }
 
 int64 String::RFind(const String& str) const
 {
-	return 0;
+	for (int64 i = static_cast<int64>(m_length); i >= 0; ++i)
+	{
+		if (m_contents[i] == str[0])
+		{
+			bool found = true;
+			for (int64 j = 0; std::cmp_less(j, str.Length()) || std::cmp_less(i + j, m_length); ++j)
+			{
+				if (m_contents[i + j] != str[j])
+				{
+					found = false;
+					break;
+				}
+			}
+
+			if (found)
+			{
+				return i;
+			}
+		}
+	}
+
+	return -1;
 }
 
-int64 String::FindFirstOf(char c) const
+int64 String::FindFirstOf(const char c) const
 {
-	return 0;
+	for (int64 i = 0; std::cmp_less(i, m_length); ++i)
+	{
+		if (m_contents[i] == c)
+		{
+			return i;
+		}
+	}
+
+	return -1;
 }
 
-int64 String::FindLastOf(char c) const
+int64 String::FindLastOf(const char c) const
 {
-	return 0;
+	for (int64 i = static_cast<int64>(m_length); i >= 0; --i)
+	{
+		if (m_contents[i] == c)
+		{
+			return i;
+		}
+	}
+
+	return -1;
 }
 
-String String::SubString(uint64 i, uint64 length)
+int64 String::FindFirstNotOf(const char c) const
 {
-	return { };
+	for (int64 i = 0; i < std::cmp_less(i, m_length); ++i)
+	{
+		if (m_contents[i] != c)
+		{
+			return i;
+		}
+	}
+
+	return -1;
 }
 
-void String::Replace(char find, char replace)
-{}
+int64 String::FindLastNotOf(const char c) const
+{
+	for (int64 i = static_cast<int64>(m_length); i >= 0; --i)
+	{
+		if (m_contents[i] != c)
+		{
+			return i;
+		}
+	}
 
-void String::Insert(char insert, uint64 index)
-{}
+	return -1;
+}
+
+String String::SubString(const uint64 i, const uint64 length) const
+{
+	TList<char> characters;
+	const uint64 endIndex = Maths::Min(i + length, i + (m_length - length));
+
+	for (uint64 index = i; index < endIndex; ++index)
+	{
+		characters.Add(m_contents[i]);
+	}
+	
+	return characters.Data();
+}
+
+void String::Replace(const char find, const char replace) const
+{
+	for (uint64 i = 0; i < m_length; ++i)
+	{
+		if (m_contents[i] == find)
+		{
+			m_contents[i] = replace;
+		}
+	}
+}
+
+void String::Insert(const char insert, const uint64 index)
+{
+	if (m_length + 1 >= m_capacity)
+	{
+		Expand();
+	}
+
+	std::memmove(&m_contents[index + 1], &m_contents[index], m_length - 1);
+	m_contents[index] = insert;
+	m_length++;
+}
 
 void String::Replace(const String& find, const String& replace)
-{}
+{
+	int64 index = Find(find);
+	while (std::cmp_less(index, m_length))
+	{
+		if (m_length + replace.Length() > m_capacity)
+		{
+			Expand();
+		}
 
-void String::Insert(const String& insert, uint64 index)
-{}
+		std::memmove(&m_contents[index + 1], &m_contents[index], m_length - replace.Length());
+
+		for (int64 i = 0; std::cmp_less(i, replace.Length()); ++i)
+		{
+			m_contents[index + i] = replace[i];
+		}
+
+		index = Find(find);
+	}
+
+	m_length = strlen(m_contents);
+}
+
+void String::Insert(const String& insert, const uint64 index)
+{
+	if (m_length + insert.Length() > m_capacity)
+	{
+		Expand();
+	}
+
+	std::memmove(&m_contents[index + 1], &m_contents[index], m_length - insert.Length());
+	for (int64 i = 0; std::cmp_less(i, insert.Length()); ++i)
+	{
+		m_contents[index + i] = insert[i];
+	}
+
+	m_length = strlen(m_contents);
+}
 
 void String::Clear()
 {
 	m_length = 0;
+}
+
+void String::Expand()
+{
+	m_capacity += CAPACITY_GROWTH;
+	m_contents = static_cast<char*>(realloc(m_contents, m_capacity));
 }
 
 bool String::operator==(const String& rhs) const
@@ -181,26 +334,36 @@ String String::operator+(const String& rhs) const
 
 String& String::operator+=(const String& rhs)
 {
+	while (m_length + rhs.Length() >= m_capacity)
+	{
+		Expand();
+	}
+
+	for (int64 i = 0; i < std::cmp_less(i, rhs.Length()); ++i)
+	{
+		m_contents[m_length + i] = rhs[i];
+	}
+
+	m_length += rhs.Length();
 	return *this;
 }
 
-String String::operator+(char c) const
+String String::operator+(const char c) const
 {
-	return { };
+	String newStr = *this;
+	newStr += c;
+
+	return newStr;
 }
 
-String& String::operator+=(char c)
+String& String::operator+=(const char c)
 {
-	return *this;
-}
+	if (m_length + 1 >= m_capacity)
+	{
+		Expand();
+	}
 
-String String::operator-(const String& rhs) const
-{
-	return { };
-}
-
-String& String::operator-=(const String& rhs)
-{
+	m_contents[m_length++] = c;
 	return *this;
 }
 

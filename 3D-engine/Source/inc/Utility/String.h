@@ -42,9 +42,13 @@ public:
 
 	[[nodiscard]] int64 FindLastOf(char c) const;
 
-	[[nodiscard]] String SubString(uint64 i, uint64 length = 0);
+	[[nodiscard]] int64 FindFirstNotOf(char c) const;
 
-	void Replace(char find, char replace);
+	[[nodiscard]] int64 FindLastNotOf(char c) const;
+
+	[[nodiscard]] String SubString(uint64 i, uint64 length = 0) const;
+
+	void Replace(char find, char replace) const;
 
 	void Insert(char insert, uint64 index);
 
@@ -53,6 +57,9 @@ public:
 	void Insert(const String& insert, uint64 index);
 
 	void Clear();
+
+private:
+	void Expand();
 
 public:
 	bool operator==(const String& rhs) const;
@@ -72,10 +79,6 @@ public:
 	String operator+(char c) const;
 
 	String& operator+=(char c);
-
-	String operator-(const String& rhs) const;
-
-	String& operator-=(const String& rhs);
 
 	char& operator[](uint64 index);
 

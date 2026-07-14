@@ -81,16 +81,11 @@ public:
 	static int Abs(int v);
 
 	/**
-	 * @brief A wrapper for the std::min function. (Integer variant)
+	 * @brief A wrapper for the std::min function.
 	 * @see https://en.cppreference.com/cpp/numeric/algorithm/min
 	 */
-	static float Min(float a, float b);
-
-	/**
-	 * @brief A wrapper for the std::min function. (Integer variant)
-	 * @see https://en.cppreference.com/cpp/numeric/algorithm/min
-	 */
-	static int Min(int a, int b);
+	template<typename T>
+	static T Min(T a, T b);
 
 	/**
 	 * @brief A wrapper for the std::min function which takes a variable number of inputs.
@@ -102,14 +97,12 @@ public:
 	requires(std::is_same_v<FIRST, ARGS> && ...)
 	static FIRST Min(int count, ARGS... values);
 
-	/** @brief A wrapper for the std::max function. */
-	static float Max(float a, float b);
-
 	/**
-	 * @brief A wrapper for the std::max function. (Integer variant)
+	 * @brief A wrapper for the std::max function.
 	 * @see https://en.cppreference.com/cpp/numeric/algorithm/max
 	 */
-	static int Max(int a, int b);
+	template<typename T>
+	static T Max(T a, T b);
 
 	/**
 	 * @brief A wrapper for the std::max function which takes a variable number of inputs.
@@ -287,6 +280,12 @@ public:
 
 };
 
+template <typename T>
+T Maths::Min(T a, T b)
+{
+	return std::min(a, b);
+}
+
 template <typename FIRST, typename... ARGS>
 requires(std::is_same_v<FIRST, ARGS> && ...)
 FIRST Maths::Min(const int count, ARGS... values)
@@ -300,6 +299,12 @@ FIRST Maths::Min(const int count, ARGS... values)
 	}
 
 	return value;
+}
+
+template <typename T>
+T Maths::Max(T a, T b)
+{
+	return std::max(a, b);
 }
 
 template <typename FIRST, typename... ARGS>
