@@ -11,6 +11,8 @@
 #include "Graphics/Rendering/Texture.h"
 #include "Graphics/Vulkan/VulkanGraphicsPipeline.h"
 
+#include "ImGui/imgui.h"
+
 DungeonGameInstance::DungeonGameInstance() :
 	m_meshActor{ nullptr }, m_camera{ nullptr }, m_material{ nullptr }, m_mesh{ nullptr }
 {}
@@ -22,9 +24,9 @@ void DungeonGameInstance::Init()
 
 	m_mesh = Mesh::MakeFromAssimp("Meshes/SM_Soulspear.fbx");
 	m_material = new Material{ "Shaders/pbr" };
-	m_material->SetTexture("Textures/T_Soulspear_B", new Texture);
-	m_material->SetTexture("Textures/T_Soulspear_N", new Texture);
-	m_material->SetTexture("Textures/T_Soulspear_ORM", new Texture);
+	m_material->AddTexture(new Texture{ "Textures/T_Soulspear_B" });
+	m_material->AddTexture(new Texture{ "Textures/T_Soulspear_N" });
+	m_material->AddTexture(new Texture{ "Textures/T_Soulspear_ORM" });
 
 	m_meshActor = GetWorld()->MakeActor<Actor>();
 	m_meshActor->MakeComponent<MeshComponent>(m_mesh, m_material);
@@ -44,4 +46,6 @@ void DungeonGameInstance::Tick()
 }
 
 void DungeonGameInstance::Render()
-{}
+{
+	ImGui::ShowDemoWindow();
+}

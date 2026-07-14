@@ -14,10 +14,10 @@ using std::runtime_error;
 uint32 Texture::m_nextId = 0;
 queue<uint32> Texture::m_freeIds;
 
-Texture::Texture()
-	: m_image{ VK_NULL_HANDLE }, m_imageAllocation{ VK_NULL_HANDLE },
-	m_imageView{ VK_NULL_HANDLE }, m_sampler{ VK_NULL_HANDLE }, m_imageExtent{ }, m_imageFormat{ },
-	m_buffer{ VK_NULL_HANDLE }, m_texture{ nullptr }, m_textureDescriptors{ }
+Texture::Texture(const string& fileName)
+	: m_file{ fileName }, m_image{ VK_NULL_HANDLE }, m_imageAllocation{ VK_NULL_HANDLE },
+	m_imageView{ VK_NULL_HANDLE }, m_sampler{ VK_NULL_HANDLE }, m_imageExtent{ },
+	m_imageFormat{ }, m_buffer{ VK_NULL_HANDLE }, m_texture{ nullptr }, m_textureDescriptors{ }
 {
 	// Get the next available ID (reusing old ones)
 	if (m_freeIds.empty())
@@ -29,6 +29,8 @@ Texture::Texture()
 		m_id = m_freeIds.front();
 		m_freeIds.pop();
 	}
+
+	CreateBuffer();
 }
 
 Texture::~Texture()
@@ -51,21 +53,6 @@ const VkDescriptorImageInfo& Texture::GetDescriptors() const
 uint32 Texture::GetId() const
 {
 	return m_id;
-}
-
-void Texture::SetTextureName(string name)
-{
-	m_file = std::move(name);
-}
-
-void Texture::Apply()
-{
-	if (m_file.empty())
-	{
-		throw runtime_error("No file name added!");
-	}
-
-	CreateBuffer();
 }
 
 void Texture::CreateBuffer()

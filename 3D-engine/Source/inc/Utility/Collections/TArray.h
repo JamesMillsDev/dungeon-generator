@@ -75,6 +75,9 @@ public:
 	T* Data() noexcept;
 	const T* Data() const noexcept;
 
+	uint32 Count();
+	uint32 Count() const;
+
 	Iterator begin();
 	Iterator end();
 	[[nodiscard]] uint64 size();
@@ -226,6 +229,18 @@ template <typename T, uint64 LENGTH>
 const T* TArray<T, LENGTH>::Data() const noexcept
 {
 	return m_elements;
+}
+
+template <typename T, uint64 LENGTH>
+uint32 TArray<T, LENGTH>::Count()
+{
+	return static_cast<uint32>(LENGTH);
+}
+
+template <typename T, uint64 LENGTH>
+uint32 TArray<T, LENGTH>::Count() const
+{
+	return static_cast<uint32>(LENGTH);
 }
 
 template <typename T, uint64 LENGTH>

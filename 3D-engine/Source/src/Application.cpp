@@ -63,6 +63,7 @@ EExitCode Application::Run() const
 		return EExitCode::WindowFailedToOpen;
 	}
 
+	SimpleInput::Create();
 	Renderer::Create(m_config, m_window->m_window);
 
 	// Validate the renderer succeeded to initialise
@@ -73,7 +74,6 @@ EExitCode Application::Run() const
 		return EExitCode::RendererFailedToInit;
 	}
 
-	SimpleInput::Create();
 	Resources::Init(m_config);
 	GameTime::Init();
 

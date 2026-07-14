@@ -59,7 +59,7 @@ public:
 public:
 	[[nodiscard]] uint64 GetHashCode() const override;
 
-	void SetTexture(const string& id, Texture* texture);
+	void AddTexture(Texture* texture);
 
 private:
 	void Bind(VkCommandBuffer cmdBuffer, const mat4& transform);

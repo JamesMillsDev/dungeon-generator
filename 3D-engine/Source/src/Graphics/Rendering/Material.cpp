@@ -45,10 +45,8 @@ uint64 Material::GetHashCode() const
 	);
 }
 
-void Material::SetTexture(const string& id, Texture* texture)
+void Material::AddTexture(Texture* texture)
 {
-	texture->SetTextureName(id);
-	texture->Apply();
 	m_textures.Add(texture);
 }
 

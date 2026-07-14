@@ -5,11 +5,8 @@
 #include <string>
 #include <vulkan/vulkan.h>
 
-#include "Rendering/Camera.h"
-#include "Rendering/Camera.h"
-
-class Camera;
 class Application;
+class Camera;
 class Config;
 struct GLFWwindow;
 struct GraphicsPipelineConfig;
@@ -52,7 +49,7 @@ private:
 	~Renderer();
 
 public:
-	void Render(const Mesh* mesh, ::Material* material, const mat4& transform) const;
+	void Render(const Mesh* mesh, Material* material, const mat4& transform) const;
 	
 private:
 	void BeginFrame();

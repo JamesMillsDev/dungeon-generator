@@ -126,6 +126,8 @@ private:
 	uint32 m_imageIndex;
 	bool m_recreateSwapChain;
 
+	VkDescriptorPool m_imguiPool;
+
 private:
 	explicit Vulkan(Config* config, GLFWwindow* window);
 	~Vulkan();

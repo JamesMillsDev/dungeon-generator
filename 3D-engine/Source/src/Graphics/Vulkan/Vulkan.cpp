@@ -17,6 +17,10 @@
 #include "Graphics/Vulkan/Uniforms.h"
 #include "Graphics/Vulkan/VulkanBuffer.h"
 
+#include "ImGui/imgui.h"
+#include "ImGui/imgui_impl_glfw.h"
+#include "ImGui/imgui_impl_vulkan.h"
+
 #include "Utility/Config.h"
 #include "Utility/Console.h"
 #include "Utility/Version.h"
@@ -25,6 +29,7 @@ using std::exception;
 
 constexpr uint32 MAX_TEXTURE_DESCRIPTORS = UINT16_MAX;
 constexpr int32 UNIFORM_BUFFER_COUNT = 3;
+constexpr VkFormat SWAPCHAIN_IMAGE_FORMAT = VK_FORMAT_B8G8R8A8_SRGB;
 
 const TArray UNIFORM_DATAS
 {
@@ -628,12 +633,11 @@ void Vulkan::Init(GLFWwindow* window)
 				}
 
 				// Generate the Swap Chain Create Information
-				constexpr VkFormat imageFormat = VK_FORMAT_B8G8R8A8_SRGB;
 				VkSwapchainCreateInfoKHR swapChainCI{};
 				swapChainCI.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 				swapChainCI.surface = m_surface;
 				swapChainCI.minImageCount = surfaceCaps.minImageCount;
-				swapChainCI.imageFormat = imageFormat;
+				swapChainCI.imageFormat = SWAPCHAIN_IMAGE_FORMAT;
 				swapChainCI.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
 				swapChainCI.imageExtent = { .width = swapChainExtent.width, .height = swapChainExtent.height };
 				swapChainCI.imageArrayLayers = 1;
@@ -671,7 +675,7 @@ void Vulkan::Init(GLFWwindow* window)
 					viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 					viewCreateInfo.image = m_swapChainImages[i];
 					viewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-					viewCreateInfo.format = imageFormat;
+					viewCreateInfo.format = SWAPCHAIN_IMAGE_FORMAT;
 					viewCreateInfo.subresourceRange = { .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .levelCount = 1, .layerCount = 1 };  // NOLINT(clang-diagnostic-missing-designated-field-initializers)
 
 					Try(
@@ -842,6 +846,78 @@ void Vulkan::Init(GLFWwindow* window)
 			[this]
 			{
 				vkDestroyCommandPool(m_device, m_commandPool, nullptr);
+			}
+		);
+
+		// ImGui
+		InitAndPushResource(
+			[this, window]
+			{
+				TArray poolSizes
+				{
+					VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+					VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+					VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+					VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+					VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+					VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
+					VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+					VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+					VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+					VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+					VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+				};
+
+				VkDescriptorPoolCreateInfo poolInfo
+				{
+					.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+					.pNext = nullptr,
+					.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
+					.maxSets = 1000,
+					.poolSizeCount = poolSizes.Count(),
+					.pPoolSizes = poolSizes.Data()
+				};
+
+				Try(
+					vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &m_imguiPool),
+					"Failed to create ImGui Descriptor Pool!"
+				);
+
+				ImGui::CreateContext();
+
+				ImGui_ImplGlfw_InitForVulkan(window, true);
+
+				ImGui_ImplVulkan_InitInfo initInfo{};
+				initInfo.Instance = m_vkInstance;
+				initInfo.PhysicalDevice = m_physicalDevice;
+				initInfo.Device = m_device;
+				initInfo.Queue = m_queue;
+				initInfo.DescriptorPool = m_imguiPool;
+				initInfo.MinImageCount = 3;
+				initInfo.ImageCount = 3;
+				initInfo.UseDynamicRendering = true;
+
+				ImGui_ImplVulkan_PipelineInfo pipelineInfo{};
+				pipelineInfo.PipelineRenderingCreateInfo = 
+				{
+					.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
+					.colorAttachmentCount = 1,
+					.pColorAttachmentFormats = &SWAPCHAIN_IMAGE_FORMAT,
+					.depthAttachmentFormat = GetDepthFormat()
+				};
+				pipelineInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+
+				initInfo.PipelineInfoMain = pipelineInfo;
+
+				ImGui_ImplVulkan_Init(&initInfo);
+			},
+			[this]
+			{
+				ImGui_ImplVulkan_Shutdown();
+				vkDestroyDescriptorPool(m_device, m_imguiPool, nullptr);
+				ImGui_ImplGlfw_Shutdown();
+
+				ImGui::DestroyContext();
 			}
 		);
 
@@ -1064,11 +1140,19 @@ VkCommandBuffer Vulkan::BeginFrame()
 	};
 	vkCmdSetScissor(cmdBuf, 0, 1, &scissor);
 
+	ImGui_ImplVulkan_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+
+	ImGui::NewFrame();
+
 	return cmdBuf;
 }
 
 void Vulkan::EndFrame(VkCommandBuffer cmdBuffer)
 {
+	ImGui::Render();
+	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer);
+
 	// End the rendering and transition the swap chain image
 	vkCmdEndRendering(cmdBuffer);
 
