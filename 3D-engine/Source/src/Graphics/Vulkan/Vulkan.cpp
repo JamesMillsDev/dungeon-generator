@@ -11,12 +11,12 @@
 
 #include "Gameplay/Actors/Components/Rendering/LightComponent.h"
 
+#include "Graphics/Uniforms.h"
 #include "Graphics/Rendering/Material.h"
 #include "Graphics/Rendering/SceneLightingData.h"
 #include "Graphics/Rendering/Texture.h"
-#include "Graphics/Vulkan/Swapchain.h"
-#include "Graphics/Vulkan/Uniforms.h"
 #include "Graphics/Vulkan/MemoryBuffer.h"
+#include "Graphics/Vulkan/Swapchain.h"
 
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_glfw.h"

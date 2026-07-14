@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Object.h"
-#include "Graphics/Vulkan/Uniforms.h"
+#include "Graphics/Uniforms.h"
 
 class Window;
 

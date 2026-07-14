@@ -1,8 +1,9 @@
 #pragma once
 
-#include "Graphics/Vulkan/Uniforms.h"
-
 #include <string>
+
+#include <glm/mat4x4.hpp>
+
 #include <vulkan/vulkan.h>
 
 class Application;
@@ -15,6 +16,7 @@ class Mesh;
 class Vulkan;
 
 using std::string;
+using glm::mat4;
 
 class Renderer
 {

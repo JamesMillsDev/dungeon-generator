@@ -3,13 +3,13 @@
 #include "Gameplay/Actors/Components/Rendering/LightComponent.h"
 
 #include "Graphics/Renderer.h"
+#include "Graphics/Uniforms.h"
 #include "Graphics/Rendering/Camera.h"
 #include "Graphics/Rendering/SceneLightingData.h"
 #include "Graphics/Rendering/Texture.h"
-#include "Graphics/Vulkan/Uniforms.h"
-#include "Graphics/Vulkan/Vulkan.h"
-#include "Graphics/Vulkan/MemoryBuffer.h"
 #include "Graphics/Vulkan/GraphicsPipeline.h"
+#include "Graphics/Vulkan/MemoryBuffer.h"
+#include "Graphics/Vulkan/Vulkan.h"
 
 #include "Utility/Collections/HashImpls.h"
 

@@ -4,7 +4,7 @@
 
 #include <vulkan/vulkan.h>
 
-#include "Uniforms.h"
+#include "Graphics/Uniforms.h"
 
 #include "Utility/Collections/TList.h"
 #include "Utility/Collections/TSet.h"
