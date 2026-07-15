@@ -19,7 +19,7 @@ const TArray LIGHT_NAMES =
 };
 
 Lighting::Lighting()
-	: m_sceneLighting{ .ambientColor = Color{ 0x111111FF }, .ambientStrength = .05f }
+	: m_sceneLighting{ .ambientColor = Color::WHITE, .ambientStrength = .2f }
 {
 
 }
@@ -33,7 +33,7 @@ void Lighting::UpdateBuffers()
 
 	for (uint8 i = 0; i < MAX_LIGHT_COUNT; ++i)
 	{
-		if (const MemoryBuffer* buffer = vulkan->GetUniformBuffer(EUniformBufferIds::Lights, i))
+		if (const MemoryBuffer* buffer = vulkan->GetUniformBuffer(EUniformBufferIds::Lights, i)) 
 		{
 			LightUniform lightUniform
 			{

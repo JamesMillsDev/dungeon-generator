@@ -50,13 +50,13 @@ VSOutput main(VSInput input, uniform ProjectionViewModelUniform *pushData)
 float4 main(VSOutput input, uniform ProjectionViewModelUniform *pushData) : SV_Target
 {
     float3 baseColor = diffuseMap.Sample(input.uv0).rgb;
-    float3 ambient = (sceneLighting.ambientColor * sceneLighting.ambientStrength).rgb;
+    float3 ambient = ((sceneLighting.ambientColor * sceneLighting.ambientStrength).rgb) * baseColor;
 
     float3 lightDir = normalize(LightDirection(lights[0], input.objectSpaceLocation));
     float3 normal = normalize(input.normal);
 
-    float diff = max(dot(lightDir, normal), 0.0);
-    float3 diffuse = baseColor * diff;
+    float diff = max(dot(normal, lightDir), 0.0);
+    float3 diffuse = lights[0].color.rgb * diff * baseColor;
 
     float3 viewDir = normalize(pushData->cameraLocation - input.objectSpaceLocation);
     float3 reflectDir = reflect(-lightDir, normal);
