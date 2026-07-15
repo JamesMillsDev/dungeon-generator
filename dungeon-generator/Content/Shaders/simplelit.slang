@@ -11,21 +11,18 @@ struct MaterialUniform
     float roughness;
     float metallic;
     float specularStrength;
-
-    int32_t baseColorMap;
-    int32_t normalMap;
-    int32_t ormMap;
-    int32_t emissiveMap;
 };
 
 [[vk::binding(2, 0)]] ConstantBuffer<MaterialUniform> material;
+[[vk::binding(3, 0)]] ConstantBuffer<Sampler2D> diffuseMap;
+[[vk::binding(4, 0)]] ConstantBuffer<Sampler2D> normalMap;
+[[vk::binding(5, 0)]] ConstantBuffer<Sampler2D> ormMap;
 
 struct VSOutput
 {
     float4 location : SV_Position;
+    float3x3 tbn;
     float3 normal;
-    float4 tangent;
-    float4 biTangent;
 
     float2 uv0;
     float4 color;
@@ -39,10 +36,10 @@ VSOutput main(VSInput input, uniform ProjectionViewModelUniform *pushData)
 
     output.location = TransformVertex(pushData, input.location);
     output.uv0 = input.uv0;
-    output.normal = normalize(input.normal).xyz;
-    output.tangent = normalize(input.tangent);
-    output.biTangent = normalize(input.biTangent);
+    output.tbn = CalculateTBN(input.normal, input.tangent, input.biTangent, pushData->model);
+
     output.color = input.color;
+    output.normal = input.normal.rgb;
 
     output.objectSpaceLocation = mul(pushData->model, float4(input.location, 1.0)).xyz;
 
@@ -52,18 +49,20 @@ VSOutput main(VSInput input, uniform ProjectionViewModelUniform *pushData)
 [shader("fragment")]
 float4 main(VSOutput input, uniform ProjectionViewModelUniform *pushData) : SV_Target
 {
-    float diff = max(dot(input.normal, LightDirection(lights[0], input.objectSpaceLocation)), 0);
+    float3 baseColor = diffuseMap.Sample(input.uv0).rgb;
+    float3 ambient = (sceneLighting.ambientColor * sceneLighting.ambientStrength).rgb;
+
+    float3 lightDir = normalize(LightDirection(lights[0], input.objectSpaceLocation));
+    float3 normal = normalize(input.normal);
+
+    float diff = max(dot(lightDir, normal), 0.0);
+    float3 diffuse = baseColor * diff;
 
     float3 viewDir = normalize(pushData->cameraLocation - input.objectSpaceLocation);
-    float3 reflectDir = reflect(-LightDirection(lights[0], input.objectSpaceLocation), input.normal);
+    float3 reflectDir = reflect(-lightDir, normal);
 
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-    float4 specular = material.specularStrength * spec * material.specularColor;
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.specularStrength);
+    float3 specular = material.specularColor.rgb * spec;
 
-    float4 ambient = sceneLighting.ambientColor * sceneLighting.ambientStrength;
-    float4 diffuse = lights[0].color * diff;
-
-    float4 result = (ambient + diff + specular) * material.color;
-
-    return result;
+    return float4(ambient + diffuse + specular, 1.0);
 }

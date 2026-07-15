@@ -15,13 +15,13 @@
 
 Material::Material(const string& shaderPath) :
 	color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ 0 }, metallic{ 0 },
-	specularColor{ Color::WHITE }, specularStrength{ .5f }, m_pipelineConfig{ shaderPath },
+	specularColor{ Color::WHITE }, specularStrength{ 8.f }, m_pipelineConfig{ shaderPath },
 	m_pipeline{ nullptr }, m_shouldUpdateDescriptors{ true }
 {}
 
 Material::Material(const ShaderConfig& shaderConfig) :
 	color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ 0 }, metallic{ 0 },
-	specularColor{ Color::WHITE }, specularStrength{ .5f }, m_pipelineConfig{ shaderConfig },
+	specularColor{ Color::WHITE }, specularStrength{ 8.f }, m_pipelineConfig{ shaderConfig },
 	m_pipeline{ nullptr }, m_shouldUpdateDescriptors{ true }
 {}
 
@@ -105,7 +105,7 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 	SceneLightingData sceneLighting
 	{
 		.ambientColor = Color::WHITE,
-		.ambientStrength = .1f
+		.ambientStrength = .05f
 	};
 	sceneLightBuffer->Fill(&sceneLighting);
 

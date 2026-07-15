@@ -22,9 +22,9 @@ void DungeonGameInstance::Init()
 	m_camera->location = vec3{ 0.f, 2.f, -10.f };
 
 	m_mesh = Mesh::MakeFromAssimp("Meshes/SM_Soulspear.fbx");
-	m_material = new Material{ "Shaders/pbr" };
+	m_material = new Material{ "Shaders/simplelit" };
 	m_material->AddTexture(Texture::LoadFromFile("Textures/T_Soulspear_B"));
-	m_material->AddTexture(Texture::LoadFromFile("Textures/T_Soulspear_N"));
+	m_material->AddTexture(Texture::LoadFromFile("Textures/T_Soulspear_N")); 
 	m_material->AddTexture(Texture::LoadFromFile("Textures/T_Soulspear_ORM"));
 
 	m_meshActor = GetWorld()->MakeActor<Actor>();

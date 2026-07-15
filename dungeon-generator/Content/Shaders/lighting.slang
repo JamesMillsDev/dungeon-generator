@@ -25,3 +25,17 @@ float3 LightDirection(LightUniform light, float3 location)
 
     return normalize(light.location.xyz - location);
 }
+
+float3 MapNormals(ConstantBuffer<Sampler2D> normalMap, float2 uv)
+{
+    return normalMap.Sample(uv).rgb;
+}
+
+float3x3 CalculateTBN(float4 normal, float4 tangent, float4 biTangent, float4x4 model)
+{
+    float3 t = normalize(mul(model, tangent)).rgb;
+    float3 b = normalize(mul(model, biTangent)).rgb;
+    float3 n = normalize(mul(model, normal)).rgb;
+
+    return float3x3(t, b, n);
+}
