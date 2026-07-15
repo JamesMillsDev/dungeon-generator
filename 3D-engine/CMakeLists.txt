@@ -37,6 +37,11 @@ FetchContent_Declare(
         GIT_REPOSITORY https://github.com/KhronosGroup/KTX-Software.git
         GIT_TAG v4.4.2
 )
+FetchContent_Declare(
+        stb
+        GIT_REPOSITORY https://github.com/nothings/stb.git
+        GIT_BRANCH master
+)
 
 SET(GLM_TEST_ENABLE OFF CACHE BOOL "GLM Build unit tests")
 
@@ -52,6 +57,7 @@ FetchContent_MakeAvailable(assimp)
 FetchContent_MakeAvailable(vma)
 FetchContent_MakeAvailable(glfw)
 FetchContent_MakeAvailable(ktx)
+FetchContent_MakeAvailable(stb)
 
 find_package(Vulkan REQUIRED)
 
@@ -75,4 +81,5 @@ target_include_directories(3Dengine
         PUBLIC ${CMAKE_CURRENT_BINARY_DIR}
         PUBLIC ${Vulkan_INCLUDE_DIRS}
         PUBLIC ${vma_SOURCE_DIR}/include
+        PUBLIC ${stb_SOURCE_DIR}
 )

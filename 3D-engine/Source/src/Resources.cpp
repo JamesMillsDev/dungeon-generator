@@ -86,7 +86,10 @@ ResourceData& Resources::Find(string id)
 	std::ranges::replace(id, '/', '\\');
 
 	// Only mapped files can be loaded
-	assert(m_fileMappings.ContainsKey(id));
+	if (!m_fileMappings.ContainsKey(id))
+	{
+		throw runtime_error("Resource with ID: '" + id + "' does not exist!");
+	}
 
 	// If the resource is already loaded, return the data
 	if (m_resources.ContainsKey(id))

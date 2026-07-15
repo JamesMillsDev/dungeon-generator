@@ -9,7 +9,6 @@
 #include "Graphics/Rendering/Material.h"
 #include "Graphics/Rendering/Mesh.h"
 #include "Graphics/Rendering/Texture.h"
-#include "Graphics/Vulkan/GraphicsPipeline.h"
 
 #include "ImGui/imgui.h"
 
@@ -24,9 +23,9 @@ void DungeonGameInstance::Init()
 
 	m_mesh = Mesh::MakeFromAssimp("Meshes/SM_Soulspear.fbx");
 	m_material = new Material{ "Shaders/pbr" };
-	m_material->AddTexture(new Texture{ "Textures/T_Soulspear_B" });
-	m_material->AddTexture(new Texture{ "Textures/T_Soulspear_N" });
-	m_material->AddTexture(new Texture{ "Textures/T_Soulspear_ORM" });
+	m_material->AddTexture(Texture::LoadFromFile("Textures/T_Soulspear_B"));
+	m_material->AddTexture(Texture::LoadFromFile("Textures/T_Soulspear_N"));
+	m_material->AddTexture(Texture::LoadFromFile("Textures/T_Soulspear_ORM"));
 
 	m_meshActor = GetWorld()->MakeActor<Actor>();
 	m_meshActor->MakeComponent<MeshComponent>(m_mesh, m_material);

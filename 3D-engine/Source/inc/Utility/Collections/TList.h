@@ -90,6 +90,7 @@ public:
 	T Front() const;
 	T Back() const;
 
+	void SetData(T* data, uint64 length);
 	T* Data() noexcept;
 	const T* Data() const noexcept;
 
@@ -354,6 +355,13 @@ template <typename T, int64 GROWTH>
 T TList<T, GROWTH>::Back() const
 {
 	return At(m_count - 1);
+}
+
+template <typename T, int64 GROWTH>
+void TList<T, GROWTH>::SetData(T* data, uint64 length)
+{
+	Resize(length);
+	std::memcpy(m_data, data, length);
 }
 
 template <typename T, int64 GROWTH>
