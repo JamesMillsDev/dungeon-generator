@@ -4,6 +4,7 @@
 
 #include "Gameplay/Actors/Transform.h"
 #include "Gameplay/Actors/World.h"
+#include "Gameplay/Actors/Components/Rendering/LightComponent.h"
 #include "Gameplay/Actors/Components/Rendering/MeshComponent.h"
 
 #include "Graphics/Rendering/Material.h"
@@ -26,10 +27,14 @@ void DungeonGameInstance::Init()
 	m_material->AddTexture(Texture::LoadFromFile("Textures/T_Soulspear_B"));
 	m_material->AddTexture(Texture::LoadFromFile("Textures/T_Soulspear_N")); 
 	m_material->AddTexture(Texture::LoadFromFile("Textures/T_Soulspear_ORM"));
+	m_material->color = Color{ 1.f, 1.f, 1.f, 1.f };
 
 	m_meshActor = GetWorld()->MakeActor<Actor>();
 	m_meshActor->MakeComponent<MeshComponent>(m_mesh, m_material);
-	m_material->color = Color{ 1.f, .5f, .31f, 1.f };
+
+	Actor* lightActor = GetWorld()->MakeActor<Actor>();
+	lightActor->GetTransform()->rotation = glm::quatLookAt({ .32f, -.77f, -.56f }, vec3{ 0.f, 1.0f, 0.f });
+	LightComponent* light = lightActor->MakeComponent<LightComponent>();
 }
 
 void DungeonGameInstance::Shutdown()
@@ -46,5 +51,5 @@ void DungeonGameInstance::Tick()
 
 void DungeonGameInstance::Render()
 {
-	ImGui::ShowDemoWindow();
+
 }

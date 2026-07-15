@@ -18,6 +18,7 @@ class Actor
 	friend class World;
 
 private:
+	World* m_world;
 	Transform* m_transform;
 
 	TList<IComponent*> m_components;
@@ -41,6 +42,8 @@ public:
 	void DestroyComponent(IComponent* component);
 
 	Transform* GetTransform() const;
+
+	World const* GetWorld() const;
 
 private:
 	void ApplyComponentListChanges();

@@ -4,7 +4,10 @@
 #include <utility>
 
 #include "Gameplay/Actors/Actor.h"
+
 #include "Utility/Collections/TList.h"
+
+class Lighting;
 
 using std::function;
 using std::pair;
@@ -18,6 +21,7 @@ class World
 
 private:
 	Actor* m_root;
+	Lighting* m_lighting;
 
 	TList<ActorLifetimeChange> m_lifetimeChanges;
 
@@ -30,6 +34,8 @@ public:
 	T* MakeActor(ARGS... args);
 
 	void DestroyActor(Actor* actor);
+
+	Lighting* GetLighting() const;
 
 private:
 	void Tick(Actor* actor = nullptr);
@@ -45,6 +51,7 @@ T* World::MakeActor(ARGS... args)
 	T* actor = new T{ args... };
 	m_lifetimeChanges.Add([this, actor]()
 		{
+			actor->m_world = this;
 			actor->GetTransform()->SetParent(m_root->GetTransform());
 
 			actor->BeginPlay();

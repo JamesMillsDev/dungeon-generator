@@ -3,7 +3,7 @@
 #include "Gameplay/Actors/Transform.h"
 
 Actor::Actor()
-	: m_transform{ new Transform }
+	: m_transform{ new Transform }, m_world{ nullptr }
 {
 	m_transform->m_owner = this;
 }
@@ -52,6 +52,11 @@ void Actor::DestroyComponent(IComponent* component)
 Transform* Actor::GetTransform() const
 {
 	return m_transform;
+}
+
+World const* Actor::GetWorld() const
+{
+	return m_world;
 }
 
 void Actor::ApplyComponentListChanges()

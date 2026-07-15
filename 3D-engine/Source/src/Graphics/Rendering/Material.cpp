@@ -5,7 +5,7 @@
 #include "Graphics/Renderer.h"
 #include "Graphics/Uniforms.h"
 #include "Graphics/Rendering/Camera.h"
-#include "Graphics/Rendering/SceneLightingData.h"
+#include "Graphics/Rendering/Lighting.h"
 #include "Graphics/Rendering/Texture.h"
 #include "Graphics/Vulkan/GraphicsPipeline.h"
 #include "Graphics/Vulkan/MemoryBuffer.h"
@@ -69,8 +69,10 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 		m_pipeline = new GraphicsPipeline{ m_pipelineConfig };
 	}
 
+	Vulkan* vulkan = Vulkan::Instance();
+
 	// Update the material uniform with this material's data
-	const MemoryBuffer* materialBuffer = Vulkan::Instance()->GetUniformBuffer(EUniformBufferIds::Material);
+	const MemoryBuffer* materialBuffer = vulkan->GetUniformBuffer(EUniformBufferIds::Material);
 	const MaterialUniform materialUniform
 	{
 		.color = color,
@@ -83,31 +85,12 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 	materialBuffer->Fill(&materialUniform);
 
 	// Update the transform buffer with our object's transform
-	const MemoryBuffer* uboBuffer = Vulkan::Instance()->GetUniformBuffer(EUniformBufferIds::ProjectionView);
+	const MemoryBuffer* uboBuffer = vulkan->GetUniformBuffer(EUniformBufferIds::ProjectionView);
 	ProjectionViewModelUniform pvm;
 	Renderer::GetCurrentCamera()->GetPvm(pvm);
 
 	pvm.model = transform;
 	uboBuffer->Fill(&pvm);
-
-	// TODO: Use more dynamic lighting. This is a test
-	const MemoryBuffer* light0Buffer = Vulkan::Instance()->GetUniformBuffer(EUniformBufferIds::Lights, 0);
-	LightUniform light0
-	{
-		.location = { 0.f, 0.f, 0.f },
-		.direction = { .32f, -.77f, -.56f }, // this is the unity default light direction
-		.color = Color::WHITE,
-		.type = 0,
-	};
-	light0Buffer->Fill(&light0);
-
-	const MemoryBuffer* sceneLightBuffer = Vulkan::Instance()->GetUniformBuffer(EUniformBufferIds::SceneLighting);
-	SceneLightingData sceneLighting
-	{
-		.ambientColor = Color::WHITE,
-		.ambientStrength = .05f
-	};
-	sceneLightBuffer->Fill(&sceneLighting);
 
 	// Bind the pipeline and push the push constants to the command buffer
 	m_pipeline->Bind(cmdBuffer, uboBuffer->GetAddress());
@@ -117,8 +100,16 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 	{
 		TList<VkWriteDescriptorSet> writes;
 
-		InsertUniformWrite(writes, sceneLightBuffer, 0);
-		InsertUniformWrite(writes, light0Buffer, 1);
+		InsertUniformWrite(writes, vulkan->GetUniformBuffer(EUniformBufferIds::SceneLighting), 0);
+
+		for (uint8 i = 0; i < MAX_LIGHT_COUNT; ++i)
+		{
+			if (const MemoryBuffer* buffer = vulkan->GetUniformBuffer(EUniformBufferIds::Lights, i))
+			{
+				InsertUniformWrite(writes, buffer, 1, i);
+			}
+		}
+
 		InsertUniformWrite(writes, materialBuffer, 2);
 
 		UpdateDescriptorSets(writes);

@@ -12,8 +12,8 @@
 #include "Gameplay/Actors/Components/Rendering/LightComponent.h"
 
 #include "Graphics/Uniforms.h"
+#include "Graphics/Rendering/Lighting.h"
 #include "Graphics/Rendering/Material.h"
-#include "Graphics/Rendering/SceneLightingData.h"
 #include "Graphics/Rendering/Texture.h"
 #include "Graphics/Vulkan/MemoryBuffer.h"
 #include "Graphics/Vulkan/Swapchain.h"
@@ -43,7 +43,7 @@ const TArray UNIFORM_DATA
 	UniformBufferData
 	{
 		.count = 1,
-		.size = sizeof(SceneLightingData),
+		.size = sizeof(SceneLightingUniform),
 		.bufferUsage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		.id = static_cast<uint16>(EUniformBufferIds::SceneLighting)
 	},

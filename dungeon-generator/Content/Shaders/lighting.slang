@@ -3,7 +3,8 @@ struct LightUniform
 	float4 location;
 	float4 direction;
 	float4 color;
-	int32_t type;
+    int32_t type;
+    int32_t enabled;
 };
 
 struct SceneLightingUniform
@@ -18,6 +19,13 @@ const static int MAX_LIGHT_COUNT = 8;
 
 float3 LightDirection(LightUniform light, float3 location)
 {
+    // The light is disabled, so return no direction
+    if (light.enabled == 0)
+    {
+        return float3(0, 1, 0);
+    }
+
+    // Directional light
     if (light.type == 0)
     {
         return light.direction.xyz;

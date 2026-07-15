@@ -2,13 +2,16 @@
 
 #include "Gameplay/Actors/Transform.h"
 
+#include "Graphics/Rendering/Lighting.h"
+
 World::World()
-	: m_root{ new Actor }
+	: m_root{ new Actor }, m_lighting{ new Lighting }
 {}
 
 World::~World()
 {
 	delete m_root;
+	delete m_lighting;
 }
 
 void World::DestroyActor(Actor* actor)
@@ -29,10 +32,17 @@ void World::DestroyActor(Actor* actor)
 		});
 }
 
+Lighting* World::GetLighting() const
+{
+	return m_lighting;
+}
+
 void World::Tick(Actor* actor)
 {
 	if (actor == nullptr)
 	{
+		m_lighting->UpdateBuffers();
+
 		actor = m_root;
 		for (const ActorLifetimeChange& change : m_lifetimeChanges)
 		{
@@ -60,6 +70,8 @@ void World::Render(Actor* actor)
 	if (actor == nullptr)
 	{
 		actor = m_root;
+
+		m_lighting->ShowWindow();
 	}
 
 	if (actor != m_root)

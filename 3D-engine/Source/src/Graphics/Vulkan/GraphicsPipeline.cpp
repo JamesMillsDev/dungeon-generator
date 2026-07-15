@@ -2,6 +2,7 @@
 
 #include "Gameplay/Actors/Components/Rendering/LightComponent.h"
 
+#include "Graphics/Rendering/Lighting.h"
 #include "Graphics/Rendering/Mesh.h"
 #include "Graphics/Rendering/Shader.h"
 #include "Graphics/Vulkan/Vulkan.h"
