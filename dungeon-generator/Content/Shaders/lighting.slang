@@ -25,3 +25,8 @@ float3 LightDirection(LightUniform light, float3 location)
 
     return normalize(light.location.xyz - location);
 }
+
+float3 MapNormal(ConstantBuffer<Sampler2D> normalMap, float2 uv)
+{
+    return normalize((normalMap.Sample(uv).rgb * 0.5 + 0.5) * 2.0 - 1.0);
+}

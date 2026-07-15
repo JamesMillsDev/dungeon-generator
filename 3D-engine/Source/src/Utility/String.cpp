@@ -152,7 +152,7 @@ int64 String::FindLastOf(const char c) const
 
 int64 String::FindFirstNotOf(const char c) const
 {
-	for (int64 i = 0; i < std::cmp_less(i, m_length); ++i)
+	for (int64 i = 0; std::cmp_less(i, m_length); ++i)
 	{
 		if (m_contents[i] != c)
 		{
@@ -339,7 +339,7 @@ String& String::operator+=(const String& rhs)
 		Expand();
 	}
 
-	for (int64 i = 0; i < std::cmp_less(i, rhs.Length()); ++i)
+	for (int64 i = 0; std::cmp_less(i, rhs.Length()); ++i)
 	{
 		m_contents[m_length + i] = rhs[i];
 	}
@@ -358,7 +358,7 @@ String String::operator+(const char c) const
 
 String& String::operator+=(const char c)
 {
-	if (m_length + 1 >= m_capacity)
+	if (m_length + 1 >= m_capacity) 
 	{
 		Expand();
 	}
