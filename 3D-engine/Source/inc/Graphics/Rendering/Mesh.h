@@ -84,6 +84,8 @@ public:
 
 public:
 	static Mesh* MakeQuad();
+	static Mesh* MakeCube();
+	static Mesh* MakeSphere(float radius = 1.f, uint8 stacks = 64, uint8 sectors = 64);
 	static Mesh* MakeFromAssimp(const string& file);
 
 public:

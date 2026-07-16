@@ -4,6 +4,7 @@
 #include <glm/mat4x4.hpp>
 #include <vulkan/vulkan.h>
 
+#include "Debug.h"
 #include "Object.h"
 
 #include "Graphics/Vulkan/GraphicsPipeline.h"
@@ -24,11 +25,10 @@ struct MaterialUniform
 {
 	Color color;
 	Color emissiveTint;
-	Color specularColor;
 
 	float roughness;
 	float metallic;
-	float specularStrength;
+	float ao;
 };
 
 class Material : public Object
@@ -40,9 +40,7 @@ public:
 	Color emissiveTint;
 	float roughness;
 	float metallic;
-
-	Color specularColor;
-	float specularStrength;
+	float ao;
 
 private:
 	GraphicsPipelineConfig m_pipelineConfig;
@@ -60,6 +58,8 @@ public:
 	[[nodiscard]] uint64 GetHashCode() const override;
 
 	void AddTexture(Texture* texture);
+
+	DEFINE_DEBUG_FUNCTION(ShowGui)
 
 private:
 	void Bind(VkCommandBuffer cmdBuffer, const mat4& transform);

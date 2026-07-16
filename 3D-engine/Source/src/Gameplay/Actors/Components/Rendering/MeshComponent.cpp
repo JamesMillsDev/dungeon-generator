@@ -4,6 +4,7 @@
 #include "Gameplay/Actors/Transform.h"
 
 #include "Graphics/Renderer.h"
+#include "Graphics/Rendering/Material.h"
 
 MeshComponent::MeshComponent(Mesh* mesh, Material* material)
 	: m_mesh{ mesh }, m_material{ material }
@@ -14,4 +15,6 @@ MeshComponent::MeshComponent(Mesh* mesh, Material* material)
 void MeshComponent::Render()
 {
 	Renderer::Instance()->Render(m_mesh, m_material, Owner()->GetTransform()->LocalToWorld());
+
+	m_material->Dbg_ShowGui();
 }

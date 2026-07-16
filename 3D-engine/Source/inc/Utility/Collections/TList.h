@@ -72,6 +72,8 @@ public:
 
 public:
 	void Add(T item);
+	void AddRange(const initializer_list<T>& items);
+
 	void Insert(T item, int64 index);
 
 	void Remove(T item);
@@ -256,6 +258,15 @@ void TList<T, GROWTH>::Add(T item)
 	}
 
 	m_data[m_count++] = item;
+}
+
+template <typename T, int64 GROWTH>
+void TList<T, GROWTH>::AddRange(const initializer_list<T>& items)
+{
+	for (const T& item : items)
+	{
+		Add(item);
+	}
 }
 
 template <typename T, int64 GROWTH>

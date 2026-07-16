@@ -6,10 +6,15 @@
 using glm::mat4;
 using glm::vec3;
 
-struct ProjectionViewModelUniform
+struct ProjectionViewUniform
 {
 	mat4 proj;
 	mat4 view;
-	mat4 model;
 	vec3 cameraLocation;
+};
+
+struct TransformUniform
+{
+	mat4 model;
+	mat4 normal;
 };

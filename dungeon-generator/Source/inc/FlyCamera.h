@@ -28,7 +28,7 @@ public:
 	FlyCamera(float fov, float near, float far);
 
 public:
-	void GetPvm(ProjectionViewModelUniform& pvm) const override;
+	void GetPvm(ProjectionViewUniform& pvm) const override;
 	void Tick();
 
 };

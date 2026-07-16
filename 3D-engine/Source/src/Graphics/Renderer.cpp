@@ -3,6 +3,7 @@
 #include "Graphics/Rendering/Camera.h"
 #include "Graphics/Rendering/Material.h"
 #include "Graphics/Rendering/Mesh.h"
+#include "Graphics/Vulkan/MemoryBuffer.h"
 #include "Graphics/Vulkan/Vulkan.h"
 
 Renderer* Renderer::m_instance = nullptr;
@@ -89,6 +90,12 @@ void Renderer::BeginFrame()
 	}
 
 	m_frameCmdBuf = m_vulkan->BeginFrame();
+
+	ProjectionViewUniform pvm;
+	m_currentCamera->GetPvm(pvm);
+
+	const MemoryBuffer* projViewBuff = m_vulkan->GetUniformBuffer(EUniformBufferIds::ProjectionView);
+	projViewBuff->Fill(&pvm);
 }
 
 void Renderer::EndFrame()

@@ -91,7 +91,7 @@ public:
 		{
 			.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
 			.offset = 0,
-			.size = sizeof(ProjectionViewModelUniform)
+			.size = sizeof(TransformUniform)
 		}
 	};
 

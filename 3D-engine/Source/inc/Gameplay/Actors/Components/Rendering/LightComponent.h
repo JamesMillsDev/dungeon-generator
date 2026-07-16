@@ -19,6 +19,12 @@ public:
 	float intensity;
 	Color color;
 
+	float constant;
+	float linear;
+	float quadratic;
+	float cutOff;
+	float outerCutOff;
+
 public:
 	LightComponent();
 

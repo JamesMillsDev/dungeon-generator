@@ -11,18 +11,18 @@
 #include "Graphics/Vulkan/MemoryBuffer.h"
 #include "Graphics/Vulkan/Vulkan.h"
 
+#include "ImGui/imgui.h"
+
 #include "Utility/Collections/HashImpls.h"
 
 Material::Material(const string& shaderPath) :
-	color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ 0 }, metallic{ 0 },
-	specularColor{ Color::WHITE }, specularStrength{ 8.f }, m_pipelineConfig{ shaderPath },
-	m_pipeline{ nullptr }, m_shouldUpdateDescriptors{ true }
+	color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ .5f }, metallic{ .5f }, ao{ 1.f },
+	m_pipelineConfig{ shaderPath }, m_pipeline{ nullptr }, m_shouldUpdateDescriptors{ true }
 {}
 
 Material::Material(const ShaderConfig& shaderConfig) :
-	color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ 0 }, metallic{ 0 },
-	specularColor{ Color::WHITE }, specularStrength{ 8.f }, m_pipelineConfig{ shaderConfig },
-	m_pipeline{ nullptr }, m_shouldUpdateDescriptors{ true }
+	color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ .5f }, metallic{ .5f }, ao{ 1.f },
+	m_pipelineConfig{ shaderConfig }, m_pipeline{ nullptr }, m_shouldUpdateDescriptors{ true }
 {}
 
 Material::~Material()
@@ -39,10 +39,7 @@ Material::~Material()
 
 uint64 Material::GetHashCode() const
 {
-	return HashAll(
-		color, emissiveTint, roughness, metallic,
-		specularColor, specularStrength
-	);
+	return HashAll(color, emissiveTint, roughness, metallic);
 }
 
 void Material::AddTexture(Texture* texture)
@@ -50,17 +47,51 @@ void Material::AddTexture(Texture* texture)
 	m_textures.Add(texture);
 }
 
+#if _DEBUG
+void Material::Dbg_ShowGui()
+{
+	ImGui::Begin("Material");
+
+	float colors[3] = { color.r, color.g, color.b };
+	if (ImGui::ColorEdit3("Color", colors))
+	{
+		color = Color{ colors[0], colors[1], colors[2], color.a };
+	}
+
+	colors[0] = emissiveTint.r;
+	colors[1] = emissiveTint.g;
+	colors[2] = emissiveTint.b;
+	if (ImGui::ColorEdit3("Emissive Color", colors))
+	{
+		emissiveTint = Color{ colors[0], colors[1], colors[2], emissiveTint.a };
+	}
+
+	ImGui::DragFloat("Roughness", &roughness, .01f, 0.f, 1.f, "%.2f");
+	ImGui::DragFloat("Metallic", &metallic, .01f, 0.f, 1.f, "%.2f"); 
+	ImGui::DragFloat("AO", &ao, .01f, 0.f, FLT_MAX, "%.2f");
+
+	ImGui::End();
+}
+#endif
+
 void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 {
 	if (m_pipeline == nullptr)
 	{
 		for (int64 i = 0; i < m_textures.Count(); ++i)
 		{
+			VkShaderStageFlagBits stage = VK_SHADER_STAGE_FRAGMENT_BIT; 
+			if (m_textures[i]->GetIsNormal())
+			{
+				// This is a normal map, so make it available in the vertex shader too
+				stage = static_cast<VkShaderStageFlagBits>(static_cast<int32>(stage) | VK_SHADER_STAGE_VERTEX_BIT);
+			}
+
 			m_pipelineConfig.shaderConfig.descriptors.Add(
 				{
 					.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 					.count = 1,
-					.stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+					.stage = static_cast<VkShaderStageFlags>(stage),
 					.binding = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT
 				}
 			);
@@ -77,40 +108,44 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 	{
 		.color = color,
 		.emissiveTint = emissiveTint,
-		.specularColor = specularColor,
 		.roughness = roughness,
 		.metallic = metallic,
-		.specularStrength = specularStrength
+		.ao = ao
 	};
 	materialBuffer->Fill(&materialUniform);
 
 	// Update the transform buffer with our object's transform
-	const MemoryBuffer* uboBuffer = vulkan->GetUniformBuffer(EUniformBufferIds::ProjectionView);
-	ProjectionViewModelUniform pvm;
-	Renderer::GetCurrentCamera()->GetPvm(pvm);
+	const MemoryBuffer* pushConstantBuffer = vulkan->GetUniformBuffer(EUniformBufferIds::Transform);
 
-	pvm.model = transform;
-	uboBuffer->Fill(&pvm);
+	const mat4 inverted = glm::scale(transform, { 1.f, -1.f, 1.f });
+	const TransformUniform transformUniform
+	{
+		.model = inverted,
+		.normal = glm::transpose(glm::inverse(inverted))
+	};
+
+	pushConstantBuffer->Fill(&transformUniform);
 
 	// Bind the pipeline and push the push constants to the command buffer
-	m_pipeline->Bind(cmdBuffer, uboBuffer->GetAddress());
+	m_pipeline->Bind(cmdBuffer, pushConstantBuffer->GetAddress());
 
 	// Update the descriptor sets if needed
 	if (m_shouldUpdateDescriptors)
 	{
 		TList<VkWriteDescriptorSet> writes;
 
-		InsertUniformWrite(writes, vulkan->GetUniformBuffer(EUniformBufferIds::SceneLighting), 0);
+		InsertUniformWrite(writes, vulkan->GetUniformBuffer(EUniformBufferIds::ProjectionView), 0);
+		InsertUniformWrite(writes, vulkan->GetUniformBuffer(EUniformBufferIds::SceneLighting), 1);
 
 		for (uint8 i = 0; i < MAX_LIGHT_COUNT; ++i)
 		{
 			if (const MemoryBuffer* buffer = vulkan->GetUniformBuffer(EUniformBufferIds::Lights, i))
 			{
-				InsertUniformWrite(writes, buffer, 1, i);
+				InsertUniformWrite(writes, buffer, 2, i);
 			}
 		}
 
-		InsertUniformWrite(writes, materialBuffer, 2);
+		InsertUniformWrite(writes, materialBuffer, 3);
 
 		UpdateDescriptorSets(writes);
 		m_shouldUpdateDescriptors = false;

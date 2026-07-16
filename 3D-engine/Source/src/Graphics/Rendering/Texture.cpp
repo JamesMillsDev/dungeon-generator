@@ -229,7 +229,6 @@ void Texture::VulkanTexture::CreateBuffer(const uint8* pixels, const uint64 numP
 	m_textureDescriptors.sampler = m_sampler;
 	m_textureDescriptors.imageView = m_imageView;
 	m_textureDescriptors.imageLayout = VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL;
-
 }
 
 void Texture::VulkanTexture::DestroyBuffer() const

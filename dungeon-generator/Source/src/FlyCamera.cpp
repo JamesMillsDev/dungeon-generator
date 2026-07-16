@@ -17,9 +17,11 @@ FlyCamera::FlyCamera(const float fov, const float near, const float far)
 	m_turnSpeed{ Maths::Radians(180.f) }, m_moveSpeed{ 5.f }, m_lastMouse{ 0.f, 0.f }
 {}
 
-void FlyCamera::GetPvm(ProjectionViewModelUniform& pvm) const
+void FlyCamera::GetPvm(ProjectionViewUniform& pvm) const
 {
 	Camera::GetPvm(pvm);
+
+	vec3 loc = { location.x, -location.y, location.z };
 
 	const float yawR = Maths::Radians(m_yaw);
 	const float pitchR = Maths::Radians(m_pitch);
@@ -30,7 +32,7 @@ void FlyCamera::GetPvm(ProjectionViewModelUniform& pvm) const
 		Maths::Cos(pitchR) * Maths::Cos(yawR)
 	};
 
-	pvm.view = glm::lookAt(location, location + forward, vec3{ 0.f, 1.f, 0.f });
+	pvm.view = glm::lookAt(location, location + forward, vec3{ 0.f, -1.f, 0.f });
 }
 
 void FlyCamera::Tick()
@@ -81,12 +83,12 @@ void FlyCamera::Tick()
 
 	if (input->IsKeyDown(KeyA))
 	{
-		location += right * GameTime::DeltaTime() * m_moveSpeed;
+		location -= right * GameTime::DeltaTime() * m_moveSpeed;
 	}
 
 	if (input->IsKeyDown(KeyD))
 	{
-		location -= right * GameTime::DeltaTime() * m_moveSpeed;
+		location += right * GameTime::DeltaTime() * m_moveSpeed;
 	}
 
 	if (input->IsKeyDown(KeyQ))
@@ -102,7 +104,7 @@ void FlyCamera::Tick()
 	// If the right button is held down, increment theta and phi (rotate)
 	if (input->IsMouseButtonDown(MouseButtonRight))
 	{
-		m_yaw -= m_turnSpeed * (mx - m_lastMouse.x) * GameTime::DeltaTime();
+		m_yaw += m_turnSpeed * (mx - m_lastMouse.x) * GameTime::DeltaTime();
 		m_pitch += m_turnSpeed * (my - m_lastMouse.y) * GameTime::DeltaTime();
 	}
 

@@ -40,31 +40,44 @@ void Lighting::UpdateBuffers()
 				.location = vec4{ 0.f },
 				.direction = vec4{ 0.f },
 				.color = Color::BLACK,
+				.intensity = 0.f,
+				.constant = 0.f,
+				.linear = 0.f,
+				.quadratic = 0.f,
+				.cutOff = 0.f,
+				.outerCutOff = 0.f,
 				.type = static_cast<uint8>(LightComponent::EType::Directional),
 				.enabled = 0
 			};
 
 			if (i < m_lights.Count())
 			{
-				LightComponent* light = m_lights[i];
-				const Transform* transform = light->Owner()->GetTransform();
+				LightComponent* light = m_lights[i]; 
+				const Transform* transform = light->Owner()->GetTransform(); 
 
 				lightUniform =
 				{
-					.location = vec4{ transform->location, 1.f },
+					.location = vec4{ transform->location, 1.f }, 
 					.direction = vec4{ transform->Forward(), 0.f },
 					.color = light->color,
+					.intensity = light->intensity,
+					.constant = light->constant,
+					.linear = light->linear,
+					.quadratic = light->quadratic,
+					.cutOff = light->cutOff,
+					.outerCutOff = light->outerCutOff,
 					.type = static_cast<uint8>(light->type),
-					.enabled = 1
+					.enabled = 1 
 				};
 			}
 
-			buffer->Fill(&lightUniform);
+			buffer->Fill(&lightUniform); 
 		}
 	}
 }
 
-void Lighting::ShowWindow()
+#if _DEBUG
+void Lighting::Dbg_ShowGui()
 {
 	ImGui::Begin("Lighting");
 
@@ -95,7 +108,9 @@ void Lighting::ShowWindow()
 			{
 				LightComponent* light = m_lights[i];
 
-				if (ImGui::CollapsingHeader(std::format("Light: {}", i + 1).c_str()))
+				string id = std::format("Light: {}", i + 1);
+				ImGui::PushID(id.c_str());
+				if (ImGui::CollapsingHeader(id.c_str()))
 				{
 					int itemIndex = static_cast<int>(light->type);
 					if (ImGui::Combo("Type", &itemIndex, LIGHT_NAMES.Data(), static_cast<int>(LIGHT_NAMES.Count())))
@@ -117,6 +132,7 @@ void Lighting::ShowWindow()
 						light->color = vec3{ colors[0], colors[1], colors[2] };
 					}
 				}
+				ImGui::PopID();
 			}
 		}
 	}
@@ -124,6 +140,8 @@ void Lighting::ShowWindow()
 
 	ImGui::End();
 }
+#endif // _DEBUG
+
 
 void Lighting::AddLight(LightComponent* light)
 {

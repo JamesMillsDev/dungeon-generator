@@ -71,7 +71,7 @@ void World::Render(Actor* actor)
 	{
 		actor = m_root;
 
-		m_lighting->ShowWindow();
+		m_lighting->Dbg_ShowGui();
 	}
 
 	if (actor != m_root)

@@ -36,8 +36,15 @@ const TArray UNIFORM_DATA
 	UniformBufferData
 	{
 		.count = 1,
-		.size = sizeof(ProjectionViewModelUniform),
+		.size = sizeof(TransformUniform),
 		.bufferUsage = VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT_KHR,
+		.id = static_cast<uint16>(EUniformBufferIds::Transform)
+	},
+	UniformBufferData
+	{
+		.count = 1,
+		.size = sizeof(ProjectionViewUniform),
+		.bufferUsage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		.id = static_cast<uint16>(EUniformBufferIds::ProjectionView)
 	},
 	UniformBufferData
@@ -58,7 +65,7 @@ const TArray UNIFORM_DATA
 	{
 		.count = 1,
 		.size = sizeof(MaterialUniform),
-		.bufferUsage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
+		.bufferUsage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		.id = static_cast<uint16>(EUniformBufferIds::Material)
 	},
 };
@@ -807,6 +814,7 @@ void Vulkan::Init(GLFWwindow* window)
 				);
 
 				ImGui::CreateContext();
+				ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
 				ImGui_ImplGlfw_InitForVulkan(window, true);
 
@@ -821,7 +829,7 @@ void Vulkan::Init(GLFWwindow* window)
 				initInfo.UseDynamicRendering = true;
 
 				ImGui_ImplVulkan_PipelineInfo pipelineInfo{};
-				pipelineInfo.PipelineRenderingCreateInfo = 
+				pipelineInfo.PipelineRenderingCreateInfo =
 				{
 					.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
 					.pNext = nullptr,
@@ -871,7 +879,7 @@ void Vulkan::RecreateSwapChain()
 
 	const Window* window = Application::GetWindow();
 	m_swapChain->Recreate(window, m_renderCompleteSemaphores);
-	
+
 	vmaDestroyImage(m_vmaAllocator, m_depthImage, m_depthImageAllocation);
 	vkDestroyImageView(m_device, m_depthImageView, nullptr);
 
@@ -959,9 +967,9 @@ VkCommandBuffer Vulkan::BeginFrame()
 	const VkViewport vp =
 	{
 		.x = 0.f,
-		.y = window->Height(),
+		.y = 0.f,
 		.width = window->Width(),
-		.height = -window->Height(),
+		.height = window->Height(),
 		.minDepth = 0.f,
 		.maxDepth = 1.f
 	};
@@ -978,6 +986,7 @@ VkCommandBuffer Vulkan::BeginFrame()
 	ImGui_ImplGlfw_NewFrame();
 
 	ImGui::NewFrame();
+	ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
 
 	return cmdBuf;
 }

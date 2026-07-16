@@ -29,7 +29,7 @@ uint32 GraphicsPipelineConfig::Size() const
 	return shaderConfig.stages.Count();
 }
 
-bool GraphicsPipelineConfig::ContainsStage(VkShaderStageFlagBits stage) const
+bool GraphicsPipelineConfig::ContainsStage(const VkShaderStageFlagBits stage) const
 {
 	return shaderConfig.stages.Contains(stage);
 }
@@ -55,16 +55,16 @@ void GraphicsPipeline::Bind(const VkCommandBuffer cmdBuffer, const VkDeviceAddre
 	vkCmdBindPipeline(cmdBuffer, m_bindPoint, m_pipeline);
 
 	vkCmdPushConstants(
-		cmdBuffer, m_pipelineLayout, m_pushConstantStage, 0, sizeof(ProjectionViewModelUniform), &pushConstantAddress
+		cmdBuffer, m_pipelineLayout, m_pushConstantStage, 0, sizeof(TransformUniform), &pushConstantAddress
 	);
 }
 
-void GraphicsPipeline::SetBindPoint(VkPipelineBindPoint bindPoint)
+void GraphicsPipeline::SetBindPoint(const VkPipelineBindPoint bindPoint)
 {
 	m_bindPoint = bindPoint;
 }
 
-void GraphicsPipeline::SetPushConstantStage(VkShaderStageFlagBits stage)
+void GraphicsPipeline::SetPushConstantStage(const VkShaderStageFlagBits stage)
 {
 	m_pushConstantStage = stage;
 }
@@ -113,6 +113,14 @@ void GraphicsPipeline::InitDescriptors(const Vulkan* vulkan)
 	VkResult result;
 	TList<DescriptorConfig> descriptors;
 
+	descriptors.Add(
+		{
+			.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+			.count = 1,
+			.stage = VK_SHADER_STAGE_ALL_GRAPHICS
+		}
+	);
+
 	if (m_config.shaderConfig.lit)
 	{
 		descriptors.Add(
@@ -126,7 +134,7 @@ void GraphicsPipeline::InitDescriptors(const Vulkan* vulkan)
 			{
 				.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 				.count = MAX_LIGHT_COUNT,
-				.stage = VK_SHADER_STAGE_FRAGMENT_BIT
+				.stage = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT
 			}
 		);
 	}

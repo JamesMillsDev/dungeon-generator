@@ -9,13 +9,19 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
+
 #include "Resources.h"
 
-#include "Graphics/Vulkan/Vulkan.h"
 #include "Graphics/Vulkan/MemoryBuffer.h"
+#include "Graphics/Vulkan/Vulkan.h"
+
+#include "Maths/Maths.h"
 
 #include "Utility/Collections/HashImpls.h"
 
+using glm::mat3;
 using std::vector;
 using VertexAttribData = std::tuple<uint8, uint8, VkFormat, size_t>;
 
@@ -148,6 +154,166 @@ Mesh* Mesh::MakeQuad()
 	};
 }
 
+Mesh* Mesh::MakeCube()
+{
+	TList<Vertex> vertices;
+	TList<uint16> indices;
+
+	TArray directions =
+	{
+		vec4{ 0.f, 1.f, 0.f, 0.f },
+		vec4{ 0.f, -1.f, 0.f, 0.f },
+		vec4{ 1.f, 0.f, 0.f, 0.f },
+		vec4{ -1.f, 0.f, 0.f, 0.f },
+		vec4{ 0.f, 0.f, 1.f, 0.f },
+		vec4{ 0.f, 0.f, -1.f, 0.f },
+	};
+
+	TArray points =
+	{
+		vec4{ .5f, .5f, -.5f, 1.f },
+		vec4{ .5f, .5f, .5f, 1.f },
+		vec4{ -.5f, .5f, .5f, 1.f },
+		vec4{ -.5f, .5f, -.5f, 1.f },
+	};
+
+	TArray uvs =
+	{
+		vec2{ 0.f, 0.f },
+		vec2{ 0.f, 1.f },
+		vec2{ 1.f, 1.f },
+		vec2{ 1.f, 0.f },
+	};
+
+	const vec2 deltaUV1 = uvs[1] - uvs[0];
+	const vec2 deltaUV2 = uvs[2] - uvs[0];
+	const float f = 1.f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+	for (uint64 i = 0; i < directions.Count(); ++i)
+	{
+		const mat4 orientation = glm::mat4_cast(glm::rotation(vec3{ 0.f, 1.f, 0.f }, vec3{ directions[i] }));
+
+		const vec4 edge1 = orientation * points[1] - orientation * points[0];
+		const vec4 edge2 = orientation * points[2] - orientation * points[0];
+
+		for (uint64 j = 0; j < points.Count(); ++j)
+		{
+			Vertex vert =
+			{
+				.location = orientation * points[j],
+				.normal = directions[i],
+				.tangent = {},
+				.biTangent = {},
+				.uv = uvs[j],
+				.color = Color::WHITE
+			};
+
+			vert.tangent =
+			{
+				f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x),
+				f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y),
+				f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z),
+				0.f
+			};
+
+			vert.biTangent =
+			{
+				f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x),
+				f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y),
+				f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z),
+				0.f
+			};
+
+			vertices.Add(vert);
+		}
+	}
+
+	indices.AddRange({ 0,  3,  1,  1,  3,  2 });
+	indices.AddRange({ 4,  7,  5,  5,  7,  6 });
+	indices.AddRange({ 8, 11,  9,  9, 11, 10 });
+	indices.AddRange({ 12, 15, 13, 13, 15, 14 });
+	indices.AddRange({ 16, 19, 17, 17, 19, 18 });
+	indices.AddRange({ 20, 23, 21, 21, 23, 22 });
+
+	return new Mesh{ { new SubMesh { vertices, indices } } };
+}
+
+Mesh* Mesh::MakeSphere(const float radius, const uint8 stacks, const uint8 sectors)
+{
+	TList<Vertex> vertices;
+	TList<uint16> indices;
+
+	const float sectorStep = 2.f * Maths::PI / static_cast<float>(sectors);
+	const float stackStep = Maths::PI / static_cast<float>(stacks);
+	const float lengthInv = 1.f / radius;
+
+	for (uint8 i = 0; i <= stacks; ++i)
+	{
+		const float phi = Maths::PI / 2 - static_cast<float>(i) * stackStep;
+		const float xz = radius * Maths::Cos(phi);
+		const float y = radius * Maths::Sin(phi);
+
+		const float u = static_cast<float>(i) / static_cast<float>(stacks);
+
+		for (uint8 j = 0; j <= sectors; ++j)
+		{
+			const float theta = static_cast<float>(j) * sectorStep;
+			const float x = xz * Maths::Cos(theta);
+			const float z = xz * Maths::Sin(theta);
+
+			const float nX = x * lengthInv;
+			const float nY = y * lengthInv;
+			const float nZ = z * lengthInv;
+
+			const float v = static_cast<float>(j) / static_cast<float>(sectors);
+
+			vertices.Add(
+				{
+					.location = { x, y, z },
+					.normal = vec4{ nX, nY, nZ, 1.f },
+					.tangent = vec4{ 0.f },
+					.biTangent = vec4{ 0.f },
+					.uv = { u, v },
+					.color = Color::WHITE
+				}
+			);
+		}
+	}
+
+	for (uint8 i = 0; i < stacks; ++i)
+	{
+		uint16 k1 = i * (sectors + 1);
+		uint16 k2 = k1 + sectors + 1;
+
+		for (uint8 j = 0; j < sectors; ++j, ++k1, ++k2)
+		{
+			if (i != 0)
+			{
+				indices.Add(k1);
+				indices.Add(k1 + 1);
+				indices.Add(k2);
+			}
+
+			if (i != stacks - 1)
+			{
+				indices.Add(k1 + 1);
+				indices.Add(k2 + 1);
+				indices.Add(k2);
+			}
+		}
+	}
+
+	return new Mesh
+	{
+		{
+			new SubMesh
+			{
+				vertices, indices
+			}
+		}
+	};
+}
+
 Mesh* Mesh::MakeFromAssimp(const string& file)
 {
 	ResourceData meshData = Resources::Find(file);
@@ -155,7 +321,7 @@ Mesh* Mesh::MakeFromAssimp(const string& file)
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFileFromMemory(
 		meshData.data, meshData.length,
-		aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_GlobalScale | aiProcess_FlipUVs
+		aiProcess_Triangulate /*| aiProcess_CalcTangentSpace*/ | aiProcess_GlobalScale | aiProcess_FlipUVs
 	);
 
 	TList<SubMesh*> subMeshes;
@@ -208,6 +374,10 @@ Mesh* Mesh::MakeFromAssimp(const string& file)
 				aiColor4D color0 = mesh->mColors[0][v];
 
 				vert.color = Color{ color0.r, color0.g, color0.b, color0.a };
+			}
+			else
+			{
+				vert.color = Color{ 1.f, 1.f, 1.f, 1.f };
 			}
 
 			vertices[v] = vert;

@@ -53,10 +53,11 @@ struct UniformBufferData
 
 enum class EUniformBufferIds : uint16
 {
-	ProjectionView = 0,
-	SceneLighting = 1,
-	Lights = 2,
-	Material = 3,
+	Transform = 0,
+	ProjectionView = 1,
+	SceneLighting = 2,
+	Lights = 3,
+	Material = 4,
 	PushConstant = UINT16_MAX
 };
 
