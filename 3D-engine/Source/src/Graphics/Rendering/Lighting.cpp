@@ -71,7 +71,7 @@ void Lighting::UpdateBuffers()
 				};
 			}
 
-			buffer->Fill(&lightUniform); 
+			buffer->Fill(&lightUniform);
 		}
 	}
 }

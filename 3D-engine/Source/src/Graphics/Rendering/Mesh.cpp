@@ -30,7 +30,6 @@ const vector<VertexAttribData> VERTEX_ATTRIBUTES =
 	std::make_tuple(LocationIndex, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, location)),
 	std::make_tuple(NormalIndex, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, normal)),
 	std::make_tuple(TangentIndex, 0, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(Vertex, tangent)),
-	std::make_tuple(BiTangentIndex, 0, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(Vertex, biTangent)),
 	std::make_tuple(UvIndex, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, uv)),
 	std::make_tuple(ColorIndex, 0, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(Vertex, color))
 };
@@ -80,7 +79,7 @@ uint64 Mesh::SubMesh::GetHashCode() const
 	uint64 seed = 0;
 	for (Vertex& vert : vertices)
 	{
-		seed = seed ^ HashAll(vert.location, vert.normal, vert.uv, vert.biTangent, vert.tangent, vert.color);
+		seed = seed ^ HashAll(vert.location, vert.normal, vert.uv, vert.tangent, vert.color);
 	}
 	return seed;
 }
@@ -113,7 +112,6 @@ Mesh* Mesh::MakeQuad()
 						.location = { -.5f, -.5f, 0.f },
 						.normal = { 0.f, 0.f, 0.f, 0.f },
 						.tangent = { 0.f, 0.f, 0.f, 0.f },
-						.biTangent = { 0.f, 0.f, 0.f, 0.f },
 						.uv = { 1.f, 0.f },
 						.color = { 1.f, 0.f, 0.f, 1.f }
 					},
@@ -122,7 +120,6 @@ Mesh* Mesh::MakeQuad()
 						.location = { .5f, -.5f, 0.f },
 						.normal = { 0.f, 0.f, 0.f, 0.f },
 						.tangent = { 0.f, 0.f, 0.f, 0.f },
-						.biTangent = { 0.f, 0.f, 0.f, 0.f },
 						.uv = { 0.f, 0.f },
 						.color = { 0.f, 1.f, 0.0f, 1.f }
 					},
@@ -131,7 +128,6 @@ Mesh* Mesh::MakeQuad()
 						.location = { .5f, .5f, 0.f },
 						.normal = { 0.f, 0.f, 0.f, 0.f },
 						.tangent = { 0.f, 0.f, 0.f, 0.f },
-						.biTangent = { 0.f, 0.f, 0.f, 0.f },
 						.uv = { 0.f, 1.f },
 						.color = { 0.f, 0.f, 1.f, 1.f }
 					},
@@ -140,7 +136,6 @@ Mesh* Mesh::MakeQuad()
 						.location = { -.5f, .5f, 0.f },
 						.normal = { 0.f, 0.f, 0.f, 0.f },
 						.tangent = { 0.f, 0.f, 0.f, 0.f },
-						.biTangent = { 0.f, 0.f, 0.f, 0.f },
 						.uv = { 1.f, 1.f },
 						.color = { 1.f, 1.f, 1.f, 1.f }
 					}
@@ -203,7 +198,6 @@ Mesh* Mesh::MakeCube()
 				.location = orientation * points[j],
 				.normal = directions[i],
 				.tangent = {},
-				.biTangent = {},
 				.uv = uvs[j],
 				.color = Color::WHITE
 			};
@@ -213,14 +207,6 @@ Mesh* Mesh::MakeCube()
 				f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x),
 				f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y),
 				f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z),
-				0.f
-			};
-
-			vert.biTangent =
-			{
-				f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x),
-				f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y),
-				f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z),
 				0.f
 			};
 
@@ -272,7 +258,6 @@ Mesh* Mesh::MakeSphere(const float radius, const uint8 stacks, const uint8 secto
 					.location = { x, y, z },
 					.normal = vec4{ nX, nY, nZ, 1.f },
 					.tangent = vec4{ 0.f },
-					.biTangent = vec4{ 0.f },
 					.uv = { u, v },
 					.color = Color::WHITE
 				}
@@ -356,10 +341,8 @@ Mesh* Mesh::MakeFromAssimp(const string& file)
 			if (mesh->HasTangentsAndBitangents())
 			{
 				aiVector3D tangent = mesh->mTangents[v];
-				aiVector3D biTangent = mesh->mBitangents[v];
 
 				vert.tangent = { tangent.x, tangent.y, tangent.z, 0.f };
-				vert.biTangent = { biTangent.x, biTangent.y, biTangent.z, 0.f };
 			}
 
 			if (mesh->HasTextureCoords(0))
@@ -463,5 +446,5 @@ void Mesh::Render(const VkCommandBuffer buffer, const uint32 instances, const ui
 
 uint64 hash<Vertex>::operator()(const Vertex& vertex) const noexcept
 {
-	return HashAll(vertex.location, vertex.normal, vertex.tangent, vertex.biTangent, vertex.uv, vertex.color);
+	return HashAll(vertex.location, vertex.normal, vertex.tangent, vertex.uv, vertex.color);
 }

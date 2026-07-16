@@ -21,7 +21,6 @@ enum : uint8
 	LocationIndex,
 	NormalIndex,
 	TangentIndex,
-	BiTangentIndex,
 	UvIndex,
 	ColorIndex,
 	VertexAttributeCount
@@ -40,8 +39,6 @@ public:
 	vec4 normal;
 	/** @brief The tangent of the vertex in model space. */
 	vec4 tangent;
-	/** @brief The bitangent of the vertex in model space. */
-	vec4 biTangent;
 
 	/** @brief The first texture coordinate of the vertex. */
 	vec2 uv;

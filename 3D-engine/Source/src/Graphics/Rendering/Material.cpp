@@ -16,20 +16,24 @@
 #include "Utility/Collections/HashImpls.h"
 
 Material::Material(const string& shaderPath) :
-	color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ .5f }, metallic{ .5f }, ao{ 1.f },
+	color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ .5f }, metallic{ .5f },
 	m_pipelineConfig{ shaderPath }, m_pipeline{ nullptr }, m_shouldUpdateDescriptors{ true }
-{}
+{
+	AddTextureMaps();
+}
 
 Material::Material(const ShaderConfig& shaderConfig) :
-	color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ .5f }, metallic{ .5f }, ao{ 1.f },
+	color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ .5f }, metallic{ .5f },
 	m_pipelineConfig{ shaderConfig }, m_pipeline{ nullptr }, m_shouldUpdateDescriptors{ true }
-{}
+{
+	AddTextureMaps();
+}
 
 Material::~Material()
 {
-	for (Texture*& texture : m_textures)
+	for (TMapEntry<string, Texture*>* texture : m_textures)
 	{
-		delete texture;
+		delete texture->Value();
 	}
 	m_textures.Clear();
 
@@ -42,9 +46,9 @@ uint64 Material::GetHashCode() const
 	return HashAll(color, emissiveTint, roughness, metallic);
 }
 
-void Material::AddTexture(Texture* texture)
+void Material::SetTexture(const string& id, Texture* texture)
 {
-	m_textures.Add(texture);
+	m_textures[id] = texture;
 }
 
 #if _DEBUG
@@ -68,7 +72,6 @@ void Material::Dbg_ShowGui()
 
 	ImGui::DragFloat("Roughness", &roughness, .01f, 0.f, 1.f, "%.2f");
 	ImGui::DragFloat("Metallic", &metallic, .01f, 0.f, 1.f, "%.2f"); 
-	ImGui::DragFloat("AO", &ao, .01f, 0.f, FLT_MAX, "%.2f");
 
 	ImGui::End();
 }
@@ -78,20 +81,13 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 {
 	if (m_pipeline == nullptr)
 	{
-		for (int64 i = 0; i < m_textures.Count(); ++i)
+		for (uint64 i = 0; i < m_textures.Count(); ++i)
 		{
-			VkShaderStageFlagBits stage = VK_SHADER_STAGE_FRAGMENT_BIT; 
-			if (m_textures[i]->GetIsNormal())
-			{
-				// This is a normal map, so make it available in the vertex shader too
-				stage = static_cast<VkShaderStageFlagBits>(static_cast<int32>(stage) | VK_SHADER_STAGE_VERTEX_BIT);
-			}
-
 			m_pipelineConfig.shaderConfig.descriptors.Add(
 				{
 					.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 					.count = 1,
-					.stage = static_cast<VkShaderStageFlags>(stage),
+					.stage = VK_SHADER_STAGE_FRAGMENT_BIT,
 					.binding = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT
 				}
 			);
@@ -110,7 +106,17 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 		.emissiveTint = emissiveTint,
 		.roughness = roughness,
 		.metallic = metallic,
-		.ao = ao
+		.alphaMask = alphaMask,
+		.alphaMaskCutoff = alphaMaskCutoff,
+		.exposure = 4.5f,
+		.gamma = 2.2f,
+		.prefilteredCubeMipLevels = 1.f,
+		.scaleIBLAmbient = 1.f, 
+		.baseColorMapSet = m_textures[BASE_COLOR_MAP_NAME] != nullptr ? 1 : 0,
+		.normalMapSet = m_textures[NORMAL_MAP_NAME] != nullptr ? 1 : 0,
+		.ormMapSet = m_textures[ORM_MAP_NAME] != nullptr ? 1 : 0,
+		.emissiveMapSet = m_textures[EMISSIVE_MAP_NAME] != nullptr ? 1 : 0,
+		.heightMapSet = m_textures[HEIGHT_MAP_NAME] != nullptr ? 1 : 0,
 	};
 	materialBuffer->Fill(&materialUniform);
 
@@ -120,8 +126,7 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 	const mat4 inverted = glm::scale(transform, { 1.f, -1.f, 1.f });
 	const TransformUniform transformUniform
 	{
-		.model = inverted,
-		.normal = glm::transpose(glm::inverse(inverted))
+		.model = inverted
 	};
 
 	pushConstantBuffer->Fill(&transformUniform);
@@ -157,9 +162,15 @@ void Material::UpdateDescriptorSets(TList<VkWriteDescriptorSet>& writes) const
 	TList<int32> textureBindings;
 	if (m_pipeline->TryGetTextureBinding(textureBindings))
 	{
-		for (int64 i = 0; i < textureBindings.Count(); ++i)
+		int i = 0;
+		for (TMapEntry<string, Texture*>* texture : m_textures)
 		{
-			InsertTextureWrite(writes, m_textures[i], textureBindings[i]);
+			if (texture->Value() != nullptr)
+			{
+				InsertTextureWrite(writes, texture->Value(), textureBindings[i]);
+			}
+
+			++i;
 		}
 	}
 
@@ -202,4 +213,13 @@ void Material::InsertUniformWrite(TList<VkWriteDescriptorSet>& writes, const Mem
 			.pBufferInfo = &buffer->GetBufferInfo(),
 			.pTexelBufferView = nullptr
 		});
+}
+
+void Material::AddTextureMaps()
+{
+	m_textures.Add(BASE_COLOR_MAP_NAME, nullptr);
+	m_textures.Add(NORMAL_MAP_NAME, nullptr);
+	m_textures.Add(ORM_MAP_NAME, nullptr);
+	m_textures.Add(EMISSIVE_MAP_NAME, nullptr);
+	m_textures.Add(HEIGHT_MAP_NAME, nullptr);
 }

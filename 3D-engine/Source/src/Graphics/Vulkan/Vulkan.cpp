@@ -346,7 +346,7 @@ void Vulkan::EndOneTimeCommand(const VkCommandBuffer& buffer, const VkFence& fen
 
 MemoryBuffer* Vulkan::GetUniformBuffer(const uint16 id, const uint32 index) const
 {
-	return (*m_shaderDataBuffers[m_frameIndex][id])[index];
+	return m_shaderDataBuffers[m_frameIndex][id][index];
 }
 
 MemoryBuffer* Vulkan::GetUniformBuffer(EUniformBufferIds id, const uint32 index) const

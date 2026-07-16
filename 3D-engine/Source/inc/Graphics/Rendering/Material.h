@@ -12,14 +12,21 @@
 #include "Maths/Color.h"
 
 #include "Utility/Collections/TList.h"
+#include "Utility/Collections/TMap.h"
 
 class MemoryBuffer;
-struct ShaderConfig;
+struct ShaderConfig; 
 class GraphicsPipeline;
 class Texture;
 
 using glm::mat4;
 using std::string;
+
+#define BASE_COLOR_MAP_NAME "Base Color Map"
+#define NORMAL_MAP_NAME "Normal Map"
+#define ORM_MAP_NAME "ORM Map"
+#define EMISSIVE_MAP_NAME "Emissive Map"
+#define HEIGHT_MAP_NAME "Height Map"
 
 struct MaterialUniform
 {
@@ -28,7 +35,19 @@ struct MaterialUniform
 
 	float roughness;
 	float metallic;
-	float ao;
+	float alphaMask;
+	float alphaMaskCutoff;
+
+	float exposure;
+	float gamma;
+	float prefilteredCubeMipLevels;
+	float scaleIBLAmbient;
+
+	int32 baseColorMapSet;
+	int32 normalMapSet;
+	int32 ormMapSet;
+	int32 emissiveMapSet;
+	int32 heightMapSet;
 };
 
 class Material : public Object
@@ -40,14 +59,15 @@ public:
 	Color emissiveTint;
 	float roughness;
 	float metallic;
-	float ao;
+	float alphaMask;
+	float alphaMaskCutoff;
 
 private:
 	GraphicsPipelineConfig m_pipelineConfig;
 	GraphicsPipeline* m_pipeline;
 	bool m_shouldUpdateDescriptors;
 
-	TList<Texture*> m_textures;
+	TMap<string, Texture*> m_textures;
 
 public:
 	explicit Material(const string& shaderPath);
@@ -57,7 +77,7 @@ public:
 public:
 	[[nodiscard]] uint64 GetHashCode() const override;
 
-	void AddTexture(Texture* texture);
+	void SetTexture(const string& id, Texture* texture);
 
 	DEFINE_DEBUG_FUNCTION(ShowGui)
 
@@ -67,5 +87,7 @@ private:
 
 	void InsertTextureWrite(TList<VkWriteDescriptorSet>& writes, const Texture* texture, uint32 binding) const;
 	void InsertUniformWrite(TList<VkWriteDescriptorSet>& writes, const MemoryBuffer* buffer, uint32 binding, uint32 arrayElem = 0) const;
+
+	void AddTextureMaps();
 
 };

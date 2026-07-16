@@ -24,9 +24,9 @@ void DungeonGameInstance::Init()
 
 	m_mesh = Mesh::MakeCube(); 
 	m_material = new Material{ "Shaders/pbr" };
-	m_material->AddTexture(Texture::LoadFromFile("Textures/T_Brick_B"));
-	m_material->AddTexture(Texture::LoadFromFile("Textures/T_Brick_N")); 
-	m_material->AddTexture(Texture::LoadFromFile("Textures/T_Brick_ORM")); 
+	m_material->SetTexture(BASE_COLOR_MAP_NAME, Texture::LoadFromFile("Textures/T_Brick_B"));
+	m_material->SetTexture(NORMAL_MAP_NAME, Texture::LoadFromFile("Textures/T_Brick_N")); 
+	m_material->SetTexture(ORM_MAP_NAME, Texture::LoadFromFile("Textures/T_Brick_ORM")); 
 	m_material->color = Color{ 1.f, 1.f, 1.f, 1.f };
 
 	m_meshActor = GetWorld()->MakeActor<Actor>();

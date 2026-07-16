@@ -150,8 +150,8 @@ public:
 	TMap& operator=(TMap rhs);
 	TMap& operator=(TMap&& rhs) noexcept;
 
-	TMapEntry<KEY, VALUE>& operator[](KEY key);
-	const TMapEntry<KEY, VALUE>& operator[](KEY key) const;
+	VALUE& operator[](KEY key);
+	const VALUE& operator[](KEY key) const;
 
 };
 
@@ -676,7 +676,7 @@ TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>& TMap<KEY, VALUE, GROWTH, LOAD_THRESHOL
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
-TMapEntry<KEY, VALUE>& TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::operator[](KEY key)
+VALUE& TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::operator[](KEY key)
 {
 	const uint64 index = IndexFor(key);
 
@@ -686,11 +686,11 @@ TMapEntry<KEY, VALUE>& TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::operator[](KEY 
 		entry = entry->next;
 	}
 
-	return *entry;
+	return entry->Value();
 }
 
 template <typename KEY, typename VALUE, int64 GROWTH, float LOAD_THRESHOLD>
-const TMapEntry<KEY, VALUE>& TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::operator[](KEY key) const
+const VALUE& TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::operator[](KEY key) const
 {
 	const uint64 index = IndexFor(key);
 
@@ -700,5 +700,5 @@ const TMapEntry<KEY, VALUE>& TMap<KEY, VALUE, GROWTH, LOAD_THRESHOLD>::operator[
 		entry = entry->next;
 	}
 
-	return *entry;
+	return entry->Value();
 }

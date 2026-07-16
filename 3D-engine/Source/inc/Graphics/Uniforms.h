@@ -16,5 +16,4 @@ struct ProjectionViewUniform
 struct TransformUniform
 {
 	mat4 model;
-	mat4 normal;
 };
