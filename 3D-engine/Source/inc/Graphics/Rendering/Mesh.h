@@ -34,7 +34,7 @@ public:
 
 public:
 	/** @brief The location of the vertex in model space. */
-	vec3 location;
+	vec4 location;
 	/** @brief The normal of the vertex in model space. */
 	vec4 normal;
 	/** @brief The tangent of the vertex in model space. */

@@ -1,6 +1,6 @@
 struct VSInput
 {
-    float3 location;
+    float4 location;
     float4 normal;
     float4 tangent;
 
@@ -11,6 +11,7 @@ struct VSInput
 struct VSOutput
 {
     float4 location : SV_Position;
+    float3 fragLocation;
     float3 normal;
     float4 tangent;
     
@@ -25,18 +26,13 @@ struct ProjectionViewUniform
     float3 cameraLocation;
 };
 
-struct TransformUniform
-{
-    float4x4 model;
-};
-
 static const float PI = 3.14159265359f;
 
 [[vk::binding(0, 0)]] ConstantBuffer<ProjectionViewUniform> projectionView;
 
-float4 TransformVertex(float4x4 model, float3 vertex)
+float4 TransformVertex(VSInput vertex, float4x4 transform)
 {
-    return mul(projectionView.proj, mul(projectionView.view, mul(model, float4(vertex.xyz, 1.0))));
+    return mul(projectionView.proj, mul(projectionView.view, mul(transform, vertex.location)));
 }
 
 float3 CalculateNormal(VSOutput vertex, Sampler2D normalMap, int32_t mapSet)

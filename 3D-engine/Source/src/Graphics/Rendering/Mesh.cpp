@@ -27,8 +27,8 @@ using VertexAttribData = std::tuple<uint8, uint8, VkFormat, size_t>;
 
 const vector<VertexAttribData> VERTEX_ATTRIBUTES =
 {
-	std::make_tuple(LocationIndex, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, location)),
-	std::make_tuple(NormalIndex, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, normal)),
+	std::make_tuple(LocationIndex, 0, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(Vertex, location)),
+	std::make_tuple(NormalIndex, 0, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(Vertex, normal)),
 	std::make_tuple(TangentIndex, 0, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(Vertex, tangent)),
 	std::make_tuple(UvIndex, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, uv)),
 	std::make_tuple(ColorIndex, 0, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(Vertex, color))
@@ -109,7 +109,7 @@ Mesh* Mesh::MakeQuad()
 				{
 					Vertex
 					{
-						.location = { -.5f, -.5f, 0.f },
+						.location = { -.5f, -.5f, 0.f, 1.f },
 						.normal = { 0.f, 0.f, 0.f, 0.f },
 						.tangent = { 0.f, 0.f, 0.f, 0.f },
 						.uv = { 1.f, 0.f },
@@ -117,7 +117,7 @@ Mesh* Mesh::MakeQuad()
 					},
 					Vertex
 					{
-						.location = { .5f, -.5f, 0.f },
+						.location = { .5f, -.5f, 0.f, 1.f },
 						.normal = { 0.f, 0.f, 0.f, 0.f },
 						.tangent = { 0.f, 0.f, 0.f, 0.f },
 						.uv = { 0.f, 0.f },
@@ -125,7 +125,7 @@ Mesh* Mesh::MakeQuad()
 					},
 					Vertex
 					{
-						.location = { .5f, .5f, 0.f },
+						.location = { .5f, .5f, 0.f, 1.f },
 						.normal = { 0.f, 0.f, 0.f, 0.f },
 						.tangent = { 0.f, 0.f, 0.f, 0.f },
 						.uv = { 0.f, 1.f },
@@ -133,7 +133,7 @@ Mesh* Mesh::MakeQuad()
 					},
 					Vertex
 					{
-						.location = { -.5f, .5f, 0.f },
+						.location = { -.5f, .5f, 0.f, 1.f },
 						.normal = { 0.f, 0.f, 0.f, 0.f },
 						.tangent = { 0.f, 0.f, 0.f, 0.f },
 						.uv = { 1.f, 1.f },
@@ -255,7 +255,7 @@ Mesh* Mesh::MakeSphere(const float radius, const uint8 stacks, const uint8 secto
 
 			vertices.Add(
 				{
-					.location = { x, y, z },
+					.location = { x, y, z, 1.f },
 					.normal = vec4{ nX, nY, nZ, 1.f },
 					.tangent = vec4{ 0.f },
 					.uv = { u, v },
@@ -328,7 +328,7 @@ Mesh* Mesh::MakeFromAssimp(const string& file)
 			{
 				aiVector3D location = mesh->mVertices[v];
 
-				vert.location = { location.x, location.y, location.z };
+				vert.location = { location.x, location.y, location.z, 1.f };
 			}
 
 			if (mesh->HasNormals())
@@ -363,7 +363,7 @@ Mesh* Mesh::MakeFromAssimp(const string& file)
 				vert.color = Color{ 1.f, 1.f, 1.f, 1.f };
 			}
 
-			vertices[v] = vert;
+			vertices[v] = vert; 
 		}
 
 		if (mesh->HasFaces())

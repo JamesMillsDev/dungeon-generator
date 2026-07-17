@@ -3,11 +3,12 @@ import lighting;
 import graphics;
 
 [shader("vertex")]
-VSOutput main(VSInput input, uniform TransformUniform *pushData)
+VSOutput main(VSInput input, uniform float4x4 transform)
 {
     VSOutput output;
 
-    output.location = TransformVertex(pushData->model, input.location);
+    output.location = TransformVertex(input, transform);
+    output.fragLocation = mul(transform, input.location).xyz;
     
     output.normal = input.normal.xyz;
     output.tangent = input.tangent;
@@ -19,9 +20,9 @@ VSOutput main(VSInput input, uniform TransformUniform *pushData)
 }
 
 [shader("fragment")]
-float4 main(VSOutput input, uniform TransformUniform *pushData) : SV_Target
+float4 main(VSOutput input, uniform float4x4 transform) : SV_Target
 {
-    float4 baseColor = TrySampleMap(diffuseMap, material.baseColorMapSet, input.uv0, material.color);
+    float4 baseColor = TrySampleMap(diffuseMap, material.baseColorMapSet, input.uv0, material.color) * input.color;
     float4 orm = TrySampleMap(ormMap, material.ormMapSet, input.uv0, float4(material.ao, material.roughness, material.metallic, 1));
     float3 emissive = TrySampleMap(emissiveMap, material.emissiveMapSet, input.uv0, material.emissiveTint).rgb;
 
@@ -61,7 +62,7 @@ float4 main(VSOutput input, uniform TransformUniform *pushData) : SV_Target
        float3 lightColor = light.color.rgb * light.intensity;
 
        // Calculate light direction and attenuation
-       float3 L = LightDirection(light, input.location.xyz);      // Light direction
+       float3 L = (light.location - input.location).xyz;//LightDirection(light, input.fragLocation);      // Light direction
 
        float distance = length(L);   // Distance for falloff
        float attenuation = 1.0 / (distance * distance);     // Inverse square falloff

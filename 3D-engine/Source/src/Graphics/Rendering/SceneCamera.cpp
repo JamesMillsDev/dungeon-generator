@@ -17,8 +17,6 @@ void SceneCamera::GetPvm(ProjectionViewUniform& pvm) const
 {
 	Camera::GetPvm(pvm);
 
-	const mat4 view = m_transform->LocalToWorld();
-
-	pvm.view = glm::scale(view, { 1.f, -1.f, 1.f });
+	pvm.view = m_transform->LocalToWorld();
 	pvm.cameraLocation = m_transform->location;
 }

@@ -126,38 +126,34 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 	};
 	materialBuffer->Fill(&materialUniform);
 
-	// Update the transform buffer with our object's transform
-	const MemoryBuffer* pushConstantBuffer = vulkan->GetUniformBuffer(EUniformBufferIds::Transform);
-
-	mat4 inverted = glm::rotate(transform, Maths::Radians(180.f), { 0.f, 0.f, 1.f });
-	inverted = glm::scale(inverted, { 1.f, -1.f, 1.f });
-	const TransformUniform transformUniform
-	{
-		.model = inverted
-	};
-
-	pushConstantBuffer->Fill(&transformUniform);
-
 	// Bind the pipeline and push the push constants to the command buffer
-	m_pipeline->Bind(cmdBuffer, pushConstantBuffer->GetAddress());
+	m_pipeline->Bind(cmdBuffer, transform);
 
 	// Update the descriptor sets if needed
 	if (m_shouldUpdateDescriptors)
 	{
 		TList<VkWriteDescriptorSet> writes;
 
-		InsertUniformWrite(writes, vulkan->GetUniformBuffer(EUniformBufferIds::ProjectionView), 0);
-		InsertUniformWrite(writes, vulkan->GetUniformBuffer(EUniformBufferIds::SceneLighting), 1);
+		InsertUniformWrite(
+			writes, vulkan->GetUniformBuffer(EUniformBufferIds::ProjectionView), 
+			static_cast<uint32>(EUniformBufferIds::ProjectionView)
+		);
+		InsertUniformWrite(
+			writes, vulkan->GetUniformBuffer(EUniformBufferIds::SceneLighting),
+			static_cast<uint32>(EUniformBufferIds::SceneLighting)
+		);
 
 		for (uint8 i = 0; i < MAX_LIGHT_COUNT; ++i)
 		{
 			if (const MemoryBuffer* buffer = vulkan->GetUniformBuffer(EUniformBufferIds::Lights, i))
 			{
-				InsertUniformWrite(writes, buffer, 2, i);
+				InsertUniformWrite(writes, buffer, static_cast<uint32>(EUniformBufferIds::Lights), i);
 			}
 		}
 
-		InsertUniformWrite(writes, materialBuffer, 3);
+		InsertUniformWrite(
+			writes, materialBuffer, static_cast<uint32>(EUniformBufferIds::Material)
+		);
 
 		UpdateDescriptorSets(writes);
 		m_shouldUpdateDescriptors = false;

@@ -95,7 +95,7 @@ void Renderer::BeginFrame()
 	m_currentCamera->GetPvm(pvm);
 
 	const MemoryBuffer* projViewBuff = m_vulkan->GetUniformBuffer(EUniformBufferIds::ProjectionView);
-	projViewBuff->Fill(&pvm);
+	projViewBuff->Fill(&pvm); 
 }
 
 void Renderer::EndFrame()

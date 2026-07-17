@@ -46,7 +46,7 @@ GraphicsPipeline::~GraphicsPipeline()
 	Destroy();
 }
 
-void GraphicsPipeline::Bind(const VkCommandBuffer cmdBuffer, const VkDeviceAddress pushConstantAddress) const
+void GraphicsPipeline::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform) const
 {
 	vkCmdBindDescriptorSets(
 		cmdBuffer, m_bindPoint, m_pipelineLayout, 0, 1, &m_descriptorSets, 0, nullptr
@@ -55,7 +55,7 @@ void GraphicsPipeline::Bind(const VkCommandBuffer cmdBuffer, const VkDeviceAddre
 	vkCmdBindPipeline(cmdBuffer, m_bindPoint, m_pipeline);
 
 	vkCmdPushConstants(
-		cmdBuffer, m_pipelineLayout, m_pushConstantStage, 0, sizeof(TransformUniform), &pushConstantAddress
+		cmdBuffer, m_pipelineLayout, m_pushConstantStage, 0, sizeof(mat4), &transform
 	);
 }
 

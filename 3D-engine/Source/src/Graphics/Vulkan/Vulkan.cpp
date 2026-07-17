@@ -31,15 +31,8 @@ using std::exception;
 constexpr uint32 MAX_TEXTURE_DESCRIPTORS = UINT16_MAX;
 constexpr int32 UNIFORM_BUFFER_COUNT = 3;
 
-const TArray UNIFORM_DATA
+const TArray UNIFORM_DATA 
 {
-	UniformBufferData
-	{
-		.count = 1,
-		.size = sizeof(TransformUniform),
-		.bufferUsage = VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT_KHR,
-		.id = static_cast<uint16>(EUniformBufferIds::Transform)
-	},
 	UniformBufferData
 	{
 		.count = 1,
@@ -54,7 +47,7 @@ const TArray UNIFORM_DATA
 		.bufferUsage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		.id = static_cast<uint16>(EUniformBufferIds::SceneLighting)
 	},
-	UniformBufferData
+	UniformBufferData 
 	{
 		.count = MAX_LIGHT_COUNT,
 		.size = sizeof(LightUniform),
@@ -967,9 +960,9 @@ VkCommandBuffer Vulkan::BeginFrame()
 	const VkViewport vp =
 	{
 		.x = 0.f,
-		.y = 0.f,
+		.y = window->Height(),
 		.width = window->Width(),
-		.height = window->Height(),
+		.height = -window->Height(),
 		.minDepth = 0.f,
 		.maxDepth = 1.f
 	};

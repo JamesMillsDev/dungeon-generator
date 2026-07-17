@@ -93,7 +93,7 @@ public:
 		{
 			.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
 			.offset = 0,
-			.size = sizeof(TransformUniform)
+			.size = sizeof(mat4)
 		}
 	};
 
@@ -127,7 +127,7 @@ public:
 	~GraphicsPipeline();
 
 public:
-	void Bind(VkCommandBuffer cmdBuffer, VkDeviceAddress pushConstantAddress) const;
+	void Bind(VkCommandBuffer cmdBuffer, const mat4& transform) const;
 	void SetBindPoint(VkPipelineBindPoint bindPoint);
 	void SetPushConstantStage(VkShaderStageFlagBits stage);
 
