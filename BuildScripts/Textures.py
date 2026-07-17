@@ -72,16 +72,12 @@ def transcode(project_name : str, ktx_sdk : str, texture_extensions : list[str],
 
             run.extend(["create"])
             run.extend(["--format", format])
-            run.extend(["--encode", "uastc-hdr-4x4" if hdr else "basis-lz"])
+            run.extend(["--encode", "uastc-hdr-4x4" if hdr else "uastc"])
             run.extend(["--assign-tf", "srgb" if srgb else "linear"])
             if hdr == True:
                 out_file = str(out_file) + ".exr"
             else:
                 out_file = str(out_file) + ".ktx2"
-            
-            if normal_mode:
-                run.extend(["--normalize"])
-                run.extend(["--normal-mode"])
 
             run.extend(mip_settings)
 

@@ -306,7 +306,7 @@ Mesh* Mesh::MakeFromAssimp(const string& file)
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFileFromMemory(
 		meshData.data, meshData.length,
-		aiProcess_Triangulate /*| aiProcess_CalcTangentSpace*/ | aiProcess_GlobalScale | aiProcess_FlipUVs
+		aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_GlobalScale | aiProcess_FlipUVs
 	);
 
 	TList<SubMesh*> subMeshes;

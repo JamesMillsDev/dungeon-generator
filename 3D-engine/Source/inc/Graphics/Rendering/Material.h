@@ -33,6 +33,7 @@ struct MaterialUniform
 	Color color;
 	Color emissiveTint;
 
+	float ao;
 	float roughness;
 	float metallic;
 	float alphaMask;
@@ -43,11 +44,11 @@ struct MaterialUniform
 	float prefilteredCubeMipLevels;
 	float scaleIBLAmbient;
 
-	int32 baseColorMapSet;
-	int32 normalMapSet;
-	int32 ormMapSet;
-	int32 emissiveMapSet;
-	int32 heightMapSet;
+	int32 baseColorMap;
+	int32 normalMap;
+	int32 ormMap;
+	int32 emissiveMap;
+	int32 heightMap;
 };
 
 class Material : public Object
@@ -57,6 +58,7 @@ class Material : public Object
 public:
 	Color color;
 	Color emissiveTint;
+	float ao;
 	float roughness;
 	float metallic;
 	float alphaMask;

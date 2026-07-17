@@ -7,6 +7,7 @@
 #include "Graphics/Uniforms.h"
 
 #include "Utility/Collections/TList.h"
+#include "Utility/Collections/TMap.h"
 #include "Utility/Collections/TSet.h"
 
 class Vulkan;
@@ -19,6 +20,7 @@ struct DescriptorConfig
 	uint32 count;
 	VkShaderStageFlags stage;
 	VkDescriptorBindingFlags binding = VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
+	string name = "";
 };
 
 struct ShaderConfig
@@ -113,7 +115,7 @@ private:
 	VkDescriptorPool m_descriptorPool;
 	VkDescriptorSetLayout m_descriptorSetLayout;
 	VkDescriptorSet m_descriptorSets;
-	TList<int32> m_samplerBindings;
+	TMap<string, int32> m_samplerBindings;
 
 	VkPipelineLayout m_pipelineLayout;
 	VkPipeline m_pipeline;
@@ -132,7 +134,7 @@ public:
 	VkDescriptorSet GetDescriptorSet() const;
 	bool IsLit() const;
 
-	bool TryGetTextureBinding(TList<int32>& binding) const;
+	bool TryGetTextureBinding(TMap<string, int32>& binding) const;
 
 private:
 	void Init(Vulkan* vulkan);

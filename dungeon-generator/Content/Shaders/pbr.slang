@@ -22,12 +22,12 @@ VSOutput main(VSInput input, uniform TransformUniform *pushData)
 float4 main(VSOutput input, uniform TransformUniform *pushData) : SV_Target
 {
     float4 baseColor = TrySampleMap(diffuseMap, material.baseColorMapSet, input.uv0, material.color);
-    float4 orm = TrySampleMap(ormMap, material.ormMapSet, input.uv0, float4(1, 0, 0, 1));
+    float4 orm = TrySampleMap(ormMap, material.ormMapSet, input.uv0, float4(material.ao, material.roughness, material.metallic, 1));
     float3 emissive = TrySampleMap(emissiveMap, material.emissiveMapSet, input.uv0, material.emissiveTint).rgb;
 
     float ao = orm.r;
-    float roughness = orm.g * material.roughness;
-    float metallic = orm.b * material.metallic;
+    float roughness = orm.g;
+    float metallic = orm.b;
 
     float3 N = CalculateNormal(input, normalMap, material.normalMapSet);
     
@@ -51,52 +51,55 @@ float4 main(VSOutput input, uniform TransformUniform *pushData) : SV_Target
     // Calculate contribution from each light source
     for(int i = 0; i < MAX_LIGHT_COUNT; ++i)
     {
-        LightUniform light = lights[i];
+       LightUniform light = lights[i];
 
-        if(light.enabled == 0)
-        {
-            continue;
-        }
+       if(light.enabled == 0)
+       {
+           continue;
+       }
 
-        float3 lightColor = light.color.rgb * light.intensity;
+       float3 lightColor = light.color.rgb * light.intensity;
 
-        // Calculate light direction and attenuation
-        float3 L = LightDirection(light, input.location.xyz);      // Light direction
-        float distance = length(L);   // Distance for falloff
-        float attenuation = 1.0 / (distance * distance);     // Inverse square falloff
-        float3 radiance = lightColor * attenuation;           // Attenuated light color
+       // Calculate light direction and attenuation
+       float3 L = LightDirection(light, input.location.xyz);      // Light direction
 
-        // Calculate half vector (between view and light directions)
-        float3 H = normalize(V + L);
+       float distance = length(L);   // Distance for falloff
+       float attenuation = 1.0 / (distance * distance);     // Inverse square falloff
+       float3 radiance = lightColor * attenuation;           // Attenuated light color
 
-        // === BRDF EVALUATION ===
-        // Calculate all necessary dot products for BRDF terms
-        float NdotL = max(dot(N, L), 0.0);  // Lambertian falloff
-        float NdotV = max(dot(N, V), 0.0);  // View angle
-        float NdotH = max(dot(N, H), 0.0);  // Half vector for specular
-        float HdotV = max(dot(H, V), 0.0);  // For Fresnel calculation
+       // Calculate half vector (between view and light directions)
+       float3 H = normalize(V + L);
 
-        // Evaluate Cook-Torrance BRDF components
-        float D = DistributionGGX(NdotH, roughness);    // Normal distribution
-        float G = GeometrySmith(NdotV, NdotL, roughness); // Geometry function
-        float3 F = FresnelSchlick(HdotV, F0);           // Fresnel reflectance
+       // === BRDF EVALUATION ===
+       // Calculate all necessary dot products for BRDF terms
+       float NdotL = max(dot(N, L), 0.0);  // Lambertian falloff
+       float NdotV = max(dot(N, V), 0.0);  // View angle
+       float NdotH = max(dot(N, H), 0.0);  // Half vector for specular
+       float HdotV = max(dot(H, V), 0.0);  // For Fresnel calculation
 
-        // Calculate specular BRDF
-        float3 numerator = D * G * F;
-        float denominator = 4.0 * NdotV * NdotL + 0.0001; // Prevent division by zero
-        float3 specular = numerator / denominator;
+       // Evaluate Cook-Torrance BRDF components
+       float D = DistributionGGX(NdotH, roughness);    // Normal distribution
+       float G = GeometrySmith(NdotV, NdotL, roughness); // Geometry function
+       float3 F = FresnelSchlick(HdotV, F0);           // Fresnel reflectance
 
-        // === ENERGY CONSERVATION ===
-        // Fresnel term represents specular reflection ratio
-        float3 kS = F;                          // Specular contribution
-        float3 kD = float3(1.0, 1.0, 1.0) - kS; // Diffuse contribution (energy conservation)
-        kD *= 1.0 - metallic;                   // Metals have no diffuse reflection
+       // Calculate specular BRDF
+       float3 numerator = D * G * F;
+       float denominator = 4.0 * NdotV * NdotL + 0.0001; // Prevent division by zero
+       float3 specular = numerator / denominator;
 
-        // === RADIANCE ACCUMULATION ===
-        // Combine diffuse (Lambertian) and specular (Cook-Torrance) terms
-        // Multiply by incident radiance and cosine foreshortening
-        Lo += (kD * baseColor.rgb / PI + specular) * radiance * NdotL;
+       // === ENERGY CONSERVATION ===
+       // Fresnel term represents specular reflection ratio
+       float3 kS = F;                          // Specular contribution
+       float3 kD = float3(1.0, 1.0, 1.0) - kS; // Diffuse contribution (energy conservation)
+       kD *= 1.0 - metallic;                   // Metals have no diffuse reflection
+
+       // === RADIANCE ACCUMULATION ===
+       // Combine diffuse (Lambertian) and specular (Cook-Torrance) terms
+       // Multiply by incident radiance and cosine foreshortening
+       Lo += (kD * baseColor.rgb / PI + specular) * radiance * NdotL;
     }
+
+    return float4(Lo, 1.0);
     
     // === AMBIENT AND EMISSIVE ===
     // Add simple ambient lighting (should be replaced with IBL in production)
@@ -110,7 +113,7 @@ float4 main(VSOutput input, uniform TransformUniform *pushData) : SV_Target
     color = color / (color + float3(1.0, 1.0, 1.0));
 
     // Apply gamma correction for sRGB display (inverse gamma)
-    //color = pow(color, float3(1.0 / material.gamma, 1.0 / material.gamma, 1.0 / material.gamma));
+    color = pow(color, float3(1.0 / material.gamma, 1.0 / material.gamma, 1.0 / material.gamma));
 
     // Output final color with original alpha
     return float4(color, baseColor.a);

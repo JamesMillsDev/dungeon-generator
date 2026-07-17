@@ -1,5 +1,7 @@
 #include "Graphics/Rendering/Material.h"
 
+#include <format>
+
 #include "Gameplay/Actors/Components/Rendering/LightComponent.h"
 
 #include "Graphics/Renderer.h"
@@ -13,18 +15,19 @@
 
 #include "ImGui/imgui.h"
 
+#include "Maths/Maths.h"
+
 #include "Utility/Collections/HashImpls.h"
 
-Material::Material(const string& shaderPath) :
-	color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ .5f }, metallic{ .5f },
-	m_pipelineConfig{ shaderPath }, m_pipeline{ nullptr }, m_shouldUpdateDescriptors{ true }
+Material::Material(const string& shaderPath)
+	: Material{ ShaderConfig{ .name = shaderPath } }
 {
-	AddTextureMaps();
 }
 
-Material::Material(const ShaderConfig& shaderConfig) :
-	color{ 0xffffffff }, emissiveTint{ 0x00000000 }, roughness{ .5f }, metallic{ .5f },
-	m_pipelineConfig{ shaderConfig }, m_pipeline{ nullptr }, m_shouldUpdateDescriptors{ true }
+Material::Material(const ShaderConfig& shaderConfig)
+	: color{ 0xffffffff }, emissiveTint{ 0x00000000 }, ao{ 0.f }, roughness{ .5f }, metallic{ .5f },
+	alphaMask{ 1.f }, alphaMaskCutoff{ 0.f }, m_pipelineConfig{ shaderConfig }, m_pipeline{ nullptr },
+	m_shouldUpdateDescriptors{ true }
 {
 	AddTextureMaps();
 }
@@ -43,7 +46,7 @@ Material::~Material()
 
 uint64 Material::GetHashCode() const
 {
-	return HashAll(color, emissiveTint, roughness, metallic);
+	return HashAll(color, emissiveTint, ao, roughness, metallic);
 }
 
 void Material::SetTexture(const string& id, Texture* texture)
@@ -70,6 +73,7 @@ void Material::Dbg_ShowGui()
 		emissiveTint = Color{ colors[0], colors[1], colors[2], emissiveTint.a };
 	}
 
+	ImGui::DragFloat("AO", &ao, .01f, 0.f, 1.f, "%.2f"); 
 	ImGui::DragFloat("Roughness", &roughness, .01f, 0.f, 1.f, "%.2f");
 	ImGui::DragFloat("Metallic", &metallic, .01f, 0.f, 1.f, "%.2f"); 
 
@@ -81,14 +85,15 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 {
 	if (m_pipeline == nullptr)
 	{
-		for (uint64 i = 0; i < m_textures.Count(); ++i)
+		for (const TMapEntry<string, Texture*>* texture : m_textures)
 		{
 			m_pipelineConfig.shaderConfig.descriptors.Add(
 				{
 					.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 					.count = 1,
 					.stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-					.binding = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT
+					.binding = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
+					.name = texture->Key()
 				}
 			);
 		}
@@ -104,7 +109,8 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 	{
 		.color = color,
 		.emissiveTint = emissiveTint,
-		.roughness = roughness,
+		.ao = ao,
+		.roughness = 1.f - roughness,
 		.metallic = metallic,
 		.alphaMask = alphaMask,
 		.alphaMaskCutoff = alphaMaskCutoff,
@@ -112,18 +118,19 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 		.gamma = 2.2f,
 		.prefilteredCubeMipLevels = 1.f,
 		.scaleIBLAmbient = 1.f, 
-		.baseColorMapSet = m_textures[BASE_COLOR_MAP_NAME] != nullptr ? 1 : 0,
-		.normalMapSet = m_textures[NORMAL_MAP_NAME] != nullptr ? 1 : 0,
-		.ormMapSet = m_textures[ORM_MAP_NAME] != nullptr ? 1 : 0,
-		.emissiveMapSet = m_textures[EMISSIVE_MAP_NAME] != nullptr ? 1 : 0,
-		.heightMapSet = m_textures[HEIGHT_MAP_NAME] != nullptr ? 1 : 0,
+		.baseColorMap = m_textures[BASE_COLOR_MAP_NAME] != nullptr ? 1 : 0,
+		.normalMap = m_textures[NORMAL_MAP_NAME] != nullptr ? 1 : 0,
+		.ormMap = m_textures[ORM_MAP_NAME] != nullptr ? 1 : 0,
+		.emissiveMap = m_textures[EMISSIVE_MAP_NAME] != nullptr ? 1 : 0,
+		.heightMap = m_textures[HEIGHT_MAP_NAME] != nullptr ? 1 : 0,
 	};
 	materialBuffer->Fill(&materialUniform);
 
 	// Update the transform buffer with our object's transform
 	const MemoryBuffer* pushConstantBuffer = vulkan->GetUniformBuffer(EUniformBufferIds::Transform);
 
-	const mat4 inverted = glm::scale(transform, { 1.f, -1.f, 1.f });
+	mat4 inverted = glm::rotate(transform, Maths::Radians(180.f), { 0.f, 0.f, 1.f });
+	inverted = glm::scale(inverted, { 1.f, -1.f, 1.f });
 	const TransformUniform transformUniform
 	{
 		.model = inverted
@@ -159,18 +166,15 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 
 void Material::UpdateDescriptorSets(TList<VkWriteDescriptorSet>& writes) const
 {
-	TList<int32> textureBindings;
+	TMap<string, int32> textureBindings;
 	if (m_pipeline->TryGetTextureBinding(textureBindings))
 	{
-		int i = 0;
 		for (TMapEntry<string, Texture*>* texture : m_textures)
 		{
 			if (texture->Value() != nullptr)
 			{
-				InsertTextureWrite(writes, texture->Value(), textureBindings[i]);
+				InsertTextureWrite(writes, texture->Value(), textureBindings[texture->Key()]);
 			}
-
-			++i;
 		}
 	}
 

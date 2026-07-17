@@ -3,6 +3,7 @@ struct MaterialUniform
     float4 color;
     float4 emissiveTint;
 
+    float ao;
     float roughness;
     float metallic;
     float alphaMask;
@@ -21,11 +22,11 @@ struct MaterialUniform
 };
 
 [[vk::binding(3, 0)]] ConstantBuffer<MaterialUniform> material;
-[[vk::binding(4, 0)]] ConstantBuffer<Sampler2D> diffuseMap;
+[[vk::binding(7, 0)]] ConstantBuffer<Sampler2D> diffuseMap;
 [[vk::binding(5, 0)]] ConstantBuffer<Sampler2D> normalMap;
-[[vk::binding(6, 0)]] ConstantBuffer<Sampler2D> ormMap;
-[[vk::binding(7, 0)]] ConstantBuffer<Sampler2D> emissiveMap;
-[[vk::binding(8, 0)]] ConstantBuffer<Sampler2D> heightMap;
+[[vk::binding(8, 0)]] ConstantBuffer<Sampler2D> ormMap;
+[[vk::binding(6, 0)]] ConstantBuffer<Sampler2D> emissiveMap;
+[[vk::binding(4, 0)]] ConstantBuffer<Sampler2D> heightMap;
 
 float4 Sample(ConstantBuffer<Sampler2D> textures[], int32_t index, float2 uv, float4 defaultValue = float4(0, 0, 0, 0))
 {
@@ -44,5 +45,5 @@ float4 TrySampleMap(Sampler2D map, int32_t cond, float2 uv, float4 defaultValue)
         return defaultValue;
     }
 
-    return map.Sample(uv);
+    return map.Sample(uv) * defaultValue;
 }

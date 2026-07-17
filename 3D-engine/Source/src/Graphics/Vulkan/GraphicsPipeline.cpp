@@ -79,7 +79,7 @@ bool GraphicsPipeline::IsLit() const
 	return m_config.shaderConfig.lit;
 }
 
-bool GraphicsPipeline::TryGetTextureBinding(TList<int32>& binding) const
+bool GraphicsPipeline::TryGetTextureBinding(TMap<string, int32>& binding) const
 {
 	if (m_samplerBindings.IsEmpty())
 	{
@@ -181,7 +181,7 @@ void GraphicsPipeline::InitDescriptors(const Vulkan* vulkan)
 
 		if (descriptor.type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
 		{
-			m_samplerBindings.Add(i);
+			m_samplerBindings.Add(descriptor.name, i);
 		}
 	}
 

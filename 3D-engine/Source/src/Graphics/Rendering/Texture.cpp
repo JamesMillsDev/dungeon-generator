@@ -121,9 +121,9 @@ void Texture::VulkanTexture::CreateBuffer(const uint8* pixels, const uint64 numP
 		throw runtime_error(std::format("Failed to load texture from file! Error Code: {}", static_cast<int32>(error)));
 	}
 
-	ktxTexture2_TranscodeBasis(m_texture, KTX_TTF_BC7_RGBA, KTX_TF_HIGH_QUALITY); 
+	ktxTexture2_TranscodeBasis(m_texture, KTX_TTF_BC3_RGBA, KTX_TF_HIGH_QUALITY);
 	// Get the format and extent from the texture
-	m_imageFormat = static_cast<VkFormat>(m_texture->vkFormat);
+	m_imageFormat = static_cast<VkFormat>(m_texture->vkFormat); 
 	m_imageExtent.width = m_texture->baseWidth;
 	m_imageExtent.height = m_texture->baseHeight;
 	m_imageExtent.depth = 1;
