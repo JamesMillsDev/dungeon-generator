@@ -6,6 +6,11 @@
 
 #include <vulkan/vulkan.h>
 
+#include "Uniforms.h"
+
+#include "Rendering/Camera.h"
+#include "Rendering/Camera.h"
+
 class Application;
 class Camera;
 class Config;
@@ -45,6 +50,8 @@ private:
 private:
 	VkCommandBuffer m_frameCmdBuf;
 	Vulkan* m_vulkan;
+
+	GlobalsUniform m_globalsUniform;
 
 private:
 	explicit Renderer(Config* config, GLFWwindow* window);

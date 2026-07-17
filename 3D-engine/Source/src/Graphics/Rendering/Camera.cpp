@@ -17,7 +17,7 @@ Camera::Camera(const float fovY, const float nearPlane, const float farPlane)
 	Renderer::SetCurrent(this);
 }
 
-void Camera::GetPvm(ProjectionViewUniform& pvm) const
+void Camera::GetPvm(GlobalsUniform& pvm) const
 {
 	pvm.proj = glm::perspective(Maths::Radians(fovY), m_window->Aspect(), nearPlane, farPlane);
 }

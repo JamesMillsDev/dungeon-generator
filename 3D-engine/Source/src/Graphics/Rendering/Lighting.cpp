@@ -57,8 +57,9 @@ void Lighting::UpdateBuffers()
 
 				lightUniform =
 				{
-					.location = vec4{ transform->location, 1.f }, 
-					.direction = vec4{ transform->Forward(), 0.f },
+					.location = vec4{ transform->location, 1.f },
+					// multiply the direction by 50000 to make sure it normalizes to 1
+					.direction = vec4{ glm::normalize(transform->Forward() * 50000.f), 0.f },
 					.color = light->color,
 					.intensity = light->intensity,
 					.constant = light->constant,

@@ -13,7 +13,7 @@ void SceneCamera::SetTransform(Transform* transform)
 	m_transform = transform;
 }
 
-void SceneCamera::GetPvm(ProjectionViewUniform& pvm) const
+void SceneCamera::GetPvm(GlobalsUniform& pvm) const
 {
 	Camera::GetPvm(pvm);
 

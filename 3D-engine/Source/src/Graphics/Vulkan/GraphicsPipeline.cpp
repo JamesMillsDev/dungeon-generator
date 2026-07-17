@@ -2,7 +2,9 @@
 
 #include "Gameplay/Actors/Components/Rendering/LightComponent.h"
 
+#include "Graphics/Uniforms.h"
 #include "Graphics/Rendering/Lighting.h"
+#include "Graphics/Rendering/Material.h"
 #include "Graphics/Rendering/Mesh.h"
 #include "Graphics/Rendering/Shader.h"
 #include "Graphics/Vulkan/Vulkan.h"
@@ -13,7 +15,11 @@ bool ShaderConfig::StageComp::operator()(const VkShaderStageFlagBits& lhs, const
 }
 
 GraphicsPipelineConfig::GraphicsPipelineConfig(ShaderConfig shader)
-	: shaderConfig{ std::move(shader) }
+	: shaderConfig{ std::move(shader) }, pushConstantRanges{ {
+			.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
+			.offset = 0,
+			.size = sizeof(PushConstants)
+		} }
 {
 
 }
@@ -46,7 +52,7 @@ GraphicsPipeline::~GraphicsPipeline()
 	Destroy();
 }
 
-void GraphicsPipeline::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform) const
+void GraphicsPipeline::Bind(const VkCommandBuffer cmdBuffer, const VkDeviceAddress& pushConstants) const
 {
 	vkCmdBindDescriptorSets(
 		cmdBuffer, m_bindPoint, m_pipelineLayout, 0, 1, &m_descriptorSets, 0, nullptr
@@ -55,7 +61,7 @@ void GraphicsPipeline::Bind(const VkCommandBuffer cmdBuffer, const mat4& transfo
 	vkCmdBindPipeline(cmdBuffer, m_bindPoint, m_pipeline);
 
 	vkCmdPushConstants(
-		cmdBuffer, m_pipelineLayout, m_pushConstantStage, 0, sizeof(mat4), &transform
+		cmdBuffer, m_pipelineLayout, m_pushConstantStage, 0, sizeof(VkDeviceAddress), &pushConstants
 	);
 }
 
@@ -117,7 +123,8 @@ void GraphicsPipeline::InitDescriptors(const Vulkan* vulkan)
 		{
 			.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 			.count = 1,
-			.stage = VK_SHADER_STAGE_ALL_GRAPHICS
+			.stage = VK_SHADER_STAGE_ALL_GRAPHICS,
+			.name = "Globals"
 		}
 	);
 
@@ -127,25 +134,19 @@ void GraphicsPipeline::InitDescriptors(const Vulkan* vulkan)
 			{
 				.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 				.count = 1,
-				.stage = VK_SHADER_STAGE_FRAGMENT_BIT
+				.stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+				.name = "SceneLighting"
 			}
 		);
 		descriptors.Add(
 			{
 				.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 				.count = MAX_LIGHT_COUNT,
-				.stage = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT
+				.stage = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT,
+				.name = "Lights"
 			}
 		);
 	}
-
-	descriptors.Add(
-		{
-			.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-			.count = 1,
-			.stage = VK_SHADER_STAGE_FRAGMENT_BIT
-		}
-	);
 
 	for (const DescriptorConfig& descriptor : m_config.shaderConfig.descriptors)
 	{

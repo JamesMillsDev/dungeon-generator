@@ -13,6 +13,6 @@ public:
 
 public:
 	void SetTransform(Transform* transform);
-	void GetPvm(ProjectionViewUniform& pvm) const override;
+	void GetPvm(GlobalsUniform& pvm) const override;
 
 };

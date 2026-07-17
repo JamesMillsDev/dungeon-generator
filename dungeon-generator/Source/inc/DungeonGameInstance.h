@@ -14,7 +14,6 @@ private:
 	FlyCamera* m_camera;
 
 	Material* m_material;
-	Material* m_cubeMaterial[4];
 	Mesh* m_mesh;
 	Mesh* m_cubeMesh;
 

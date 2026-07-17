@@ -7,7 +7,7 @@
 
 #include "Utility/Collections/TList.h"
 
-constexpr uint8 MAX_LIGHT_COUNT = 8;
+constexpr uint8 MAX_LIGHT_COUNT = 16;
 
 struct LightUniform
 {

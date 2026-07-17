@@ -62,7 +62,7 @@ void Renderer::WaitIdle()
 }
 
 Renderer::Renderer(Config* config, GLFWwindow* window)
-	: m_frameCmdBuf{ VK_NULL_HANDLE }
+	: m_frameCmdBuf{ VK_NULL_HANDLE }, m_globalsUniform{  }
 {
 	m_instance = this;
 	InitVulkan(config, window);
@@ -78,7 +78,6 @@ Renderer::~Renderer()
 void Renderer::Render(const Mesh* mesh, Material* material, const mat4& transform) const
 {
 	material->Bind(m_frameCmdBuf, transform);
-
 	mesh->Render(m_frameCmdBuf);
 }
 
@@ -91,11 +90,15 @@ void Renderer::BeginFrame()
 
 	m_frameCmdBuf = m_vulkan->BeginFrame();
 
-	ProjectionViewUniform pvm;
-	m_currentCamera->GetPvm(pvm);
+	m_currentCamera->GetPvm(m_globalsUniform);
 
-	const MemoryBuffer* projViewBuff = m_vulkan->GetUniformBuffer(EUniformBufferIds::ProjectionView);
-	projViewBuff->Fill(&pvm); 
+	m_globalsUniform.exposure = 4.5f;
+	m_globalsUniform.gamma = 2.2f;
+	m_globalsUniform.prefilteredCubeMipLevels = 1.f;
+	m_globalsUniform.scaleIBLAmbient = 1.f;
+
+	const MemoryBuffer* globalsBuff = m_vulkan->GetUniformBuffer(EUniformBufferIds::Globals);
+	globalsBuff->Fill(&m_globalsUniform);
 }
 
 void Renderer::EndFrame()

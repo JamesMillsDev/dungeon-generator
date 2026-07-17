@@ -34,7 +34,7 @@ constexpr bool ENABLE_VALIDATION_LAYERS = true;
 constexpr bool ENABLE_VALIDATION_LAYERS = false;
 #endif
 
-const TList<const char*> VALIDATION_LAYERS =
+const TList VALIDATION_LAYERS =
 {
 	"VK_LAYER_KHRONOS_validation"
 };
@@ -53,11 +53,12 @@ struct UniformBufferData
 
 enum class EUniformBufferIds : uint16
 {
-	ProjectionView = 0,
+	Globals = 0,
 	SceneLighting = 1,
 	Lights = 2,
-	Material = 3,
-	PushConstant = UINT16_MAX
+	Transform = UINT16_MAX - 2,
+	Material = UINT16_MAX - 1,
+	PushConstants = UINT16_MAX
 };
 
 using UniformBufferSet = TMap<uint16, TList<MemoryBuffer*>>;

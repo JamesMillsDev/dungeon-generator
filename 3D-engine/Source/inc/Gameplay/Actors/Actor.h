@@ -39,6 +39,12 @@ public:
 	template<typename T, typename... ARGS>
 	T* MakeComponent(ARGS... args);
 
+	template<typename T>
+	T* GetComponent();
+
+	template<typename T>
+	TList<T*> GetComponents();
+
 	void DestroyComponent(IComponent* component);
 
 	Transform* GetTransform() const;
@@ -64,4 +70,34 @@ T* Actor::MakeComponent(ARGS... args)
 
 	newComp->m_owner = this;
 	return newComp;
+}
+
+template <typename T>
+T* Actor::GetComponent()
+{
+	for (IComponent* component : m_components)
+	{
+		if (T* comp = dynamic_cast<T*>(component))
+		{
+			return comp;
+		}
+	}
+
+	return nullptr;
+}
+
+template <typename T>
+TList<T*> Actor::GetComponents()
+{
+	TList<T*> components;
+
+	for (IComponent* component : m_components)
+	{
+		if (T* comp = dynamic_cast<T*>(component))
+		{
+			components.Add(comp);
+		}
+	}
+
+	return components;
 }

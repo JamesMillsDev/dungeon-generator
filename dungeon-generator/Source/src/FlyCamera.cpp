@@ -14,17 +14,15 @@ class SimpleInput;
 
 FlyCamera::FlyCamera(const float fov, const float near, const float far)
 	: Camera{ fov, near, far }, location{ 0.f, 0.f, 0.f }, m_yaw{ 0 }, m_pitch{ 0 },
-	m_turnSpeed{ Maths::Radians(180.f) }, m_moveSpeed{ 5.f }, m_lastMouse{ 0.f, 0.f }
+	m_turnSpeed{ Maths::Radians(180.f) }, m_moveSpeed{ 5.f }, m_lastMouse{ 0.f, 0.f } 
 {}
 
-void FlyCamera::GetPvm(ProjectionViewUniform& pvm) const
+void FlyCamera::GetPvm(GlobalsUniform& pvm) const
 {
 	Camera::GetPvm(pvm);
 
-	vec3 loc = { location.x, location.y, location.z };
-
 	const float yawR = Maths::Radians(m_yaw);
-	const float pitchR = Maths::Radians(m_pitch);
+	const float pitchR = Maths::Radians(m_pitch); 
 	const vec3 forward
 	{
 		Maths::Cos(pitchR) * Maths::Sin(yawR),
@@ -33,7 +31,7 @@ void FlyCamera::GetPvm(ProjectionViewUniform& pvm) const
 	};
 
 	pvm.view = glm::lookAt(location, location + forward, vec3{ 0.f, 1.f, 0.f });
-	pvm.cameraLocation = loc;
+	pvm.cameraLocation = location;
 }
 
 void FlyCamera::Tick()

@@ -9,11 +9,6 @@ struct MaterialUniform
     float alphaMask;
     float alphaMaskCutoff;
 
-    float exposure;
-    float gamma;
-    float prefilteredCubeMipLevels;
-    float scaleIBLAmbient;
-
     int32_t baseColorMapSet;
     int32_t normalMapSet;
     int32_t ormMapSet;
@@ -21,12 +16,11 @@ struct MaterialUniform
 	int32_t heightMapSet;
 };
 
-[[vk::binding(3, 0)]] ConstantBuffer<MaterialUniform> material;
-[[vk::binding(7, 0)]] ConstantBuffer<Sampler2D> diffuseMap;
-[[vk::binding(5, 0)]] ConstantBuffer<Sampler2D> normalMap;
-[[vk::binding(8, 0)]] ConstantBuffer<Sampler2D> ormMap;
-[[vk::binding(6, 0)]] ConstantBuffer<Sampler2D> emissiveMap;
-[[vk::binding(4, 0)]] ConstantBuffer<Sampler2D> heightMap;
+[[vk::binding(6, 0)]] ConstantBuffer<Sampler2D> diffuseMap;
+[[vk::binding(4, 0)]] ConstantBuffer<Sampler2D> normalMap;
+[[vk::binding(7, 0)]] ConstantBuffer<Sampler2D> ormMap;
+[[vk::binding(5, 0)]] ConstantBuffer<Sampler2D> emissiveMap;
+[[vk::binding(3, 0)]] ConstantBuffer<Sampler2D> heightMap;
 
 float4 Sample(ConstantBuffer<Sampler2D> textures[], int32_t index, float2 uv, float4 defaultValue = float4(0, 0, 0, 0))
 {

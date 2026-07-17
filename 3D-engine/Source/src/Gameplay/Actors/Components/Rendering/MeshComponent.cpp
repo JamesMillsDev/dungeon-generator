@@ -12,9 +12,14 @@ MeshComponent::MeshComponent(Mesh* mesh, Material* material)
 	
 }
 
+Material* MeshComponent::GetMaterial() const
+{
+	return m_material;
+}
+
 void MeshComponent::Render()
 {
 	Renderer::Instance()->Render(m_mesh, m_material, Owner()->GetTransform()->LocalToWorld());
 
-	m_material->Dbg_ShowGui();
+	m_material->Dbg_ShowGui(); 
 }

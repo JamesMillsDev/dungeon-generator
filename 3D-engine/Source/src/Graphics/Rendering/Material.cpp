@@ -5,8 +5,6 @@
 #include "Gameplay/Actors/Components/Rendering/LightComponent.h"
 
 #include "Graphics/Renderer.h"
-#include "Graphics/Uniforms.h"
-#include "Graphics/Rendering/Camera.h"
 #include "Graphics/Rendering/Lighting.h"
 #include "Graphics/Rendering/Texture.h"
 #include "Graphics/Vulkan/GraphicsPipeline.h"
@@ -15,14 +13,11 @@
 
 #include "ImGui/imgui.h"
 
-#include "Maths/Maths.h"
-
 #include "Utility/Collections/HashImpls.h"
 
 Material::Material(const string& shaderPath)
-	: Material{ ShaderConfig{ .name = shaderPath } }
-{
-}
+	: Material{ ShaderConfig{.name = shaderPath } }
+{}
 
 Material::Material(const ShaderConfig& shaderConfig)
 	: color{ 0xffffffff }, emissiveTint{ 0x00000000 }, ao{ 0.f }, roughness{ .5f }, metallic{ .5f },
@@ -57,6 +52,12 @@ void Material::SetTexture(const string& id, Texture* texture)
 #if _DEBUG
 void Material::Dbg_ShowGui()
 {
+	if (!showDebugWindow)
+	{
+		return;
+	}
+
+	ImGui::PushID("Material");
 	ImGui::Begin("Material");
 
 	float colors[3] = { color.r, color.g, color.b };
@@ -73,38 +74,22 @@ void Material::Dbg_ShowGui()
 		emissiveTint = Color{ colors[0], colors[1], colors[2], emissiveTint.a };
 	}
 
-	ImGui::DragFloat("AO", &ao, .01f, 0.f, 1.f, "%.2f"); 
+	ImGui::DragFloat("AO", &ao, .01f, 0.f, 1.f, "%.2f");
 	ImGui::DragFloat("Roughness", &roughness, .01f, 0.f, 1.f, "%.2f");
-	ImGui::DragFloat("Metallic", &metallic, .01f, 0.f, 1.f, "%.2f"); 
+	ImGui::DragFloat("Metallic", &metallic, .01f, 0.f, 1.f, "%.2f");
 
 	ImGui::End();
+	ImGui::PopID();
 }
 #endif
 
 void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 {
-	if (m_pipeline == nullptr)
-	{
-		for (const TMapEntry<string, Texture*>* texture : m_textures)
-		{
-			m_pipelineConfig.shaderConfig.descriptors.Add(
-				{
-					.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-					.count = 1,
-					.stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-					.binding = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
-					.name = texture->Key()
-				}
-			);
-		}
-
-		m_pipeline = new GraphicsPipeline{ m_pipelineConfig };
-	}
+	ValidatePipeline();
 
 	Vulkan* vulkan = Vulkan::Instance();
 
 	// Update the material uniform with this material's data
-	const MemoryBuffer* materialBuffer = vulkan->GetUniformBuffer(EUniformBufferIds::Material);
 	const MaterialUniform materialUniform
 	{
 		.color = color,
@@ -114,20 +99,30 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 		.metallic = metallic,
 		.alphaMask = alphaMask,
 		.alphaMaskCutoff = alphaMaskCutoff,
-		.exposure = 4.5f,
-		.gamma = 2.2f,
-		.prefilteredCubeMipLevels = 1.f,
-		.scaleIBLAmbient = 1.f, 
 		.baseColorMap = m_textures[BASE_COLOR_MAP_NAME] != nullptr ? 1 : 0,
 		.normalMap = m_textures[NORMAL_MAP_NAME] != nullptr ? 1 : 0,
 		.ormMap = m_textures[ORM_MAP_NAME] != nullptr ? 1 : 0,
 		.emissiveMap = m_textures[EMISSIVE_MAP_NAME] != nullptr ? 1 : 0,
 		.heightMap = m_textures[HEIGHT_MAP_NAME] != nullptr ? 1 : 0,
 	};
+
+	const MemoryBuffer* transformBuffer = vulkan->GetUniformBuffer(EUniformBufferIds::Transform);
+	transformBuffer->Fill(&transform);
+
+	const MemoryBuffer* materialBuffer = vulkan->GetUniformBuffer(EUniformBufferIds::Material);
 	materialBuffer->Fill(&materialUniform);
 
 	// Bind the pipeline and push the push constants to the command buffer
-	m_pipeline->Bind(cmdBuffer, transform);
+	const PushConstants push =
+	{
+		.transform = transformBuffer->GetAddress(),
+		.material = materialBuffer->GetAddress()
+	};
+
+	const MemoryBuffer* pushConstantBuffer = vulkan->GetUniformBuffer(EUniformBufferIds::PushConstants);
+	pushConstantBuffer->Fill(&push);
+
+	m_pipeline->Bind(cmdBuffer, pushConstantBuffer->GetAddress());
 
 	// Update the descriptor sets if needed
 	if (m_shouldUpdateDescriptors)
@@ -135,28 +130,28 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 		TList<VkWriteDescriptorSet> writes;
 
 		InsertUniformWrite(
-			writes, vulkan->GetUniformBuffer(EUniformBufferIds::ProjectionView), 
-			static_cast<uint32>(EUniformBufferIds::ProjectionView)
-		);
-		InsertUniformWrite(
-			writes, vulkan->GetUniformBuffer(EUniformBufferIds::SceneLighting),
-			static_cast<uint32>(EUniformBufferIds::SceneLighting)
+			writes, vulkan->GetUniformBuffer(EUniformBufferIds::Globals),
+			static_cast<uint32>(EUniformBufferIds::Globals)
 		);
 
-		for (uint8 i = 0; i < MAX_LIGHT_COUNT; ++i)
+		if (m_pipelineConfig.shaderConfig.lit)
 		{
-			if (const MemoryBuffer* buffer = vulkan->GetUniformBuffer(EUniformBufferIds::Lights, i))
+			InsertUniformWrite(
+				writes, vulkan->GetUniformBuffer(EUniformBufferIds::SceneLighting),
+				static_cast<uint32>(EUniformBufferIds::SceneLighting)
+			);
+
+			for (uint8 i = 0; i < MAX_LIGHT_COUNT; ++i)
 			{
-				InsertUniformWrite(writes, buffer, static_cast<uint32>(EUniformBufferIds::Lights), i);
+				if (const MemoryBuffer* buffer = vulkan->GetUniformBuffer(EUniformBufferIds::Lights, i))
+				{
+					InsertUniformWrite(writes, buffer, static_cast<uint32>(EUniformBufferIds::Lights), i);
+				}
 			}
 		}
 
-		InsertUniformWrite(
-			writes, materialBuffer, static_cast<uint32>(EUniformBufferIds::Material)
-		);
-
 		UpdateDescriptorSets(writes);
-		m_shouldUpdateDescriptors = false;
+		m_shouldUpdateDescriptors = false; 
 	}
 }
 
@@ -175,6 +170,46 @@ void Material::UpdateDescriptorSets(TList<VkWriteDescriptorSet>& writes) const
 	}
 
 	vkUpdateDescriptorSets(Vulkan::Device(), static_cast<uint32>(writes.Count()), writes.Data(), 0, nullptr);
+}
+
+void Material::UpdateUniformDescriptor(const MemoryBuffer* buffer, uint32 binding) const
+{
+	const VkWriteDescriptorSet write =
+	{
+		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.pNext = nullptr,
+		.dstSet = m_pipeline->GetDescriptorSet(),
+		.dstBinding = binding,
+		.dstArrayElement = 0,
+		.descriptorCount = 1,
+		.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+		.pImageInfo = nullptr,
+		.pBufferInfo = &buffer->GetBufferInfo(),
+		.pTexelBufferView = nullptr
+	};
+
+	vkUpdateDescriptorSets(Vulkan::Device(), 1, &write, 0, nullptr);
+}
+
+void Material::ValidatePipeline()
+{
+	if (m_pipeline == nullptr)
+	{
+		for (const TMapEntry<string, Texture*>* texture : m_textures)
+		{
+			m_pipelineConfig.shaderConfig.descriptors.Add(
+				{
+					.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+					.count = 1,
+					.stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+					.binding = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
+					.name = texture->Key()
+				}
+			);
+		}
+
+		m_pipeline = new GraphicsPipeline{ m_pipelineConfig };
+	}
 }
 
 void Material::InsertTextureWrite(TList<VkWriteDescriptorSet>& writes, const Texture* texture, const uint32 binding) const

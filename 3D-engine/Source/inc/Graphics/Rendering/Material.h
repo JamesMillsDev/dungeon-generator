@@ -39,11 +39,6 @@ struct MaterialUniform
 	float alphaMask;
 	float alphaMaskCutoff;
 
-	float exposure;
-	float gamma;
-	float prefilteredCubeMipLevels;
-	float scaleIBLAmbient;
-
 	int32 baseColorMap;
 	int32 normalMap;
 	int32 ormMap;
@@ -56,6 +51,10 @@ class Material : public Object
 	friend class Renderer;
 		
 public:
+#if _DEBUG
+	bool showDebugWindow = false;
+#endif
+
 	Color color;
 	Color emissiveTint;
 	float ao;
@@ -86,6 +85,9 @@ public:
 private:
 	void Bind(VkCommandBuffer cmdBuffer, const mat4& transform);
 	void UpdateDescriptorSets(TList<VkWriteDescriptorSet>& writes) const;
+	void UpdateUniformDescriptor(const MemoryBuffer* buffer, uint32 binding) const;
+
+	void ValidatePipeline();
 
 	void InsertTextureWrite(TList<VkWriteDescriptorSet>& writes, const Texture* texture, uint32 binding) const;
 	void InsertUniformWrite(TList<VkWriteDescriptorSet>& writes, const MemoryBuffer* buffer, uint32 binding, uint32 arrayElem = 0) const;

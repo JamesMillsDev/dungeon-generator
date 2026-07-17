@@ -24,7 +24,7 @@ public:
 	Camera(float fovY, float nearPlane, float farPlane);
 
 public:
-	virtual void GetPvm(ProjectionViewUniform& pvm) const;
+	virtual void GetPvm(GlobalsUniform& pvm) const;
 
 	[[nodiscard]] bool IsCurrent() const;
 

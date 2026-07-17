@@ -23,25 +23,25 @@ struct SceneLightingUniform
     float ambientStrength;
 };
 
-const static int MAX_LIGHT_COUNT = 8;
+const static int MAX_LIGHT_COUNT = 16;
 [[vk::binding(1, 0)]] ConstantBuffer<SceneLightingUniform> sceneLighting;
 [[vk::binding(2, 0)]] ConstantBuffer<LightUniform> lights[MAX_LIGHT_COUNT];
 
-float3 LightDirection(LightUniform light, float3 location)
+float3 LightDirection(int32_t index, float3 location)
 {
     // The light is disabled, so return no direction
-    if (light.enabled == 0)
+    if (lights[index].enabled == 0)
     {
         return float3(0, 1, 0);
     }
 
     // Directional light
-    if (light.type == 0)
+    if (lights[index].type == 0)
     {
-        return normalize(light.direction.xyz);
+        return normalize(lights[index].direction.xyz);
 	}
 
-    return normalize(light.location.xyz - location);
+    return normalize(lights[index].location.xyz - location);
 }
 
 // Normal Distribution Function (D) - GGX/Trowbridge-Reitz Distribution

@@ -4,12 +4,11 @@
 
 #include <vulkan/vulkan.h>
 
-#include "Graphics/Uniforms.h"
-
 #include "Utility/Collections/TList.h"
 #include "Utility/Collections/TMap.h"
 #include "Utility/Collections/TSet.h"
 
+struct PushConstants;
 class Vulkan;
 
 using std::string;
@@ -20,7 +19,7 @@ struct DescriptorConfig
 	uint32 count;
 	VkShaderStageFlags stage;
 	VkDescriptorBindingFlags binding = VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
-	string name = "";
+	string name;
 };
 
 struct ShaderConfig
@@ -88,14 +87,7 @@ public:
 	ColorBlendStateConfig blendState;
 	PrimitiveConfig primitive;
 	MultisamplerConfig multisampler;
-	TList<VkPushConstantRange> pushConstantRanges =
-	{
-		{
-			.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
-			.offset = 0,
-			.size = sizeof(mat4)
-		}
-	};
+	TList<VkPushConstantRange> pushConstantRanges;
 
 public:
 	explicit GraphicsPipelineConfig(ShaderConfig shader);
@@ -127,7 +119,7 @@ public:
 	~GraphicsPipeline();
 
 public:
-	void Bind(VkCommandBuffer cmdBuffer, const mat4& transform) const;
+	void Bind(VkCommandBuffer cmdBuffer, const VkDeviceAddress& pushConstants) const;
 	void SetBindPoint(VkPipelineBindPoint bindPoint);
 	void SetPushConstantStage(VkShaderStageFlagBits stage);
 

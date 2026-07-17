@@ -2,13 +2,19 @@ import global;
 import lighting;
 import graphics;
 
+struct PushConstants
+{
+    TransformUniform* transform;
+    MaterialUniform* material;
+};
+
 [shader("vertex")]
-VSOutput main(VSInput input, uniform float4x4 transform)
+VSOutput main(VSInput input, uniform PushConstants* pushConstants)
 {
     VSOutput output;
 
-    output.location = TransformVertex(input, transform);
-    output.fragLocation = mul(transform, input.location).xyz;
+    output.location = TransformVertex(input, pushConstants->transform->value);
+    output.fragLocation = mul(pushConstants->transform->value, input.location).xyz;
     
     output.normal = input.normal.xyz;
     output.tangent = input.tangent;
@@ -20,21 +26,21 @@ VSOutput main(VSInput input, uniform float4x4 transform)
 }
 
 [shader("fragment")]
-float4 main(VSOutput input, uniform float4x4 transform) : SV_Target
+float4 main(VSOutput input, uniform PushConstants* pushConstants) : SV_Target
 {
-    float4 baseColor = TrySampleMap(diffuseMap, material.baseColorMapSet, input.uv0, material.color) * input.color;
-    float4 orm = TrySampleMap(ormMap, material.ormMapSet, input.uv0, float4(material.ao, material.roughness, material.metallic, 1));
-    float3 emissive = TrySampleMap(emissiveMap, material.emissiveMapSet, input.uv0, material.emissiveTint).rgb;
+    float4 baseColor = TrySampleMap(diffuseMap, pushConstants->material->baseColorMapSet, input.uv0, pushConstants->material->color) * input.color;
+    float4 orm = TrySampleMap(ormMap, pushConstants->material->ormMapSet, input.uv0, float4(pushConstants->material->ao, pushConstants->material->roughness, pushConstants->material->metallic, 1));
+    float3 emissive = TrySampleMap(emissiveMap, pushConstants->material->emissiveMapSet, input.uv0, pushConstants->material->emissiveTint).rgb;
 
     float ao = orm.r;
     float roughness = orm.g;
     float metallic = orm.b;
 
-    float3 N = CalculateNormal(input, normalMap, material.normalMapSet);
+    float3 N = CalculateNormal(input, normalMap, pushConstants->material->normalMapSet);
     
     // === LIGHTING SETUP ===
     // Calculate view direction (fragment to camera)
-    float3 V = normalize(projectionView.cameraLocation - input.location.xyz);
+    float3 V = normalize(globals.cameraLocation - input.location.xyz);
     
     // Calculate reflection vector for environment mapping
     float3 R = reflect(-V, N);
@@ -62,7 +68,7 @@ float4 main(VSOutput input, uniform float4x4 transform) : SV_Target
        float3 lightColor = light.color.rgb * light.intensity;
 
        // Calculate light direction and attenuation
-       float3 L = (light.location - input.location).xyz;//LightDirection(light, input.fragLocation);      // Light direction
+       float3 L = LightDirection(i, input.fragLocation);      // Light direction
 
        float distance = length(L);   // Distance for falloff
        float attenuation = 1.0 / (distance * distance);     // Inverse square falloff
@@ -99,12 +105,10 @@ float4 main(VSOutput input, uniform float4x4 transform) : SV_Target
        // Multiply by incident radiance and cosine foreshortening
        Lo += (kD * baseColor.rgb / PI + specular) * radiance * NdotL;
     }
-
-    return float4(Lo, 1.0);
     
     // === AMBIENT AND EMISSIVE ===
     // Add simple ambient lighting (should be replaced with IBL in production)
-    float3 ambient = float3(0.03, 0.03, 0.03) * baseColor.rgb * ao;
+    float3 ambient = (sceneLighting.ambientColor * sceneLighting.ambientStrength).rgb * baseColor.rgb * ao;
 
     // Combine all lighting contributions
     float3 color = ambient + Lo + emissive;
@@ -114,7 +118,7 @@ float4 main(VSOutput input, uniform float4x4 transform) : SV_Target
     color = color / (color + float3(1.0, 1.0, 1.0));
 
     // Apply gamma correction for sRGB display (inverse gamma)
-    color = pow(color, float3(1.0 / material.gamma, 1.0 / material.gamma, 1.0 / material.gamma));
+    color = pow(color, float3(1.0 / globals.gamma, 1.0 / globals.gamma, 1.0 / globals.gamma));
 
     // Output final color with original alpha
     return float4(color, baseColor.a);
