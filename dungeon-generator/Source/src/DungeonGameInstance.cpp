@@ -34,17 +34,17 @@ void DungeonGameInstance::Init()
 {
 	m_camera = new FlyCamera{ 45.f, .1f, 100.f };
 	m_camera->location = vec3{ 0.f, 2.f, -10.f }; 
-//
-//m_mesh = Mesh::MakeCube();
-//m_material = new Material{ "Shaders/pbr" };
-//m_material->SetTexture(BASE_COLOR_MAP_NAME, Texture::LoadFromFile("Textures/T_Brick_B"));
-//m_material->SetTexture(NORMAL_MAP_NAME, Texture::LoadFromFile("Textures/T_Brick_N"));
-//m_material->SetTexture(ORM_MAP_NAME, Texture::LoadFromFile("Textures/T_Brick_ORM"));
-//m_material->color = Color{ 1.f, 1.f, 1.f, 1.f };
-//m_material->showDebugWindow = true;
-//
-//m_meshActor = GetWorld()->MakeActor<Actor>();
-//m_meshActor->MakeComponent<MeshComponent>(m_mesh, m_material);
+	
+	m_mesh = Mesh::MakeFromAssimp("Meshes/SM_Soulspear.fbx");
+	m_material = new Material{ "Shaders/pbr" };
+	m_material->SetTexture(BASE_COLOR_MAP_NAME, Texture::LoadFromFile("Textures/T_Soulspear_B"));
+	m_material->SetTexture(NORMAL_MAP_NAME, Texture::LoadFromFile("Textures/T_Soulspear_N"));
+	m_material->SetTexture(ORM_MAP_NAME, Texture::LoadFromFile("Textures/T_Soulspear_ORM"));
+	m_material->color = Color{ 1.f, 1.f, 1.f, 1.f };
+	m_material->showDebugWindow = true;
+	
+	m_meshActor = GetWorld()->MakeActor<Actor>();
+	m_meshActor->MakeComponent<MeshComponent>(m_mesh, m_material);
 
 	m_cubeMesh = Mesh::MakeCube();
 
@@ -71,8 +71,8 @@ void DungeonGameInstance::Init()
 void DungeonGameInstance::Shutdown()
 {
 	delete m_camera;
-	//delete m_mesh;
-	//delete m_material;
+	delete m_mesh;
+	delete m_material;
 
 	delete m_cubeMesh;
 	for (Material* material : lightMaterials)

@@ -2,7 +2,6 @@
 
 #include "Gameplay/Actors/Components/Rendering/LightComponent.h"
 
-#include "Graphics/Uniforms.h"
 #include "Graphics/Rendering/Lighting.h"
 #include "Graphics/Rendering/Material.h"
 #include "Graphics/Rendering/Mesh.h"
@@ -18,7 +17,7 @@ GraphicsPipelineConfig::GraphicsPipelineConfig(ShaderConfig shader)
 	: shaderConfig{ std::move(shader) }, pushConstantRanges{ {
 			.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
 			.offset = 0,
-			.size = sizeof(PushConstants)
+			.size = sizeof(MaterialUniform)
 		} }
 {
 
@@ -52,7 +51,7 @@ GraphicsPipeline::~GraphicsPipeline()
 	Destroy();
 }
 
-void GraphicsPipeline::Bind(const VkCommandBuffer cmdBuffer, const VkDeviceAddress& pushConstants) const
+void GraphicsPipeline::Bind(const VkCommandBuffer cmdBuffer, const MaterialUniform& material) const
 {
 	vkCmdBindDescriptorSets(
 		cmdBuffer, m_bindPoint, m_pipelineLayout, 0, 1, &m_descriptorSets, 0, nullptr
@@ -61,7 +60,7 @@ void GraphicsPipeline::Bind(const VkCommandBuffer cmdBuffer, const VkDeviceAddre
 	vkCmdBindPipeline(cmdBuffer, m_bindPoint, m_pipeline);
 
 	vkCmdPushConstants(
-		cmdBuffer, m_pipelineLayout, m_pushConstantStage, 0, sizeof(VkDeviceAddress), &pushConstants
+		cmdBuffer, m_pipelineLayout, m_pushConstantStage, 0, sizeof(MaterialUniform), &material
 	);
 }
 

@@ -56,9 +56,7 @@ enum class EUniformBufferIds : uint16
 	Globals = 0,
 	SceneLighting = 1,
 	Lights = 2,
-	Transform = UINT16_MAX - 2,
-	Material = UINT16_MAX - 1,
-	PushConstants = UINT16_MAX
+	Max = UINT16_MAX
 };
 
 using UniformBufferSet = TMap<uint16, TList<MemoryBuffer*>>;

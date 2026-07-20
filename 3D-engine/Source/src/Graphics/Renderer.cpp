@@ -75,9 +75,14 @@ Renderer::~Renderer()
 	DestroyVulkan();
 }
 
-void Renderer::Render(const Mesh* mesh, Material* material, const mat4& transform) const
+void Renderer::Render(const Mesh* mesh, Material* material, const mat4& transform)
 {
-	material->Bind(m_frameCmdBuf, transform);
+	m_globalsUniform.transform = transform;
+
+	const MemoryBuffer* globalsBuff = m_vulkan->GetUniformBuffer(EUniformBufferIds::Globals);
+	globalsBuff->Fill(&m_globalsUniform);
+
+	material->Bind(m_frameCmdBuf);
 	mesh->Render(m_frameCmdBuf);
 }
 
@@ -96,9 +101,6 @@ void Renderer::BeginFrame()
 	m_globalsUniform.gamma = 2.2f;
 	m_globalsUniform.prefilteredCubeMipLevels = 1.f;
 	m_globalsUniform.scaleIBLAmbient = 1.f;
-
-	const MemoryBuffer* globalsBuff = m_vulkan->GetUniformBuffer(EUniformBufferIds::Globals);
-	globalsBuff->Fill(&m_globalsUniform);
 }
 
 void Renderer::EndFrame()

@@ -8,7 +8,7 @@
 #include "Utility/Collections/TMap.h"
 #include "Utility/Collections/TSet.h"
 
-struct PushConstants;
+struct MaterialUniform;
 class Vulkan;
 
 using std::string;
@@ -119,7 +119,7 @@ public:
 	~GraphicsPipeline();
 
 public:
-	void Bind(VkCommandBuffer cmdBuffer, const VkDeviceAddress& pushConstants) const;
+	void Bind(VkCommandBuffer cmdBuffer, const MaterialUniform& material) const;
 	void SetBindPoint(VkPipelineBindPoint bindPoint);
 	void SetPushConstantStage(VkShaderStageFlagBits stage);
 

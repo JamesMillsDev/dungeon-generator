@@ -1,20 +1,14 @@
 import global;
 import graphics;
 
-struct PushConstants
-{
-    TransformUniform* transform;
-    MaterialUniform* material;
-};
-
 [shader("vertex")]
-VSOutput main(VSInput input, uniform PushConstants* pushConstants)
+VSOutput main(VSInput input, uniform MaterialUniform material)
 {
     VSOutput output;
 
-    output.location = TransformVertex(input, pushConstants->transform->value);
-    output.fragLocation = mul(pushConstants->transform->value, input.location).xyz;
-    
+    output.location = TransformVertex(input);
+    output.fragLocation = mul(globals.transform, input.location).xyz;
+
     output.normal = input.normal.xyz;
     output.tangent = input.tangent;
     
@@ -25,7 +19,7 @@ VSOutput main(VSInput input, uniform PushConstants* pushConstants)
 }
 
 [shader("fragment")]
-float4 main(VSOutput input, uniform PushConstants* pushConstants) : SV_Target
+float4 main(VSOutput input, uniform MaterialUniform material) : SV_Target
 {
-    return pushConstants->material->color;
+    return material.color;
 }

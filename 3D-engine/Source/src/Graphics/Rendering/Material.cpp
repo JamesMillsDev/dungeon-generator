@@ -83,7 +83,7 @@ void Material::Dbg_ShowGui()
 }
 #endif
 
-void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
+void Material::Bind(const VkCommandBuffer cmdBuffer)
 {
 	ValidatePipeline();
 
@@ -106,23 +106,7 @@ void Material::Bind(const VkCommandBuffer cmdBuffer, const mat4& transform)
 		.heightMap = m_textures[HEIGHT_MAP_NAME] != nullptr ? 1 : 0,
 	};
 
-	const MemoryBuffer* transformBuffer = vulkan->GetUniformBuffer(EUniformBufferIds::Transform);
-	transformBuffer->Fill(&transform);
-
-	const MemoryBuffer* materialBuffer = vulkan->GetUniformBuffer(EUniformBufferIds::Material);
-	materialBuffer->Fill(&materialUniform);
-
-	// Bind the pipeline and push the push constants to the command buffer
-	const PushConstants push =
-	{
-		.transform = transformBuffer->GetAddress(),
-		.material = materialBuffer->GetAddress()
-	};
-
-	const MemoryBuffer* pushConstantBuffer = vulkan->GetUniformBuffer(EUniformBufferIds::PushConstants);
-	pushConstantBuffer->Fill(&push);
-
-	m_pipeline->Bind(cmdBuffer, pushConstantBuffer->GetAddress());
+	m_pipeline->Bind(cmdBuffer, materialUniform);
 
 	// Update the descriptor sets if needed
 	if (m_shouldUpdateDescriptors)

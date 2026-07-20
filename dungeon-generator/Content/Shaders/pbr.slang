@@ -2,19 +2,13 @@ import global;
 import lighting;
 import graphics;
 
-struct PushConstants
-{
-    TransformUniform* transform;
-    MaterialUniform* material;
-};
-
 [shader("vertex")]
-VSOutput main(VSInput input, uniform PushConstants* pushConstants)
+VSOutput main(VSInput input, uniform MaterialUniform material)
 {
     VSOutput output;
 
-    output.location = TransformVertex(input, pushConstants->transform->value);
-    output.fragLocation = mul(pushConstants->transform->value, input.location).xyz;
+    output.location = TransformVertex(input);
+    output.fragLocation = mul(globals.transform, input.location).xyz;
     
     output.normal = input.normal.xyz;
     output.tangent = input.tangent;
@@ -26,17 +20,17 @@ VSOutput main(VSInput input, uniform PushConstants* pushConstants)
 }
 
 [shader("fragment")]
-float4 main(VSOutput input, uniform PushConstants* pushConstants) : SV_Target
+float4 main(VSOutput input, uniform MaterialUniform material) : SV_Target
 {
-    float4 baseColor = TrySampleMap(diffuseMap, pushConstants->material->baseColorMapSet, input.uv0, pushConstants->material->color) * input.color;
-    float4 orm = TrySampleMap(ormMap, pushConstants->material->ormMapSet, input.uv0, float4(pushConstants->material->ao, pushConstants->material->roughness, pushConstants->material->metallic, 1));
-    float3 emissive = TrySampleMap(emissiveMap, pushConstants->material->emissiveMapSet, input.uv0, pushConstants->material->emissiveTint).rgb;
+    float4 baseColor = TrySampleMap(diffuseMap, material.baseColorMapSet, input.uv0, material.color) * input.color;
+    float4 orm = TrySampleMap(ormMap, material.ormMapSet, input.uv0, float4(material.ao, material.roughness, material.metallic, 1));
+    float3 emissive = TrySampleMap(emissiveMap, material.emissiveMapSet, input.uv0, material.emissiveTint).rgb;
 
     float ao = orm.r;
     float roughness = orm.g;
     float metallic = orm.b;
 
-    float3 N = CalculateNormal(input, normalMap, pushConstants->material->normalMapSet);
+    float3 N = CalculateNormal(input, normalMap, material.normalMapSet);
     
     // === LIGHTING SETUP ===
     // Calculate view direction (fragment to camera)

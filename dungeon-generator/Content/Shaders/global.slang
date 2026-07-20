@@ -23,6 +23,7 @@ struct GlobalsUniform
 {
     float4x4 proj;
     float4x4 view;
+    float4x4 transform;
     float3 cameraLocation;
 
     float exposure;
@@ -31,18 +32,13 @@ struct GlobalsUniform
     float scaleIBLAmbient;
 };
 
-struct TransformUniform
-{
-    float4x4 value;
-};
-
 static const float PI = 3.14159265359f;
 
 [[vk::binding(0, 0)]] ConstantBuffer<GlobalsUniform> globals;
 
-float4 TransformVertex(VSInput vertex, float4x4 transform)
+float4 TransformVertex(VSInput vertex)
 {
-    return mul(globals.proj, mul(globals.view, mul(transform, vertex.location)));
+    return mul(globals.proj, mul(globals.view, mul(globals.transform, vertex.location)));
 }
 
 float3 CalculateNormal(VSOutput vertex, Sampler2D normalMap, int32_t mapSet)

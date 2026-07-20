@@ -43,27 +43,6 @@ const TArray UNIFORM_DATA
 	UniformBufferData
 	{
 		.count = 1,
-		.size = sizeof(TransformUniform),
-		.bufferUsage = VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT_KHR,
-		.id = static_cast<uint16>(EUniformBufferIds::Transform)
-	},
-	UniformBufferData
-	{
-		.count = 1,
-		.size = sizeof(MaterialUniform),
-		.bufferUsage = VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT_KHR,
-		.id = static_cast<uint16>(EUniformBufferIds::Material)
-	},
-	UniformBufferData
-	{
-		.count = 1,
-		.size = sizeof(PushConstants),
-		.bufferUsage = VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT_KHR,
-		.id = static_cast<uint16>(EUniformBufferIds::PushConstants)
-	},
-	UniformBufferData
-	{
-		.count = 1,
 		.size = sizeof(SceneLightingUniform),
 		.bufferUsage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		.id = static_cast<uint16>(EUniformBufferIds::SceneLighting)

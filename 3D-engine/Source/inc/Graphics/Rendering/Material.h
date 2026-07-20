@@ -83,7 +83,7 @@ public:
 	DEFINE_DEBUG_FUNCTION(ShowGui)
 
 private:
-	void Bind(VkCommandBuffer cmdBuffer, const mat4& transform);
+	void Bind(VkCommandBuffer cmdBuffer);
 	void UpdateDescriptorSets(TList<VkWriteDescriptorSet>& writes) const;
 	void UpdateUniformDescriptor(const MemoryBuffer* buffer, uint32 binding) const;
 

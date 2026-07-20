@@ -10,6 +10,8 @@
 
 #include "Rendering/Camera.h"
 #include "Rendering/Camera.h"
+#include "Rendering/Camera.h"
+#include "Rendering/Camera.h"
 
 class Application;
 class Camera;
@@ -58,7 +60,7 @@ private:
 	~Renderer();
 
 public:
-	void Render(const Mesh* mesh, Material* material, const mat4& transform) const;
+	void Render(const Mesh* mesh, Material* material, const mat4& transform);
 	
 private:
 	void BeginFrame();
