@@ -63,15 +63,15 @@ public:
 	};
 
 private:
-	static uint32 m_nextId;
-	static queue<uint32> m_freeIds;
+	static int32 m_nextId;
+	static queue<int32> m_freeIds;
 
 public:
 	static Texture* LoadFromFile(const string& fileName);
 
 private:
 	VulkanTexture* m_vulkanTexture;
-	uint32 m_id;
+	int32 m_id;
 
 	TList<uint8> m_pixels;
 
@@ -83,7 +83,7 @@ public:
 	[[nodiscard]] uint64 GetHashCode() const override;
 
 	[[nodiscard]] const VkDescriptorImageInfo& GetDescriptors() const;
-	[[nodiscard]] uint32 GetId() const;
+	[[nodiscard]] int32 GetId() const;
 
 	DEFINE_GETTER_SETTER(Pixels, const TList<uint8>&, pixels, m_pixels)
 	DEFINE_GETTER_SETTER_VARIABLE(Width, uint32, width)

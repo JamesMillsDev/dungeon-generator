@@ -12,6 +12,8 @@
 #include "Rendering/Camera.h"
 #include "Rendering/Camera.h"
 #include "Rendering/Camera.h"
+#include "Rendering/Camera.h"
+#include "Rendering/Camera.h"
 
 class Application;
 class Camera;
@@ -60,7 +62,7 @@ private:
 	~Renderer();
 
 public:
-	void Render(const Mesh* mesh, Material* material, const mat4& transform);
+	void Render(const Mesh* mesh, Material* material, const mat4& transform, uint32 objectIndex) const;
 	
 private:
 	void BeginFrame();

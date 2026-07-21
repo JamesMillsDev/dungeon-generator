@@ -49,10 +49,9 @@ void DungeonGameInstance::Init()
 	m_cubeMesh = Mesh::MakeCube();
 
 	float offset = .00001f;
-	const ShaderConfig shaderConfig = { .name = "Shaders/unlit", .lit = false };
 	for (uint8 i = 0; i < MAX_LIGHT_COUNT; ++i)
 	{
-		lightMaterials[i] = new Material{ shaderConfig };
+		lightMaterials[i] = new Material{ "Shaders/unlit" };
 		lightMaterials[i]->color = Color::HSVToRGB(offset, 1.f, 1.f);
 
 		Actor* lightActor = GetWorld()->MakeActor<Actor>();

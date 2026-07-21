@@ -3,12 +3,12 @@ import lighting;
 import graphics;
 
 [shader("vertex")]
-VSOutput main(VSInput input, uniform MaterialUniform material)
+VSOutput main(VSInput input, uniform uint32_t objectIndex)
 {
     VSOutput output;
 
-    output.location = TransformVertex(input);
-    output.fragLocation = mul(globals.transform, input.location).xyz;
+    output.location = TransformVertex(input, objectIndex);
+    output.fragLocation = mul(transforms[objectIndex].value, input.location).xyz;
     
     output.normal = input.normal.xyz;
     output.tangent = input.tangent;
@@ -20,18 +20,26 @@ VSOutput main(VSInput input, uniform MaterialUniform material)
 }
 
 [shader("fragment")]
-float4 main(VSOutput input, uniform MaterialUniform material) : SV_Target
+float4 main(VSOutput input, uniform uint32_t objectIndex) : SV_Target
 {
-    float4 baseColor = TrySampleMap(diffuseMap, material.baseColorMapSet, input.uv0, material.color) * input.color;
-    float4 orm = TrySampleMap(ormMap, material.ormMapSet, input.uv0, float4(material.ao, material.roughness, material.metallic, 1));
-    float3 emissive = TrySampleMap(emissiveMap, material.emissiveMapSet, input.uv0, material.emissiveTint).rgb;
+    MaterialUniform mat = materials[objectIndex];
+
+    float4 baseColorSample = TrySampleMap(mat.baseColorIndex, input.uv0, mat.color);
+    float4 baseColor = baseColorSample * input.color;
+
+    float4 defaultOrm = float4(mat.ao, mat.roughness, mat.metallic, 1.0);
+    float4 orm = TrySampleMap(mat.ormIndex, input.uv0, defaultOrm);
+
+    float4 emissiveSample = TrySampleMap(mat.emissiveIndex, input.uv0, mat.emissiveTint);
+    float3 emissive = emissiveSample.rgb;
 
     float ao = orm.r;
     float roughness = orm.g;
     float metallic = orm.b;
 
-    float3 N = CalculateNormal(input, normalMap, material.normalMapSet);
-    
+    float4 normalMapSample = TrySampleMap(mat.normalIndex, input.uv0, float4(input.normal, 0.0));
+    float3 N = CalculateNormal(input, normalMapSample);
+
     // === LIGHTING SETUP ===
     // Calculate view direction (fragment to camera)
     float3 V = normalize(globals.cameraLocation - input.location.xyz);

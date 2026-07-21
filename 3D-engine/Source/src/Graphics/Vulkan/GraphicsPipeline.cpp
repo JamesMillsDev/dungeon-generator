@@ -2,6 +2,7 @@
 
 #include "Gameplay/Actors/Components/Rendering/LightComponent.h"
 
+#include "Graphics/Uniforms.h"
 #include "Graphics/Rendering/Lighting.h"
 #include "Graphics/Rendering/Material.h"
 #include "Graphics/Rendering/Mesh.h"
@@ -51,16 +52,18 @@ GraphicsPipeline::~GraphicsPipeline()
 	Destroy();
 }
 
-void GraphicsPipeline::Bind(const VkCommandBuffer cmdBuffer, const MaterialUniform& material) const
+void GraphicsPipeline::Bind(const VkCommandBuffer cmdBuffer, uint32 objectIndex) const
 {
+	TArray dynamicOffsets = { static_cast<uint32>(0), static_cast<uint32>(sizeof(TransformUniform)) };
+
 	vkCmdBindDescriptorSets(
-		cmdBuffer, m_bindPoint, m_pipelineLayout, 0, 1, &m_descriptorSets, 0, nullptr
+		cmdBuffer, m_bindPoint, m_pipelineLayout, 0, 1, &m_descriptorSets, dynamicOffsets.Count(), dynamicOffsets.Data()
 	);
 
 	vkCmdBindPipeline(cmdBuffer, m_bindPoint, m_pipeline);
 
 	vkCmdPushConstants(
-		cmdBuffer, m_pipelineLayout, m_pushConstantStage, 0, sizeof(MaterialUniform), &material
+		cmdBuffer, m_pipelineLayout, m_pushConstantStage, 0, sizeof(uint32), &objectIndex
 	);
 }
 
@@ -77,22 +80,6 @@ void GraphicsPipeline::SetPushConstantStage(const VkShaderStageFlagBits stage)
 VkDescriptorSet GraphicsPipeline::GetDescriptorSet() const
 {
 	return m_descriptorSets;
-}
-
-bool GraphicsPipeline::IsLit() const
-{
-	return m_config.shaderConfig.lit;
-}
-
-bool GraphicsPipeline::TryGetTextureBinding(TMap<string, int32>& binding) const
-{
-	if (m_samplerBindings.IsEmpty())
-	{
-		return false;
-	}
-
-	binding = m_samplerBindings;
-	return true;
 }
 
 void GraphicsPipeline::Init(Vulkan* vulkan)
@@ -122,30 +109,48 @@ void GraphicsPipeline::InitDescriptors(const Vulkan* vulkan)
 		{
 			.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 			.count = 1,
-			.stage = VK_SHADER_STAGE_ALL_GRAPHICS,
-			.name = "Globals"
+			.stage = VK_SHADER_STAGE_ALL_GRAPHICS
+		}
+	);
+	descriptors.Add(
+		{
+			.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+			.count = 1,
+			.stage = VK_SHADER_STAGE_FRAGMENT_BIT
+		}
+	);
+	descriptors.Add(
+		{
+			.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+			.count = MAX_LIGHT_COUNT,
+			.stage = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT
 		}
 	);
 
-	if (m_config.shaderConfig.lit)
-	{
-		descriptors.Add(
-			{
-				.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-				.count = 1,
-				.stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-				.name = "SceneLighting"
-			}
-		);
-		descriptors.Add(
-			{
-				.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-				.count = MAX_LIGHT_COUNT,
-				.stage = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT,
-				.name = "Lights"
-			}
-		);
-	}
+	descriptors.Add(
+		{
+			.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
+			.count = 1,
+			.stage = VK_SHADER_STAGE_ALL_GRAPHICS
+		}
+	);
+
+	descriptors.Add(
+		{
+			.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
+			.count = 1,
+			.stage = VK_SHADER_STAGE_FRAGMENT_BIT
+		}
+	);
+
+	descriptors.Add(
+		{
+			.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+			.flags = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT,
+			.count = 1,
+			.stage = VK_SHADER_STAGE_ALL_GRAPHICS
+		}
+	);
 
 	for (const DescriptorConfig& descriptor : m_config.shaderConfig.descriptors)
 	{
@@ -171,18 +176,13 @@ void GraphicsPipeline::InitDescriptors(const Vulkan* vulkan)
 			}
 		);
 
-		flags.Add(VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT);
+		flags.Add(descriptor.flags);
 		poolSizes.Add(
 			{
 				.type = descriptor.type,
 				.descriptorCount = descriptor.count
 			}
 		);
-
-		if (descriptor.type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
-		{
-			m_samplerBindings.Add(descriptor.name, i);
-		}
 	}
 
 	const VkDescriptorSetLayoutBindingFlagsCreateInfo dslFlagsCreateInfo

@@ -9,35 +9,22 @@ struct MaterialUniform
     float alphaMask;
     float alphaMaskCutoff;
 
-    int32_t baseColorMapSet;
-    int32_t normalMapSet;
-    int32_t ormMapSet;
-    int32_t emissiveMapSet;
-	int32_t heightMapSet;
+    int32_t baseColorIndex;
+    int32_t normalIndex;
+    int32_t ormIndex;
+    int32_t emissiveIndex;
+	int32_t heightIndex;
 };
 
-[[vk::binding(6, 0)]] ConstantBuffer<Sampler2D> diffuseMap;
-[[vk::binding(4, 0)]] ConstantBuffer<Sampler2D> normalMap;
-[[vk::binding(7, 0)]] ConstantBuffer<Sampler2D> ormMap;
-[[vk::binding(5, 0)]] ConstantBuffer<Sampler2D> emissiveMap;
-[[vk::binding(3, 0)]] ConstantBuffer<Sampler2D> heightMap;
+[[vk::binding(4, 0)]] ConstantBuffer<MaterialUniform> materials[];
+[[vk::binding(5, 0)]] Sampler2D textures[];
 
-float4 Sample(ConstantBuffer<Sampler2D> textures[], int32_t index, float2 uv, float4 defaultValue = float4(0, 0, 0, 0))
+float4 TrySampleMap(int32_t index, float2 uv, float4 defaultValue)
 {
-    if (index == -1)
+    if (NonUniformResourceIndex(index) == -1)
     {
         return defaultValue;
     }
 
-    return textures[index].Sample(uv);
-}
-
-float4 TrySampleMap(Sampler2D map, int32_t cond, float2 uv, float4 defaultValue)
-{
-    if(cond == 0)
-    {
-        return defaultValue;
-    }
-
-    return map.Sample(uv) * defaultValue;
+    return textures[NonUniformResourceIndex(index)].Sample(uv) * defaultValue;
 }

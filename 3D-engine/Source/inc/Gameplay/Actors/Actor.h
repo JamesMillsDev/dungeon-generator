@@ -20,6 +20,7 @@ class Actor
 private:
 	World* m_world;
 	Transform* m_transform;
+	uint32 m_objectIndex;
 
 	TList<IComponent*> m_components;
 	TList<ComponentListChange> m_componentListChanges;
@@ -50,6 +51,7 @@ public:
 	Transform* GetTransform() const;
 
 	World const* GetWorld() const;
+	uint32 GetObjectIndex() const;
 
 private:
 	void ApplyComponentListChanges();

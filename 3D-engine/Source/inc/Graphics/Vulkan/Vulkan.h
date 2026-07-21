@@ -56,6 +56,9 @@ enum class EUniformBufferIds : uint16
 	Globals = 0,
 	SceneLighting = 1,
 	Lights = 2,
+	Transforms = 3,
+	Materials = 4,
+	Textures = 5,
 	Max = UINT16_MAX
 };
 

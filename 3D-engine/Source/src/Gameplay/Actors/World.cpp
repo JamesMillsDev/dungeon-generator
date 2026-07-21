@@ -5,7 +5,7 @@
 #include "Graphics/Rendering/Lighting.h"
 
 World::World()
-	: m_root{ new Actor }, m_lighting{ new Lighting }
+	: m_nextObjectIndex{ 0 }, m_root{ new Actor }, m_lighting{ new Lighting }
 {}
 
 World::~World()
@@ -18,6 +18,7 @@ void World::DestroyActor(Actor* actor)
 {
 	m_lifetimeChanges.Add([this, actor]
 		{
+			m_returnedObjectIndices.push(actor->GetObjectIndex());
 			actor->GetTransform()->SetParent(nullptr);
 
 			actor->EndPlay();

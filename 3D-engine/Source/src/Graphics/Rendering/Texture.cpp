@@ -19,8 +19,8 @@ const TArray TEXTURE_EXTENSIONS =
 
 using std::runtime_error;
 
-uint32 Texture::m_nextId = 0;
-queue<uint32> Texture::m_freeIds;
+int32 Texture::m_nextId = 0;
+queue<int32> Texture::m_freeIds;
 
 Texture* Texture::LoadFromFile(const string& fileName)
 {
@@ -95,7 +95,7 @@ const VkDescriptorImageInfo& Texture::GetDescriptors() const
 	return m_vulkanTexture->m_textureDescriptors;
 }
 
-uint32 Texture::GetId() const
+int32 Texture::GetId() const
 {
 	return m_id;
 }

@@ -59,6 +59,11 @@ World const* Actor::GetWorld() const
 	return m_world;
 }
 
+uint32 Actor::GetObjectIndex() const
+{
+	return m_objectIndex;
+}
+
 void Actor::ApplyComponentListChanges()
 {
 	for (const ComponentListChange& change : m_componentListChanges)

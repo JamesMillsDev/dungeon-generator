@@ -83,7 +83,7 @@ void Material::Dbg_ShowGui()
 }
 #endif
 
-void Material::Bind(const VkCommandBuffer cmdBuffer)
+void Material::Bind(const VkCommandBuffer cmdBuffer, const uint32 objectIndex)
 {
 	ValidatePipeline();
 
@@ -99,14 +99,17 @@ void Material::Bind(const VkCommandBuffer cmdBuffer)
 		.metallic = metallic,
 		.alphaMask = alphaMask,
 		.alphaMaskCutoff = alphaMaskCutoff,
-		.baseColorMap = m_textures[BASE_COLOR_MAP_NAME] != nullptr ? 1 : 0,
-		.normalMap = m_textures[NORMAL_MAP_NAME] != nullptr ? 1 : 0,
-		.ormMap = m_textures[ORM_MAP_NAME] != nullptr ? 1 : 0,
-		.emissiveMap = m_textures[EMISSIVE_MAP_NAME] != nullptr ? 1 : 0,
-		.heightMap = m_textures[HEIGHT_MAP_NAME] != nullptr ? 1 : 0,
+		.baseColorMap = m_textures[BASE_COLOR_MAP_NAME] != nullptr ? m_textures[BASE_COLOR_MAP_NAME]->GetId() : -1,
+		.normalMap = m_textures[NORMAL_MAP_NAME] != nullptr ? m_textures[NORMAL_MAP_NAME]->GetId() : -1,
+		.ormMap = m_textures[ORM_MAP_NAME] != nullptr ? m_textures[ORM_MAP_NAME]->GetId() : -1,
+		.emissiveMap = m_textures[EMISSIVE_MAP_NAME] != nullptr ? m_textures[EMISSIVE_MAP_NAME]->GetId() : -1,
+		.heightMap = m_textures[HEIGHT_MAP_NAME] != nullptr ? m_textures[HEIGHT_MAP_NAME]->GetId() : -1,
 	};
 
-	m_pipeline->Bind(cmdBuffer, materialUniform);
+	const MemoryBuffer* materialBuffer = vulkan->GetUniformBuffer(EUniformBufferIds::Materials);
+	materialBuffer->Fill(&materialUniform, sizeof(MaterialUniform), objectIndex);
+
+	m_pipeline->Bind(cmdBuffer, objectIndex);
 
 	// Update the descriptor sets if needed
 	if (m_shouldUpdateDescriptors)
@@ -118,19 +121,21 @@ void Material::Bind(const VkCommandBuffer cmdBuffer)
 			static_cast<uint32>(EUniformBufferIds::Globals)
 		);
 
-		if (m_pipelineConfig.shaderConfig.lit)
-		{
-			InsertUniformWrite(
-				writes, vulkan->GetUniformBuffer(EUniformBufferIds::SceneLighting),
-				static_cast<uint32>(EUniformBufferIds::SceneLighting)
-			);
+		InsertUniformWrite(
+			writes, vulkan->GetUniformBuffer(EUniformBufferIds::Transforms),
+			static_cast<uint32>(EUniformBufferIds::Transforms)
+		);
 
-			for (uint8 i = 0; i < MAX_LIGHT_COUNT; ++i)
+		InsertUniformWrite(
+			writes, vulkan->GetUniformBuffer(EUniformBufferIds::SceneLighting),
+			static_cast<uint32>(EUniformBufferIds::SceneLighting)
+		);
+
+		for (uint8 i = 0; i < MAX_LIGHT_COUNT; ++i)
+		{
+			if (const MemoryBuffer* buffer = vulkan->GetUniformBuffer(EUniformBufferIds::Lights, i))
 			{
-				if (const MemoryBuffer* buffer = vulkan->GetUniformBuffer(EUniformBufferIds::Lights, i))
-				{
-					InsertUniformWrite(writes, buffer, static_cast<uint32>(EUniformBufferIds::Lights), i);
-				}
+				InsertUniformWrite(writes, buffer, static_cast<uint32>(EUniformBufferIds::Lights), i);
 			}
 		}
 
@@ -141,15 +146,11 @@ void Material::Bind(const VkCommandBuffer cmdBuffer)
 
 void Material::UpdateDescriptorSets(TList<VkWriteDescriptorSet>& writes) const
 {
-	TMap<string, int32> textureBindings;
-	if (m_pipeline->TryGetTextureBinding(textureBindings))
+	for (TMapEntry<string, Texture*>* texture : m_textures)
 	{
-		for (TMapEntry<string, Texture*>* texture : m_textures)
+		if (texture->Value() != nullptr)
 		{
-			if (texture->Value() != nullptr)
-			{
-				InsertTextureWrite(writes, texture->Value(), textureBindings[texture->Key()]);
-			}
+			InsertTextureWrite(writes, texture->Value(), static_cast<uint32>(EUniformBufferIds::Textures));
 		}
 	}
 
@@ -179,19 +180,6 @@ void Material::ValidatePipeline()
 {
 	if (m_pipeline == nullptr)
 	{
-		for (const TMapEntry<string, Texture*>* texture : m_textures)
-		{
-			m_pipelineConfig.shaderConfig.descriptors.Add(
-				{
-					.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-					.count = 1,
-					.stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-					.binding = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
-					.name = texture->Key()
-				}
-			);
-		}
-
 		m_pipeline = new GraphicsPipeline{ m_pipelineConfig };
 	}
 }

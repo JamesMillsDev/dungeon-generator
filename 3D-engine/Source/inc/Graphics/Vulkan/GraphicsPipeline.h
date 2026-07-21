@@ -16,10 +16,10 @@ using std::string;
 struct DescriptorConfig
 {
 	VkDescriptorType type;
+	VkDescriptorBindingFlagBits flags = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
 	uint32 count;
 	VkShaderStageFlags stage;
-	VkDescriptorBindingFlags binding = VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
-	string name;
+	VkDescriptorBindingFlags binding = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
 };
 
 struct ShaderConfig
@@ -34,7 +34,6 @@ public:
 	TList<DescriptorConfig> descriptors = {};
 	string name;
 	string entryPoint = "main";
-	bool lit = true;
 
 };
 
@@ -107,7 +106,6 @@ private:
 	VkDescriptorPool m_descriptorPool;
 	VkDescriptorSetLayout m_descriptorSetLayout;
 	VkDescriptorSet m_descriptorSets;
-	TMap<string, int32> m_samplerBindings;
 
 	VkPipelineLayout m_pipelineLayout;
 	VkPipeline m_pipeline;
@@ -119,14 +117,11 @@ public:
 	~GraphicsPipeline();
 
 public:
-	void Bind(VkCommandBuffer cmdBuffer, const MaterialUniform& material) const;
+	void Bind(VkCommandBuffer cmdBuffer, uint32 objectIndex) const;
 	void SetBindPoint(VkPipelineBindPoint bindPoint);
 	void SetPushConstantStage(VkShaderStageFlagBits stage);
 
 	VkDescriptorSet GetDescriptorSet() const;
-	bool IsLit() const;
-
-	bool TryGetTextureBinding(TMap<string, int32>& binding) const;
 
 private:
 	void Init(Vulkan* vulkan);

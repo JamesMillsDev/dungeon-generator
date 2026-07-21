@@ -28,7 +28,7 @@
 
 using std::exception;
 
-constexpr uint32 MAX_TEXTURE_DESCRIPTORS = UINT16_MAX;
+constexpr uint32 MAX_VISIBLE_OBJECTS = 10000;
 constexpr int32 UNIFORM_BUFFER_COUNT = 3;
 
 const TArray UNIFORM_DATA 
@@ -39,6 +39,20 @@ const TArray UNIFORM_DATA
 		.size = sizeof(GlobalsUniform),
 		.bufferUsage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		.id = static_cast<uint16>(EUniformBufferIds::Globals)
+	},
+	UniformBufferData
+	{
+		.count = 1,
+		.size = sizeof(TransformUniform) * MAX_VISIBLE_OBJECTS,
+		.bufferUsage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+		.id = static_cast<uint16>(EUniformBufferIds::Transforms)
+	},
+	UniformBufferData
+	{
+		.count = 1,
+		.size = sizeof(MaterialUniform) * MAX_VISIBLE_OBJECTS,
+		.bufferUsage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+		.id = static_cast<uint16>(EUniformBufferIds::Materials)
 	},
 	UniformBufferData
 	{
@@ -519,6 +533,7 @@ void Vulkan::Init(GLFWwindow* window)
 				enabledVk12Features.runtimeDescriptorArray = true;
 				enabledVk12Features.bufferDeviceAddress = true;
 				enabledVk12Features.descriptorBindingSampledImageUpdateAfterBind = true;
+				enabledVk12Features.descriptorBindingPartiallyBound = true;
 
 				VkPhysicalDeviceVulkan13Features enabledVk13Features{};
 				enabledVk13Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
