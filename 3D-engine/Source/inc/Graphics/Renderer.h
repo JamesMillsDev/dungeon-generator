@@ -9,12 +9,8 @@
 #include "Uniforms.h"
 
 #include "Rendering/Camera.h"
-#include "Rendering/Camera.h"
-#include "Rendering/Camera.h"
-#include "Rendering/Camera.h"
-#include "Rendering/Camera.h"
-#include "Rendering/Camera.h"
 
+class MemoryBuffer;
 class Application;
 class Camera;
 class Config;
@@ -56,6 +52,8 @@ private:
 	Vulkan* m_vulkan;
 
 	GlobalsUniform m_globalsUniform;
+	TransformUniform m_transforms;
+	MemoryBuffer* m_transformBuffer;
 
 private:
 	explicit Renderer(Config* config, GLFWwindow* window);

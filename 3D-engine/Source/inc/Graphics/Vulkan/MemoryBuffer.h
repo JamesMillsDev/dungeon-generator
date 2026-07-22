@@ -13,12 +13,13 @@ private:
 	VmaAllocation m_allocation;
 	VmaAllocationInfo m_allocationInfo;
 	VkBufferUsageFlags m_usage;
+	VkMemoryPropertyFlags m_flags;
 	VkDeviceAddress m_deviceAddress;
 
 	VkDescriptorBufferInfo m_bufferInfo;
 
 public:
-	explicit MemoryBuffer(VkDeviceSize size, VkBufferUsageFlags usage, Vulkan* vulkan);
+	explicit MemoryBuffer(VkDeviceSize size, VkBufferUsageFlags usage, Vulkan* vulkan, VkMemoryPropertyFlags flags = 0);
 	~MemoryBuffer();
 
 public:
@@ -29,7 +30,7 @@ public:
 	[[nodiscard]] const VkDeviceSize& Size() const;
 
 private:
-	void Create(const Vulkan* vulkan);
+	void Create(const Vulkan* vulkan, VkMemoryPropertyFlags flags);
 	void Destroy();
 
 };

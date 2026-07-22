@@ -27,6 +27,7 @@ using std::runtime_error;
 using std::string;
 
 constexpr int32 MAX_FRAMES_IN_FLIGHT = 2;
+constexpr uint32 MAX_VISIBLE_OBJECTS = 10000;
 
 #ifdef _DEBUG
 constexpr bool ENABLE_VALIDATION_LAYERS = true;
@@ -76,6 +77,7 @@ public:
 	[[nodiscard]] static Vulkan* Instance();
 	DEFINE_ACCESSOR(VkDevice, Device)
 	DEFINE_ACCESSOR(VmaAllocator, Allocator)
+	DEFINE_ACCESSOR(VkPhysicalDeviceProperties, DeviceProperties)
 
 	[[nodiscard]] static bool IsLoaded();
 	[[nodiscard]] static runtime_error VulkanError(const string& message, VkResult result);
@@ -101,6 +103,7 @@ private:
 	VkInstance m_vkInstance;
 	VkDebugUtilsMessengerEXT m_debugMessenger;
 
+	VkPhysicalDeviceProperties m_deviceProperties;
 	VkPhysicalDevice m_physicalDevice;
 	VkDevice m_device;
 	VkQueue m_queue;

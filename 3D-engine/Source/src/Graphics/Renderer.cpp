@@ -6,8 +6,24 @@
 #include "Graphics/Vulkan/MemoryBuffer.h"
 #include "Graphics/Vulkan/Vulkan.h"
 
+#include <vulkan/vulkan.h>
+
 Renderer* Renderer::m_instance = nullptr;
 Camera* Renderer::m_currentCamera = nullptr;
+
+// Courtesy of https://github.com/SaschaWillems/Vulkan/blob/master/examples/dynamicuniformbuffer/dynamicuniformbuffer.cpp#L31C1-L42C2
+void* alignedAlloc(size_t size, size_t alignment)
+{
+	void* data = nullptr;
+#if defined(_MSC_VER) || defined(__MINGW32__)
+	data = _aligned_malloc(size, alignment);
+#else
+	int res = posix_memalign(&data, alignment, size);
+	if (res != 0)
+		data = nullptr;
+#endif
+	return data;
+}
 
 Renderer* Renderer::Instance()
 {
@@ -68,6 +84,17 @@ Renderer::Renderer(Config* config, GLFWwindow* window)
 	InitVulkan(config, window);
 
 	m_vulkan = Vulkan::Instance();
+
+	const uint64 minUboAlignment = m_vulkan->GetDeviceProperties().limits.minUniformBufferOffsetAlignment;
+	uint64 dynamicAlignment = sizeof(TransformUniform);
+	if (minUboAlignment > 0)
+	{
+		dynamicAlignment = (dynamicAlignment + minUboAlignment - 1) & ~(minUboAlignment - 1);
+	}
+
+	const uint64 bufferSize = MAX_VISIBLE_OBJECTS * dynamicAlignment;
+	m_transforms.values = static_cast<mat4*>(alignedAlloc(bufferSize, dynamicAlignment));
+	m_transformBuffer = new MemoryBuffer{ bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, m_vulkan, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT };
 }
 
 Renderer::~Renderer()
@@ -77,14 +104,6 @@ Renderer::~Renderer()
 
 void Renderer::Render(const Mesh* mesh, Material* material, const mat4& transform, const uint32 objectIndex) const
 {
-	TransformUniform transformUniform
-	{
-		.value = transform
-	};
-
-	const MemoryBuffer* transformBuffer = m_vulkan->GetUniformBuffer(EUniformBufferIds::Transforms);
-	transformBuffer->Fill(&transformUniform, sizeof(TransformUniform), objectIndex); 
-
 	material->Bind(m_frameCmdBuf, objectIndex);
 	mesh->Render(m_frameCmdBuf);
 }
@@ -107,6 +126,8 @@ void Renderer::BeginFrame()
 
 	const MemoryBuffer* globalsBuff = m_vulkan->GetUniformBuffer(EUniformBufferIds::Globals);
 	globalsBuff->Fill(&m_globalsUniform);
+
+	
 }
 
 void Renderer::EndFrame()

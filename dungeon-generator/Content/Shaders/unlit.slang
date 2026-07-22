@@ -2,12 +2,12 @@ import global;
 import graphics;
 
 [shader("vertex")]
-VSOutput main(VSInput input, uniform uint32_t objectIndex)
+VSOutput main(VSInput input)
 {
     VSOutput output;
 
-    output.location = TransformVertex(input, objectIndex);
-    output.fragLocation = mul(transforms[objectIndex].value, input.location).xyz;
+    output.location = TransformVertex(input);
+    output.fragLocation = mul(transform.value, input.location).xyz;
 
     output.normal = input.normal.xyz;
     output.tangent = input.tangent;
@@ -19,7 +19,7 @@ VSOutput main(VSInput input, uniform uint32_t objectIndex)
 }
 
 [shader("fragment")]
-float4 main(VSOutput input, uniform uint32_t objectIndex) : SV_Target
+float4 main(VSOutput input) : SV_Target
 {
-    return materials[objectIndex].color;
+    return material.color;
 }

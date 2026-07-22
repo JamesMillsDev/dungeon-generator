@@ -20,5 +20,5 @@ struct GlobalsUniform
 
 struct TransformUniform
 {
-	mat4 value;
+	mat4* values = nullptr;
 };

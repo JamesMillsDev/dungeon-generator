@@ -28,7 +28,6 @@
 
 using std::exception;
 
-constexpr uint32 MAX_VISIBLE_OBJECTS = 10000;
 constexpr int32 UNIFORM_BUFFER_COUNT = 3;
 
 const TArray UNIFORM_DATA 
@@ -46,13 +45,6 @@ const TArray UNIFORM_DATA
 		.size = sizeof(TransformUniform) * MAX_VISIBLE_OBJECTS,
 		.bufferUsage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		.id = static_cast<uint16>(EUniformBufferIds::Transforms)
-	},
-	UniformBufferData
-	{
-		.count = 1,
-		.size = sizeof(MaterialUniform) * MAX_VISIBLE_OBJECTS,
-		.bufferUsage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-		.id = static_cast<uint16>(EUniformBufferIds::Materials)
 	},
 	UniformBufferData
 	{
@@ -183,6 +175,16 @@ const VmaAllocator& Vulkan::Allocator()
 const VmaAllocator& Vulkan::GetAllocator() const
 {
 	return m_vmaAllocator;
+}
+
+const VkPhysicalDeviceProperties& Vulkan::DeviceProperties()
+{
+	return m_instance->GetDeviceProperties();
+}
+
+const VkPhysicalDeviceProperties& Vulkan::GetDeviceProperties() const
+{
+	return m_deviceProperties;
 }
 
 bool Vulkan::IsLoaded()
@@ -480,6 +482,7 @@ void Vulkan::Init(GLFWwindow* window)
 					.properties = {}
 				};
 				vkGetPhysicalDeviceProperties2(m_physicalDevice, &deviceProperties);
+				m_deviceProperties = deviceProperties.properties;
 
 				// Get all the device's queue families
 				uint32 queueFamilyCount = 0;

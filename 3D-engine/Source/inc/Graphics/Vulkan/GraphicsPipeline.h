@@ -13,15 +13,6 @@ class Vulkan;
 
 using std::string;
 
-struct DescriptorConfig
-{
-	VkDescriptorType type;
-	VkDescriptorBindingFlagBits flags = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
-	uint32 count;
-	VkShaderStageFlags stage;
-	VkDescriptorBindingFlags binding = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
-};
-
 struct ShaderConfig
 {
 	struct StageComp
@@ -31,7 +22,6 @@ struct ShaderConfig
 
 public:
 	TSet<VkShaderStageFlagBits, StageComp> stages = { VK_SHADER_STAGE_VERTEX_BIT, VK_SHADER_STAGE_FRAGMENT_BIT };
-	TList<DescriptorConfig> descriptors = {};
 	string name;
 	string entryPoint = "main";
 
